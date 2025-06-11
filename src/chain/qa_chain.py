@@ -2,7 +2,9 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from src.rag.retriever import CustomRetriever
-from src.prompts.legal_assistant_prompt import legal_assistant_prompt
+from pathlib import Path
+
+legal_assistant_prompt_path = Path(__file__).parent.parent.parent / "prompts" / "legal_assistant_prompt.txt"
 
 def build_qa_chain(retriever: CustomRetriever, temperature: float = 0) -> ConversationalRetrievalChain:
     """
@@ -18,7 +20,7 @@ def build_qa_chain(retriever: CustomRetriever, temperature: float = 0) -> Conver
     llm = ChatOpenAI(temperature=temperature)
 
     prompt = PromptTemplate.from_template(
-        legal_assistant_prompt
+        legal_assistant_prompt_path.read_text()
     )
 
     chain = ConversationalRetrievalChain.from_llm(
