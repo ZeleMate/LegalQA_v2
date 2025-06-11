@@ -5,3 +5,9 @@ scikit-learn
 numpy
 
 dotenv
+
+faiss-cpu
+langchain
+langchain-openai
+langchain-core
+langchain-community
