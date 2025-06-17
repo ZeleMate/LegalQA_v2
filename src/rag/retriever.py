@@ -33,7 +33,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
             if idx in self.id_mapping:
                 doc_id = self.id_mapping[idx]
 
-                match = self.documents_df[self.documents_df["id"] == doc_id]
+                match = self.documents_df[self.documents_df["doc_id"] == doc_id]
                 if not match.empty:
                     row = match.iloc[0]
 

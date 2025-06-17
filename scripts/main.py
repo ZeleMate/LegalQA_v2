@@ -4,17 +4,28 @@ import pandas as pd
 from src.data.faiss_loader import load_faiss_index
 from src.rag.retriever import CustomRetriever
 from src.chain.qa_chain import build_qa_chain
-from langchain_community.embeddings import OpenAIEmbeddings
-
-load_dotenv()
+from langchain_openai import OpenAIEmbeddings
 
 PARQUET_PATH = os.getenv("PARQUET_PATH")
 FAISS_INDEX_PATH = os.getenv("FAISS_INDEX_PATH")
 ID_MAPPING_PATH = os.getenv("ID_MAPPING_PATH")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+required_env_vars = [
+    "PARQUET_PATH",
+    "FAISS_INDEX_PATH",
+    "ID_MAPPING_PATH",
+    "OPENAI_API_KEY",
+]
+
+missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+
+if missing_vars:
+    raise ValueError(f"Hiányzó környezeti változók: {', '.join(missing_vars)}. Kérlek, ellenőrizd a .env fájlt.")
 
 df = pd.read_parquet(PARQUET_PATH)
 faiss_index, id_mapping = load_faiss_index(FAISS_INDEX_PATH, ID_MAPPING_PATH)
-embeddings = OpenAIEmbeddings()
+embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
 retriever = CustomRetriever(
     embeddings=embeddings,

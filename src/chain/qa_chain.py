@@ -3,21 +3,24 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from src.rag.retriever import CustomRetriever
 from pathlib import Path
+import os
 
-legal_assistant_prompt_path = Path(__file__).parent.parent.parent / "prompts" / "legal_assistant_prompt.txt"
+legal_assistant_prompt_path = Path(__file__).parent.parent / "prompts" / "legal_assistant_prompt.txt"
 
-def build_qa_chain(retriever: CustomRetriever, temperature: float = 0) -> ConversationalRetrievalChain:
+def build_qa_chain(retriever: CustomRetriever) -> ConversationalRetrievalChain:
     """
     Builds a QA chain using LangChain.
 
     Args:
         retriever: A CustomRetriever object.
-        temperature (float): The temperature of the LLM.
 
     Returns:
         ConversationalRetrievalChain: The configured QA chain.
     """
-    llm = ChatOpenAI(temperature=temperature)
+    llm = ChatOpenAI(
+        openai_api_key=os.getenv("OPENAI_API_KEY"),
+        model="o4-mini-2025-04-16"
+    )
 
     prompt = PromptTemplate.from_template(
         legal_assistant_prompt_path.read_text()
@@ -32,7 +35,10 @@ def build_qa_chain(retriever: CustomRetriever, temperature: float = 0) -> Conver
             documents_df=retriever.documents_df
         ),
         return_source_documents=True,
-        combine_docs_chain_kwargs={"prompt": prompt}
+        combine_docs_chain_kwargs={
+            "prompt": prompt,
+            "document_variable_name": "context"
+        },
     )
 
     return chain
