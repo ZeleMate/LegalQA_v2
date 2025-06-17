@@ -6,6 +6,8 @@ import pandas as pd
 import faiss
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.cluster import KMeans
+from collections import defaultdict
 
 class CustomRetriever(BaseRetriever, BaseModel):
     alpha: float = 0.7
@@ -13,6 +15,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
     faiss_index: faiss.Index = Field(...)
     id_mapping: dict = Field(...)
     documents_df: pd.DataFrame = Field(...)
+    k: int = 20
 
     def _get_relevant_documents(self, query: str, *, run_manager=None) -> list[Document]:
         """
@@ -28,7 +31,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
         query_embedding = self.embeddings.embed_query(query)
         query_vector = np.array(query_embedding).reshape(1, -1)
 
-        distances, indices = self.faiss_index.search(query_vector, k=20)
+        distances, indices = self.faiss_index.search(query_vector, k=self.k)
         distances = distances[0]
         indices = indices[0]
 
@@ -73,6 +76,41 @@ class CustomRetriever(BaseRetriever, BaseModel):
                         page_content=row["text"],
                         metadata=metadata
                     ))
+        if len(documents) >= 6:
+            # Ellenőrizzük, hogy minden dokumentumban van-e embedding
+            documents_with_embedding = [
+                doc for doc in documents
+                if "embedding" in doc.metadata
+            ]
+            
+            if len(documents_with_embedding) >= 6:
+                n_clusters = min(5, max(2, len(documents_with_embedding) // 4))
+
+                embedding_matrix = np.vstack([
+                    np.array(doc.metadata["embedding"]) for doc in documents_with_embedding
+                ])
+
+                kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+                labels = kmeans.fit_predict(embedding_matrix)
+        
+                for doc, label in zip(documents_with_embedding, labels):
+                    doc.metadata["cluster"] = int(label)
+
+                cluster_scores = defaultdict(list)
+                for doc in documents_with_embedding:
+                    cluster_scores[doc.metadata["cluster"]].append(doc.metadata["final_score"])
+                avg_scores = {
+                    c: np.mean(s) for c, s in cluster_scores.items()
+                }
+                best_cluster = max(avg_scores.items(), key=lambda x: x[1])[0]
+
+                documents = [doc for doc in documents_with_embedding if doc.metadata["cluster"] == best_cluster]
+            else:
+                for doc in documents:
+                    doc.metadata["cluster"] = 0
+        else:
+            for doc in documents:
+                doc.metadata["cluster"] = 0
 
         # Végső sorbarendezés
         documents.sort(key=lambda d: d.metadata.get("final_score", 0), reverse=True)

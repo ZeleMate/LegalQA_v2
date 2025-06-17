@@ -41,7 +41,7 @@ chat_history = []
 
 while True:
     question = input("\n❓ Kérdés: ")
-    if question.strip().lower() == ["exit", "quit"]:
+    if question.strip().lower() in ["exit", "quit"]:
         break
     
     result = qa_chain.invoke({

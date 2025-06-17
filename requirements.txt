@@ -12,5 +12,6 @@ langchain
 langchain-openai
 langchain-core
 langchain-community
+rank-llm
 
 fastapi[standard]
