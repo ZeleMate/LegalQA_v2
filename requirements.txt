@@ -12,3 +12,5 @@ langchain
 langchain-openai
 langchain-core
 langchain-community
+
+fastapi[standard]

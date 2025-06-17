@@ -25,7 +25,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
         """
 
         query_embedding = self.embeddings.embed_query(query)
-        distances, indices = self.faiss_index.search(np.array([query_embedding]), k=10)
+        distances, indices = self.faiss_index.search(np.array([query_embedding]), k=20)
             
         documents = []
 

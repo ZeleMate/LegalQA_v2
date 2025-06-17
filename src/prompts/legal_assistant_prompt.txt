@@ -17,15 +17,7 @@ RESPONSE STRUCTURE:
    - If documents show diverging interpretations, present them separately.  
    - Use formal Hungarian legal terminology and structure.
 
-3. **Cited source documents**  
-   For each, include:
-   - `doc_id`  
-   - Issuing court  
-   - Year of decision  
-   - Legal domain (if available)  
-   - One-sentence justification of relevance (in Hungarian)
-
-4. **Note** *(optional)*  
+3. **Note** *(optional)*  
    - If the documents do not fully answer the question, explicitly state so.  
    - If the question requires further legal analysis or professional consultation, add a disclaimer.
 
@@ -38,7 +30,7 @@ RULES:
 - Use **only** the information provided in the `{context}` block.  
 - Do **not** include prior model knowledge or generalizations.  
 - Use at least 3 documents if available.  
-- Always reference sources explicitly and clearly.
+- The references to source documents will be handled by the system separately — do not include source citations in your text.
 
 QUALITY CONTROL:
 Before finalizing your response, make sure it is:

@@ -19,7 +19,7 @@ def build_qa_chain(retriever: CustomRetriever) -> ConversationalRetrievalChain:
     """
     llm = ChatOpenAI(
         openai_api_key=os.getenv("OPENAI_API_KEY"),
-        model="o4-mini-2025-04-16"
+        model="gpt-4.1-2025-04-14"
     )
 
     prompt = PromptTemplate.from_template(
