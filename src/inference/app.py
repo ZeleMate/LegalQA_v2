@@ -10,7 +10,7 @@ from src.chain.qa_chain import build_qa_chain
 
 app = FastAPI(
     title="LegalQA API",
-    description="API a jogi kérdések megválaszolásához",
+    description="An API for answering legal questions.",
     version="1.0.0"
 )
 
@@ -52,8 +52,8 @@ def ask(req: QuestionRequest):
 @app.get("/")
 def read_root():
     return {
-        "message": "Üdvözöljük a LegalQA API-ban!",
+        "message": "Welcome to the LegalQA API!",
         "endpoints": {
-            "/ask": "POST - Kérdés feltétele a rendszernek"
+            "/ask": "POST - Ask a question to the system"
         }
     }

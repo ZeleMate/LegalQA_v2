@@ -21,7 +21,7 @@ required_env_vars = [
 missing_vars = [var for var in required_env_vars if not os.getenv(var)]
 
 if missing_vars:
-    raise ValueError(f"Hiányzó környezeti változók: {', '.join(missing_vars)}. Kérlek, ellenőrizd a .env fájlt.")
+    raise ValueError(f"Missing environment variables: {', '.join(missing_vars)}. Please check your .env file.")
 
 df = pd.read_parquet(PARQUET_PATH)
 faiss_index, id_mapping = load_faiss_index(FAISS_INDEX_PATH, ID_MAPPING_PATH)
@@ -36,11 +36,11 @@ retriever = CustomRetriever(
 
 qa_chain = build_qa_chain(retriever)
 
-print("\n📘 LegalQA kérdezz-felelek. Írd be a kérdésed, vagy 'exit'-tel kiléphetsz.")
+print("\n📘 LegalQA Bot. Type your question or 'exit' to quit.")
 chat_history = []
 
 while True:
-    question = input("\n❓ Kérdés: ")
+    question = input("\n❓ Question: ")
     if question.strip().lower() in ["exit", "quit"]:
         break
     
@@ -49,5 +49,5 @@ while True:
         "chat_history": chat_history
         })
     
-    print(f"\n🧾 Válasz:\n{result['answer']}")
+    print(f"\n🧾 Answer:\n{result['answer']}")
     chat_history.append((question, result["answer"]))

@@ -51,10 +51,10 @@ class CustomRetriever(BaseRetriever, BaseModel):
                         if key not in ["text", "embedding"]
                     }
 
-                    # Relevancia FAISS distance alapján
+                    # Relevance score based on FAISS distance
                     relevance_score = 1.0 / (1.0 + distance)
 
-                    # Opcionális boost
+                    # Optional boost
                     if metadata.get("HatarozatEve") and metadata["HatarozatEve"] >= 2020:
                         relevance_score *= 1.2
                     if metadata.get("MeghozoBirosag") == "Kúria":
@@ -64,10 +64,10 @@ class CustomRetriever(BaseRetriever, BaseModel):
                     doc_embedding = np.array(row["embedding"]).reshape(1, -1)
                     similarity_score = cosine_similarity(query_vector, doc_embedding)[0][0]
 
-                    # Végső súlyozott pontszám
+                    # Final weighted score
                     final_score = self.alpha * similarity_score + (1 - self.alpha) * relevance_score
 
-                    # Minden metrikát elmentünk
+                    # Store all metrics
                     metadata["relevancia"] = round(relevance_score, 3)
                     metadata["similarity_score"] = round(similarity_score, 3)
                     metadata["final_score"] = round(final_score, 4)
@@ -77,7 +77,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
                         metadata=metadata
                     ))
         if len(documents) >= 6:
-            # Ellenőrizzük, hogy minden dokumentumban van-e embedding
+            # Check if all documents have an embedding
             documents_with_embedding = [
                 doc for doc in documents
                 if "embedding" in doc.metadata
@@ -112,6 +112,6 @@ class CustomRetriever(BaseRetriever, BaseModel):
             for doc in documents:
                 doc.metadata["cluster"] = 0
 
-        # Végső sorbarendezés
+        # Final sort
         documents.sort(key=lambda d: d.metadata.get("final_score", 0), reverse=True)
         return documents
