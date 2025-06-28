@@ -7,6 +7,9 @@ import faiss
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import defaultdict
+from langchain_core.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import JsonOutputParser
 
 class CustomRetriever(BaseRetriever, BaseModel):
     alpha: float = 0.7
@@ -79,3 +82,67 @@ class CustomRetriever(BaseRetriever, BaseModel):
         # Final sort
         documents.sort(key=lambda d: d.metadata.get("final_score", 0), reverse=True)
         return documents
+
+class RerankingRetriever(BaseRetriever, BaseModel):
+    retriever: CustomRetriever = Field(...)
+    llm: ChatOpenAI = Field(...)
+    reranker_prompt: PromptTemplate = Field(...)
+    k: int = 5
+
+    def _get_relevant_documents(self, query: str, *, run_manager=None) -> list[Document]:
+        """
+        Retrieves documents from the base retriever and reranks them using an LLM.
+
+        Args:
+            query (str): The user's query.
+
+        Returns:
+            list[Document]: A list of reranked and relevant documents.
+        """
+        # 1. Get initial documents from the base retriever
+        initial_docs = self.retriever.get_relevant_documents(query)
+
+        # 2. Format documents for the reranker prompt
+        doc_texts = ""
+        for i, doc in enumerate(initial_docs):
+            doc_texts += f"### Document {i+1} (ID: {doc.metadata.get('doc_id', 'N/A')})\n"
+            doc_texts += doc.page_content
+            doc_texts += "\n---\n"
+
+        # 3. Invoke the reranker LLM
+        parser = JsonOutputParser()
+        chain = self.reranker_prompt | self.llm | parser
+        
+        reranked_results = chain.invoke({
+            "query": query,
+            "documents": doc_texts,
+            "k": self.k
+        })
+
+        # 4. Process the reranked results
+        final_docs = []
+        seen_doc_ids = set()
+
+        if "ranked_documents" in reranked_results:
+            for res in reranked_results["ranked_documents"]:
+                doc_id = res.get("doc_id")
+                relevance_score = res.get("relevance_score")
+                reason = res.get("reason")
+                
+                # Find the original document by its ID
+                original_doc = next((doc for doc in initial_docs if doc.metadata.get("doc_id") == doc_id), None)
+                
+                if original_doc and doc_id not in seen_doc_ids:
+                    original_doc.metadata['reranker_score'] = relevance_score
+                    original_doc.metadata['reranker_reason'] = reason
+                    final_docs.append(original_doc)
+                    seen_doc_ids.add(doc_id)
+
+        # Add remaining initial docs if we didn't get enough from the reranker
+        for doc in initial_docs:
+            if len(final_docs) >= self.k:
+                break
+            if doc.metadata.get("doc_id") not in seen_doc_ids:
+                final_docs.append(doc)
+
+        return final_docs[:self.k]
