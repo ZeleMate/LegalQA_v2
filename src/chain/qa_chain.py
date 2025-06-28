@@ -1,56 +1,59 @@
-from langchain.chains import ConversationalRetrievalChain
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from src.rag.retriever import CustomRetriever
 from pathlib import Path
 import os
-from langchain.retrievers.contextual_compression import ContextualCompressionRetriever
-from langchain_community.document_compressors.rankllm_rerank import RankLLMRerank
 
-legal_assistant_prompt_path = Path(__file__).parent.parent / "prompts" / "legal_assistant_prompt.txt"
-reranker_prompt_path = Path(__file__).parent.parent / "prompts" / "reranker_prompt.txt"
+from src.rag.retriever import RerankingRetriever
 
-def build_qa_chain(retriever: CustomRetriever) -> ConversationalRetrievalChain:
+def format_docs(docs):
+    """Helper function to format documents for the prompt."""
+    return "\n\n".join(
+        f"### Document ID: {doc.metadata.get('doc_id', 'N/A')}\\n"
+        f"Content:\\n{doc.page_content}"
+        for doc in docs
+    )
+
+def build_qa_chain(retriever: RerankingRetriever):
     """
-    Builds a QA chain using LangChain.
+    Builds a Question-Answering chain using LangChain Expression Language (LCEL).
+
+    This chain takes a user's question, retrieves relevant documents using the
+    provided RerankingRetriever, formats them into a context, and then uses an LLM
+    to generate a final answer based on that context.
 
     Args:
-        retriever: A CustomRetriever object.
+        retriever: An instance of our custom RerankingRetriever.
 
     Returns:
-        ConversationalRetrievalChain: The configured QA chain.
+        A Runnable object representing the QA chain.
     """
+    # 1. Load the prompt template for the legal assistant
+    prompt_path = Path(__file__).parent.parent / "prompts" / "legal_assistant_prompt.txt"
+    try:
+        template = prompt_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        raise RuntimeError(f"Prompt file not found at: {prompt_path}")
+        
+    prompt = PromptTemplate.from_template(template)
+
+    # 2. Define the LLM for generating the final answer
     llm = ChatOpenAI(
-        openai_api_key=os.getenv("OPENAI_API_KEY"),
-        model="gpt-4.1-2025-04-14"
+        model_name="gpt-4o-mini",
+        temperature=0,
+        openai_api_key=os.getenv("OPENAI_API_KEY")
     )
 
-    prompt = PromptTemplate.from_template(
-        legal_assistant_prompt_path.read_text()
+    # 3. Build the LCEL chain
+    rag_chain = (
+        {
+            "context": retriever | format_docs,
+            "question": RunnablePassthrough()
+        }
+        | prompt
+        | llm
+        | StrOutputParser()
     )
 
-    reranker_prompt = PromptTemplate.from_template(
-        reranker_prompt_path.read_text()
-    )
-
-    compressor = RankLLMRerank(
-        top_n=5,
-        model="gpt",
-        gpt_model = "gpt-4o-mini"
-    )
-
-    compression_retriever = ContextualCompressionRetriever(
-        base_retriever=retriever,
-        base_compressor=compressor
-    )
-    chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        retriever=compression_retriever,
-        return_source_documents=True,
-        combine_docs_chain_kwargs={
-            "prompt": prompt,
-            "document_variable_name": "context"
-        },
-    )
-
-    return chain
+    return rag_chain
