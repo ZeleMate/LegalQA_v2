@@ -6,7 +6,6 @@ import pandas as pd
 import faiss
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.cluster import KMeans
 from collections import defaultdict
 
 class CustomRetriever(BaseRetriever, BaseModel):
@@ -48,7 +47,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
                     metadata = {
                         key: value
                         for key, value in row.items()
-                        if key not in ["text", "embedding"]
+                        if key not in ["text"]
                     }
 
                     # Relevance score based on FAISS distance
@@ -76,41 +75,6 @@ class CustomRetriever(BaseRetriever, BaseModel):
                         page_content=row["text"],
                         metadata=metadata
                     ))
-        if len(documents) >= 6:
-            # Check if all documents have an embedding
-            documents_with_embedding = [
-                doc for doc in documents
-                if "embedding" in doc.metadata
-            ]
-            
-            if len(documents_with_embedding) >= 6:
-                n_clusters = min(5, max(2, len(documents_with_embedding) // 4))
-
-                embedding_matrix = np.vstack([
-                    np.array(doc.metadata["embedding"]) for doc in documents_with_embedding
-                ])
-
-                kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-                labels = kmeans.fit_predict(embedding_matrix)
-        
-                for doc, label in zip(documents_with_embedding, labels):
-                    doc.metadata["cluster"] = int(label)
-
-                cluster_scores = defaultdict(list)
-                for doc in documents_with_embedding:
-                    cluster_scores[doc.metadata["cluster"]].append(doc.metadata["final_score"])
-                avg_scores = {
-                    c: np.mean(s) for c, s in cluster_scores.items()
-                }
-                best_cluster = max(avg_scores.items(), key=lambda x: x[1])[0]
-
-                documents = [doc for doc in documents_with_embedding if doc.metadata["cluster"] == best_cluster]
-            else:
-                for doc in documents:
-                    doc.metadata["cluster"] = 0
-        else:
-            for doc in documents:
-                doc.metadata["cluster"] = 0
 
         # Final sort
         documents.sort(key=lambda d: d.metadata.get("final_score", 0), reverse=True)
