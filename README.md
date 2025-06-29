@@ -15,23 +15,21 @@ The system utilizes a multi-container Docker setup orchestrated by `docker-compo
 
 ```mermaid
 graph TD
+    D[Developer]
+    E{Makefile}
+    U[User]
+    A["app: FastAPI Server"]
+    B["db: PostgreSQL"]
+
+    U -- "HTTP Request" --> A
+    D -- "uses" --> E
+    E -- "manages with 'docker-compose'" --> A
+    E -- "manages with 'docker-compose'" --> B
+    A -- "Connects via internal network" --> B
+
     subgraph "Docker Environment"
-        subgraph "legalqa_app container"
-            direction LR
-            A[FastAPI Server]
-        end
-
-        subgraph "legalqa_db container"
-            direction LR
-            B[PostgreSQL + pgvector]
-        end
-
-        A -- "Queries data over legalqa_net" --> B
-    end
-
-    C[User] -- "HTTP Request" --> A
-    D[Developer] -- "make <command>" --> E{Makefile}
-    E -- "docker-compose up/down/exec" --> subgraph "Docker Environment"
+        A
+        B
     end
 ```
 
