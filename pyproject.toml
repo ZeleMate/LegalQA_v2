@@ -10,10 +10,22 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
 dependencies = [
+    # Core application dependencies
+    "pandas",
+    "pyarrow",
+    "python-dotenv",
+    "faiss-cpu",
     "langchain",
     "langchain-openai",
-    "faiss-cpu",
-    "pandas",
+    "langchain-core",
+    "langchain-community",
+    "rank-llm",
+    "fastapi",
+    "uvicorn[standard]", # uvicorn is needed to run fastapi
+    "psycopg2-binary",
+    "pgvector",
+    "scikit-learn",
+    "numpy",
 ]
 
 [project.optional-dependencies]
@@ -22,6 +34,11 @@ dev = [
     "black",
     "isort",
     "mypy",
+]
+notebook = [
+    "matplotlib",
+    "seaborn",
+    "jupyter",
 ]
 
 [tool.black]

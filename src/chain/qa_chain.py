@@ -10,7 +10,7 @@ from src.rag.retriever import RerankingRetriever
 def format_docs(docs):
     """Helper function to format documents for the prompt."""
     return "\n\n".join(
-        f"### Document ID: {doc.metadata.get('doc_id', 'N/A')}\\n"
+        f"### Document ID: {doc.metadata.get('chunk_id', 'N/A')}\\n"
         f"Content:\\n{doc.page_content}"
         for doc in docs
     )
@@ -49,7 +49,7 @@ def build_qa_chain(retriever: RerankingRetriever):
     rag_chain = (
         {
             "context": retriever | format_docs,
-            "question": RunnablePassthrough()
+            "question": RunnablePassthrough(),
         }
         | prompt
         | llm
