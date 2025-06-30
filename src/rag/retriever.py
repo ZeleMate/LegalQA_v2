@@ -61,15 +61,22 @@ class CustomRetriever(BaseRetriever, BaseModel):
             
             try:
                 df = pd.read_parquet(parquet_path)
-                # Ensure the index is set to chunk_id for efficient lookup
-                if 'chunk_id' in df.columns:
-                    df.set_index('chunk_id', inplace=True)
                 
-                # Fetch rows corresponding to the chunk_ids
-                relevant_rows_df = df.loc[df.index.isin(chunk_ids)]
+                if 'chunk_id' not in df.columns:
+                    print("Error: 'chunk_id' column not found in Parquet file. Cannot look up documents.", file=sys.stderr)
+                    return {}
                 
-                # Convert DataFrame to the dictionary format expected by the calling function
-                docs_data = relevant_rows_df.to_dict(orient='index')
+                # Filter the DataFrame directly on the column
+                relevant_rows_df = df[df['chunk_id'].isin(chunk_ids)]
+
+                if relevant_rows_df.empty:
+                    print("--> [Retriever] Warning: No matching documents found in Parquet file for the retrieved IDs.")
+                    print("--> This might indicate that the FAISS index/ID mapping is out of sync with the Parquet file.")
+                    return {}
+
+                # Convert the filtered DataFrame to the expected dictionary format, keyed by chunk_id
+                docs_data = relevant_rows_df.set_index('chunk_id').to_dict(orient='index')
+                
                 print(f"--> [Retriever] Found {len(docs_data)} documents in Parquet file.")
                 return docs_data
             except Exception as e:

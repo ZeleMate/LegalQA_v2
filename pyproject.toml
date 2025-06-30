@@ -6,7 +6,6 @@ build-backend = "hatchling.build"
 name = "legalqa"
 version = "0.1.0"
 description = "Legal Question Answering System"
-readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
 dependencies = [
@@ -47,4 +46,7 @@ target-version = ["py38"]
 
 [tool.isort]
 profile = "black"
-multi_line_output = 3 
+multi_line_output = 3
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"] 

@@ -54,8 +54,8 @@ build-db:
 # These commands wrap the standard docker-compose commands for convenience.
 
 build:
-	@echo "--> Building or rebuilding service images..."
-	docker-compose build
+	@echo "--> Building or rebuilding service images with no cache to ensure freshness..."
+	docker-compose build --no-cache
 
 up:
 	@echo "--> Starting all services in detached mode (app & db)..."
@@ -81,9 +81,9 @@ ps:
 # These tasks are run on the host machine, not in Docker.
 
 install:
-	@echo "--> Installing or upgrading local dependencies from requirements.txt..."
-	pip3 install --upgrade -r requirements.txt
-	@echo "--> Installation/upgrade complete."
+	@echo "--> Installing local dependencies for notebook and development use..."
+	pip install -e ".[notebook]"
+	@echo "--> Installation complete. Activate your venv with 'source venv/bin/activate'."
 
 test:
 	@echo "--> Running local tests..."

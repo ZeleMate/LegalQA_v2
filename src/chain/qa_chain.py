@@ -40,7 +40,7 @@ def build_qa_chain(retriever: RerankingRetriever):
 
     # 2. Define the LLM for generating the final answer
     llm = ChatOpenAI(
-        model_name="gpt-4.1-2025-04-14",
+        model_name="o3-2025-04-16",
         temperature=0,
         openai_api_key=os.getenv("OPENAI_API_KEY")
     )

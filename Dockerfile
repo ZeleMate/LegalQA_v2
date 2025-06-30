@@ -12,14 +12,19 @@ ENV PYTHONUNBUFFERED=1
 # All subsequent commands (COPY, RUN, CMD) will be relative to this path.
 WORKDIR /app
 
-# 4. Install Dependencies
-# First, copy only the requirements file. This allows Docker to cache the installed packages.
-# The layer will only be re-built if requirements.txt changes, not on every code change.
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# 4. Install Dependencies using pyproject.toml
+# This approach leverages the modern Python packaging standard.
+# First, copy only the files necessary for dependency installation.
+# This allows Docker to cache this layer effectively.
+COPY pyproject.toml .
+
+# Install dependencies defined in pyproject.toml.
+# The '.' refers to the current directory, where pyproject.toml is located.
+RUN pip install --no-cache-dir .
 
 # 5. Copy Application Code
-# Copy the rest of the application's source code into the working directory.
+# Now, copy the rest of the application's source code.
+# This layer will be rebuilt on code changes, but the dependency layer remains cached.
 COPY ./src /app/src
 COPY ./scripts /app/scripts
 

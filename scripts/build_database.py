@@ -37,16 +37,18 @@ chunks = Table(
 # --- End of Schema Definition ---
 
 def get_db_connection_url():
-    """Constructs the database connection URL from .env variables."""
-    load_dotenv(os.path.join(project_root, '.env'))
+    """
+    Constructs the database connection URL from environment variables.
+    These are injected by Docker Compose from the .env file.
+    """
     user = os.getenv("POSTGRES_USER")
     password = os.getenv("POSTGRES_PASSWORD")
-    host = os.getenv("POSTGRES_HOST")
+    host = os.getenv("POSTGRES_HOST") # Should be 'db'
     port = os.getenv("POSTGRES_PORT")
     db = os.getenv("POSTGRES_DB")
     if not all([user, password, host, port, db]):
         print("Error: One or more PostgreSQL environment variables are not set.")
-        print("Please check your .env file.")
+        print("Please check your .env file in the project root.")
         sys.exit(1)
     return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}"
 
@@ -216,11 +218,12 @@ def build_faiss_index(engine, output_dir):
 
 
 if __name__ == "__main__":
-    # Define project_root here so it's available for constructing file paths.
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-
+    # Inside the container, the working directory is /app.
+    # We construct paths relative to this known root.
+    APP_ROOT = "/app"
+    
     print("--- Building database from FULL dataset ---")
-    INPUT_PARQUET_PATH = os.path.join(project_root, 'data', 'processed', 'processed_documents_with_embeddings.parquet')
+    INPUT_PARQUET_PATH = os.path.join(APP_ROOT, 'data', 'processed', 'processed_documents_with_embeddings.parquet')
     
     if not os.path.exists(INPUT_PARQUET_PATH):
             print(f"Error: Full data file not found at '{INPUT_PARQUET_PATH}'")
@@ -229,7 +232,7 @@ if __name__ == "__main__":
 
     db_url = get_db_connection_url()
     db_engine = create_engine(db_url, echo=False)
-    output_directory = os.path.join(project_root, 'data', 'processed')
+    output_directory = os.path.join(APP_ROOT, 'data', 'processed')
 
     if check_db_connection(db_engine):
         create_schema(db_engine)
