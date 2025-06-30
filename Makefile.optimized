@@ -51,6 +51,14 @@ help:
 	@echo "  ${GREEN}health${NC}             Check application health"
 	@echo "  ${GREEN}clean${NC}              Clean up resources and volumes"
 	@echo ""
+	@echo "${YELLOW}🧪 TESTING COMMANDS:${NC}"
+	@echo "  ${GREEN}validate${NC}           Quick validation of optimizations"
+	@echo "  ${GREEN}test${NC}               Run comprehensive test suite"
+	@echo "  ${GREEN}test-functionality${NC} Run functionality tests only"
+	@echo "  ${GREEN}test-performance${NC}   Run performance tests only"
+	@echo "  ${GREEN}test-integration${NC}   Run integration tests only"
+	@echo "  ${GREEN}test-ci${NC}            Run CI/CD test pipeline"
+	@echo ""
 	@echo "${BLUE}=============================================================================${NC}"
 
 .PHONY: help prod-up prod-build prod-setup prod-down dev-up dev-setup dev-down monitoring-up monitoring-down
@@ -191,13 +199,36 @@ clean-all: clean
 # TESTING COMMANDS
 # ==============================================================================
 
+validate:
+	@echo "${GREEN}🔍 Running quick validation...${NC}"
+	$(PYTHON) scripts/validate_optimizations.py
+
 test:
-	@echo "${GREEN}🧪 Running tests...${NC}"
-	$(PYTHON) -m pytest tests/ -v
+	@echo "${GREEN}🧪 Running comprehensive tests...${NC}"
+	$(PYTHON) scripts/run_tests.py
+
+test-functionality:
+	@echo "${GREEN}🔧 Running functionality tests...${NC}"
+	$(PYTHON) -m pytest tests/test_functionality.py -v
 
 test-performance:
-	@echo "${GREEN}🏃 Running performance tests...${NC}"
-	$(PYTHON) -m pytest tests/test_performance.py -v --benchmark-only
+	@echo "${GREEN}⚡ Running performance tests...${NC}"
+	$(PYTHON) -m pytest tests/test_performance.py -v
+
+test-integration:
+	@echo "${GREEN}🔗 Running integration tests...${NC}"
+	$(PYTHON) -m pytest tests/test_integration.py -v
+
+test-ci:
+	@echo "${GREEN}🚀 Running CI test suite...${NC}"
+	$(PYTHON) scripts/validate_optimizations.py
+	@if [ $$? -eq 0 ]; then \
+		echo "${GREEN}✅ Validation passed, running full tests...${NC}"; \
+		$(PYTHON) scripts/run_tests.py; \
+	else \
+		echo "${RED}❌ Validation failed, skipping full tests${NC}"; \
+		exit 1; \
+	fi
 
 lint:
 	@echo "${GREEN}🔍 Running code linting...${NC}"

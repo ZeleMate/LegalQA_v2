@@ -1,5 +1,5 @@
 """
-Infrastructure module for performance optimizations.
+Infrastructure components for LegalQA optimization.
 
 This module contains:
 - CacheManager: Multi-level caching for embeddings and query results
