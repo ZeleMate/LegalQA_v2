@@ -6,6 +6,12 @@
 APP_SERVICE_NAME = app
 
 # ====================================================================================
+# VARIABLES
+# ====================================================================================
+# Use the Python interpreter from the virtual environment for local scripts
+PYTHON := ./venv/bin/python
+
+# ====================================================================================
 # HELP
 # ====================================================================================
 # By default, running "make" will show this help message.
@@ -42,7 +48,7 @@ help:
 
 
 # Phony targets are not associated with files. This prevents conflicts.
-.PHONY: help install test lint clean build up down logs ps build-db create-sample build-db-dev
+.PHONY: help install test lint clean build up down logs ps build-db create-sample build-db-dev setup-prod setup-dev setup-notebooks dev
 
 # ====================================================================================
 # CORE WORKFLOW (Split into Dev and Prod)
@@ -121,3 +127,19 @@ clean:
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	@echo "--> Cleanup complete."
+
+setup-prod:
+	@echo "--- Building production database from full dataset... ---"
+	@docker-compose run --rm app python scripts/build_database.py
+
+setup-dev:
+	@echo "--- Creating sample data file... ---"
+	@$(PYTHON) scripts/create_sample.py
+
+setup-notebooks:
+	@echo "--- Building local FAISS index from sample data for notebooks... ---"
+	@$(PYTHON) scripts/build_local_index.py
+
+dev:
+	@echo "--- Starting development environment with live-reload... ---"
+	@docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d --build
