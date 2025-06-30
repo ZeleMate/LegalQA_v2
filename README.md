@@ -9,41 +9,30 @@ An advanced, Retrieval-Augmented Generation (RAG) system designed to answer comp
 The system utilizes a multi-container Docker setup orchestrated by `docker-compose.yml`:
 
 - **`app` service:** A FastAPI application that serves the QA model, handles API requests, and contains all the core logic for the RAG pipeline.
-- **`db` service:** A PostgreSQL database with the `pgvector` extension to store document chunks and their vector embeddings efficiently.
-- **`legalqa_net` network:** A dedicated bridge network for communication between the `app` and `db` services.
-- **`postgres_data` volume:** A named volume to persist the PostgreSQL database data across container restarts.
+- **`db` service:** A PostgreSQL database to store document chunks efficiently.
 
 ```mermaid
 graph TD
-    D[Developer]
-    E{Makefile}
-    U[User]
-    A["app: FastAPI Server"]
-    B["db: PostgreSQL"]
+    U[User] --> A["app: FastAPI Server"]
+    A -- "Connects via internal network" --> B["db: PostgreSQL"]
 
-    U -- "HTTP Request" --> A
-    D -- "uses" --> E
-    E -- "manages with 'docker-compose'" --> A
-    E -- "manages with 'docker-compose'" --> B
-    A -- "Connects via internal network" --> B
-
-    subgraph "Docker Environment"
+    subgraph "Docker Environment (Production & Development)"
         A
         B
     end
+
+    D[Developer] -- "uses" --> E{Makefile}
+    E -- "manages 'docker-compose'" --> A
+    E -- "manages 'docker-compose'" --> B
 ```
 
-## Getting Started
-
-Follow these steps to set up and run the project locally.
-
-### Prerequisites
+## Prerequisites
 
 - [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/install/)
-- A `.parquet` file containing your documents and embeddings. See the `Data Schema` section for details.
+- `make` command-line tool.
 - An OpenAI API key.
 
-### Installation & Setup
+## Installation
 
 1.  **Clone the repository:**
     ```sh
@@ -51,23 +40,11 @@ Follow these steps to set up and run the project locally.
     cd LegalQA_v2
     ```
 
-2.  **Prepare your data:**
-    - Place your processed Parquet file (e.g., `processed_documents_with_embeddings.parquet`) inside the `data/processed/` directory.
-
-3.  **Set up environment variables:**
-    - Create a `.env` file in the project root. You can copy the structure from the example below.
-    - **This single `.env` file controls both the Docker environment and local notebook execution.**
+2.  **Create the environment file:**
+    -   Create a `.env` file in the project root by copying and filling out the example below. This file will store your API key and other configuration variables.
+    -   **Important:** This file is listed in `.gitignore` and will not be committed to version control.
 
     ```env
-    # --- Data Source & File Paths ---
-    # Use 'postgres' for the Dockerized app, 'local_parquet' for notebook testing.
-    DATA_SOURCE=local_parquet
-
-    # Paths for local notebook execution
-    PARQUET_PATH=data/processed/processed_documents_with_embeddings.parquet
-    FAISS_INDEX_PATH=data/processed/faiss_index.bin
-    ID_MAPPING_PATH=data/processed/id_mapping.pkl
-
     # --- API Keys ---
     # Replace with your actual OpenAI API key
     OPENAI_API_KEY="sk-..."
@@ -76,78 +53,94 @@ Follow these steps to set up and run the project locally.
     # The 'app' service will use these to connect to the 'db' service.
     # 'POSTGRES_HOST' MUST be the service name ('db') for container networking.
     POSTGRES_USER=admin
-    POSTGRES_PASSWORD=admin # Change to a secure password
+    POSTGRES_PASSWORD=admin
     POSTGRES_DB=legalqa
     POSTGRES_HOST=db
     POSTGRES_PORT=5432
+    
+    # --- Data File Configuration ---
+    # The name of the main parquet file located in the ./data directory
+    PARQUET_FILENAME=all_data.parquet
     ```
 
-## Usage and Workflows
+3.  **Place the data file:**
+    -   Place your main Parquet data file (e.g., `all_data.parquet`) into the `data/` directory.
+    -   The filename must match the `PARQUET_FILENAME` variable in your `.env` file.
 
-This project supports two primary workflows: full application deployment with Docker and local development/testing in Jupyter notebooks. All Docker-related tasks are managed via the `Makefile`.
+## Usage: Development vs. Production
 
-### 1. Running the Full Application (Docker)
+The project is designed with two distinct environments managed by the `Makefile`.
 
-This is the standard way to run the entire system.
+---
 
-1.  **Set `DATA_SOURCE` for Docker:**
-    -   In your `.env` file, ensure the `DATA_SOURCE` is set to `postgres`.
-        ```
-        DATA_SOURCE=postgres
-        ```
+### 1. Development Environment (Recommended for Local Use)
 
-2.  **Start all services:**
-    -   This command builds the images if they don't exist and starts the `app` and `db` containers in the background.
-        ```sh
-        make up
-        ```
+The development environment is designed for speed and convenience. It works with a small, randomly generated sample of your data, allowing the services to start quickly and enabling live-reloading for code changes.
 
-3.  **Build the database:**
-    -   With the services running, execute the database build script. This command runs a script inside the `app` container that reads the Parquet file, populates the PostgreSQL database, and builds a FAISS index.
-    -   **Warning:** This is a one-time, resource-intensive process.
-        ```sh
-        make build-db
-        ```
+1.  **Create the sample data:**
+    -   This command runs a script that creates a small `sample_data.parquet` file from your main data file.
+    ```sh
+    make setup-dev
+    ```
 
-4.  **Interact with the API:**
-    -   The FastAPI server is now available at `http://localhost:8000`. You can access the interactive documentation at `http://localhost:8000/docs`.
+2.  **Build the database and start the services:**
+    -   This command will:
+        -   Build the database using **only the sample data**.
+        -   Start the `app` and `db` services using `docker-compose.override.yml`.
+        -   Enable live-reloading for the `app` service. Any changes you make in the `src/` directory will automatically restart the server.
+    ```sh
+    make dev
+    ```
+
+3.  **Access the API:**
+    -   The API is now available at `http://localhost:8000`.
+    -   Interactive documentation (Swagger UI) is at `http://localhost:8000/docs`.
+
+---
+
+### 2. Production Environment (For Deployment)
+
+The production environment is intended for deployment on a server with sufficient resources. It uses the entire dataset and runs the services in a detached, optimized mode.
+
+**Warning:** Building the full database is a resource-intensive process and may take a very long time depending on your data size and machine performance.
+
+1.  **Build the production database:**
+    -   This command populates the PostgreSQL database with the **entire dataset** from your `all_data.parquet` file.
+    ```sh
+    make setup-prod
+    ```
+
+2.  **Start the services in production mode:**
+    -   This command starts the `app` and `db` services in the background.
+    ```sh
+    make prod
+    ```
+
+3.  **Interact with the API:**
+    -   The API is available at `http://localhost:8000` (or your server's address).
     -   **Example `curl` request:**
         ```sh
         curl -X POST "http://localhost:8000/ask" \
              -H "Content-Type: application/json" \
              -d '{"question": "Mi a bűnszervezet fogalma a Btk. szerint?"}'
         ```
+---
 
-5.  **View logs or stop services:**
+### Managing the Services
+
+The `Makefile` provides simple commands to manage the Docker containers.
+
+-   **Stop all services:**
     ```sh
-    make logs   # Tail the logs from both containers
-    make down   # Stop and remove all containers and networks
+    make stop
     ```
+    *(This stops the containers started by either `make dev` or `make prod`.)*
 
-### 2. Local Development (Jupyter Notebook)
-
-For experimentation and model development, you can run the notebooks without a live database connection.
-
-1.  **Set `DATA_SOURCE` for local testing:**
-    -   In your `.env` file, set the `DATA_SOURCE` to `local_parquet`.
-        ```
-        DATA_SOURCE=local_parquet
-        ```
-
-2.  **Install local dependencies:**
-    -   The project uses `pyproject.toml` for dependency management. Create a virtual environment and install the necessary packages.
-        ```sh
-        python -m venv venv
-        source venv/bin/activate
-        pip install -e ".[notebook]"
-        ```
-        *This installs the core dependencies plus the extra packages for notebook development (`matplotlib`, `seaborn`, `jupyter`).*
-
-3.  **Run Jupyter:**
+-   **Clean up the environment:**
+    -   This command stops the containers and removes all associated volumes (including the database data) and networks. Use with caution.
     ```sh
-    jupyter notebook
+    make clean
     ```
-    -   Now you can open and run the notebooks in the `notebooks/` directory. The retriever will automatically use the local Parquet file specified in your `.env` file, bypassing the need for a database connection.
 
 ## Data Schema
 
