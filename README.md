@@ -13,17 +13,15 @@ The system utilizes a multi-container Docker setup orchestrated by `docker-compo
 
 ```mermaid
 graph TD
-    U[User] --> A["app: FastAPI Server"]
-    A -- "Connects via internal network" --> B["db: PostgreSQL"]
+    D[Developer] -- "uses" --> M{Makefile}
+    U[User] -- "HTTP Request" --> A["app: FastAPI Server"]
 
-    subgraph "Docker Environment (Production & Development)"
-        A
-        B
+    M -- "manages via<br/>docker-compose" --> DockerEnv
+
+    subgraph DockerEnv [Docker Environment]
+        direction LR
+        A -- "connects to" --> B["db: PostgreSQL"]
     end
-
-    D[Developer] -- "uses" --> E{Makefile}
-    E -- "manages 'docker-compose'" --> A
-    E -- "manages 'docker-compose'" --> B
 ```
 
 ## Prerequisites
