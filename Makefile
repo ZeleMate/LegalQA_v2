@@ -20,7 +20,13 @@ help:
 	@echo "--- Core Commands ---"
 	@echo "  up              Start all services in detached mode (using docker-compose up)."
 	@echo "  down            Stop and remove all services, networks, and optionally volumes."
-	@echo "  build-db        Build the production database and FAISS index from the full dataset."
+	@echo ""
+	@echo "--- Development ---"
+	@echo "  create-sample   Create a small sample of the main dataset for quick testing."
+	@echo "  build-db-dev    Build the database using only the SMALL SAMPLE dataset."
+	@echo ""
+	@echo "--- Production ---"
+	@echo "  build-db        Build the database using the FULL dataset (can be slow)."
 	@echo ""
 	@echo "--- Docker Compose Management ---"
 	@echo "  build           Build or rebuild all service images."
@@ -36,11 +42,28 @@ help:
 
 
 # Phony targets are not associated with files. This prevents conflicts.
-.PHONY: help install test lint clean build up down logs ps build-db
+.PHONY: help install test lint clean build up down logs ps build-db create-sample build-db-dev
 
 # ====================================================================================
-# CORE WORKFLOW
+# CORE WORKFLOW (Split into Dev and Prod)
 # ====================================================================================
+
+# --- Development Tasks ---
+
+create-sample:
+	@echo "--> Creating a small sample from the full dataset..."
+	@echo "--> NOTE: This command must be run while services are up ('make up')."
+	docker-compose exec $(APP_SERVICE_NAME) python scripts/create_sample.py
+
+build-db-dev:
+	@echo "--> Building development database using SAMPLE data..."
+	@echo "--> This will create a small, temporary database for testing."
+	@echo "--> NOTE: This command must be run while services are up ('make up')."
+	docker-compose exec $(APP_SERVICE_NAME) python scripts/build_database.py \
+		--input-file /app/data/processed/sample_data.parquet \
+		--output-dir /app/data/processed/dev_index
+
+# --- Production Task ---
 
 build-db:
 	@echo "--> Building production database and FAISS index with FULL data..."

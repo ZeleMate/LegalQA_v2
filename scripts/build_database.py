@@ -176,7 +176,16 @@ def build_faiss_index(engine, output_dir):
             print("Warning: No embeddings found in the database. Skipping FAISS index creation.")
             return
 
-        chunk_ids, embeddings = zip(*results)
+        # Filter out entries where embedding is None, which can cause errors
+        valid_results = [r for r in results if r.embedding is not None]
+        
+        if not valid_results:
+            print("Warning: All embedding entries were invalid (None). Skipping FAISS index creation.")
+            return
+            
+        print(f"--> Found {len(results)} total entries, {len(valid_results)} have valid embeddings.")
+        
+        chunk_ids, embeddings = zip(*valid_results)
         
         # Convert embeddings to a format FAISS can use (2D numpy array)
         embedding_matrix = np.array(embeddings, dtype=np.float32)
@@ -216,25 +225,45 @@ def build_faiss_index(engine, output_dir):
         session.close()
         print("--- FAISS Index Build Finished ---")
 
+def parse_arguments():
+    """Parses command-line arguments."""
+    parser = argparse.ArgumentParser(description="Build the database and/or FAISS index from a Parquet file.")
+    
+    # The container's working directory is /app
+    default_input = "/app/data/processed/processed_documents_with_embeddings.parquet"
+    default_output = "/app/data/processed"
+
+    parser.add_argument(
+        "--input-file",
+        type=str,
+        default=default_input,
+        help=f"Path to the input Parquet file. Defaults to {default_input}"
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=default_output,
+        help=f"Directory to save the FAISS index and mapping. Defaults to {default_output}"
+    )
+    return parser.parse_args()
 
 if __name__ == "__main__":
-    # Inside the container, the working directory is /app.
-    # We construct paths relative to this known root.
-    APP_ROOT = "/app"
-    
-    print("--- Building database from FULL dataset ---")
-    INPUT_PARQUET_PATH = os.path.join(APP_ROOT, 'data', 'processed', 'processed_documents_with_embeddings.parquet')
-    
-    if not os.path.exists(INPUT_PARQUET_PATH):
-            print(f"Error: Full data file not found at '{INPUT_PARQUET_PATH}'")
-            print("Please ensure the full, processed Parquet file is available.")
-            sys.exit(1)
+    load_dotenv() # Load .env file from the project root
+    args = parse_arguments()
+
+    print(f"--- Starting Database Build Process ---")
+    print(f"Input data file: {args.input_file}")
+    print(f"Output directory: {args.output_dir}")
+
+    if not os.path.exists(args.input_file):
+        print(f"Error: Input data file not found at '{args.input_file}'")
+        print("Please ensure the Parquet file is available or check the --input-file argument.")
+        sys.exit(1)
 
     db_url = get_db_connection_url()
     db_engine = create_engine(db_url, echo=False)
-    output_directory = os.path.join(APP_ROOT, 'data', 'processed')
 
     if check_db_connection(db_engine):
         create_schema(db_engine)
-        build_database(db_engine, INPUT_PARQUET_PATH)
-        build_faiss_index(db_engine, output_directory) 
+        build_database(db_engine, args.input_file)
+        build_faiss_index(db_engine, args.output_dir) 
