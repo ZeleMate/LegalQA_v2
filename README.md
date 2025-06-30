@@ -13,23 +13,12 @@ The system utilizes a multi-container Docker setup orchestrated by `docker-compo
 
 ```mermaid
 graph TD
-    subgraph "User"
-        U_in["User's Question"]
-        U_out["Final Answer"]
-    end
-
-    subgraph "System Components"
-        A["app: FastAPI Server"]
-        D["db: PostgreSQL"]
-        L["External LLM (OpenAI)"]
-    end
-
-    U_in -- "1. API Request" --> A
-    A -- "2. Search for relevant text" --> D
-    D -- "3. Return text chunks" --> A
-    A -- "4. Augment prompt" --> L
-    L -- "5. Generate Answer" --> A
-    A -- "6. API Response" --> U_out
+    U_in["User's Question"] -- "API Request" --> A["app: FastAPI Server"]
+    A -- "Search for relevant text" --> D["db: PostgreSQL"]
+    D -- "Return text chunks" --> A
+    A -- "Augment prompt with text" --> L["External LLM (OpenAI)"]
+    L -- "Generate Answer" --> A
+    A -- "API Response" --> U_out["Final Answer"]
 ```
 
 ## Prerequisites
