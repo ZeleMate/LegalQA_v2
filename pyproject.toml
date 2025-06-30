@@ -25,14 +25,25 @@ dependencies = [
     "pgvector",
     "scikit-learn",
     "numpy<2.0",
+    # Performance optimizations
+    "asyncpg>=0.28.0",  # Faster async PostgreSQL driver
+    "aioredis>=2.0.0",  # Redis for caching
+    "redis[hiredis]>=4.0.0",  # Redis with faster hiredis parser
+    "sqlalchemy[asyncio]>=2.0.0",  # Async SQLAlchemy support
+    "prometheus-client>=0.17.0",  # Metrics and monitoring
+    "aioboto3>=11.0.0",  # Async AWS operations if needed
+    "cachetools>=5.0.0",  # Additional caching utilities
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-benchmark>=4.0.0",
     "black",
     "isort",
     "mypy",
+    "psutil>=5.9.0",  # For performance monitoring in tests
 ]
 notebook = [
     "matplotlib",

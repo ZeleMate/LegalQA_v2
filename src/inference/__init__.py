@@ -1,3 +1,3 @@
 """
-Inference module for the LegalQA application.
+Inference components for LegalQA.
 """ 
