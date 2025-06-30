@@ -33,7 +33,8 @@ class CustomRetriever(BaseRetriever, BaseModel):
                 dbname=os.getenv("POSTGRES_DB"),
                 user=os.getenv("POSTGRES_USER"),
                 password=os.getenv("POSTGRES_PASSWORD"),
-                host=os.getenv("POSTGRES_HOST"),
+                # Default to 'localhost' for local development
+                host=os.getenv("POSTGRES_HOST", "localhost"),
                 port=os.getenv("POSTGRES_PORT")
             )
         except psycopg2.OperationalError as e:

@@ -40,10 +40,12 @@ def get_db_connection_url():
     """
     Constructs the database connection URL from environment variables.
     These are injected by Docker Compose from the .env file.
+    For local development, host defaults to 'localhost'.
     """
     user = os.getenv("POSTGRES_USER")
     password = os.getenv("POSTGRES_PASSWORD")
-    host = os.getenv("POSTGRES_HOST") # Should be 'db'
+    # Default to 'localhost' if POSTGRES_HOST is not set
+    host = os.getenv("POSTGRES_HOST", "localhost")
     port = os.getenv("POSTGRES_PORT")
     db = os.getenv("POSTGRES_DB")
     if not all([user, password, host, port, db]):
