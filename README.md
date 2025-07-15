@@ -11,18 +11,14 @@ The system is designed for performance and scalability, leveraging asynchronous 
 ```mermaid
 graph TD
     subgraph "User Interaction"
-        U[User] -- "API Request" --> A
+        U[User]
     end
 
     subgraph "Application Layer (Docker)"
         A[FastAPI App]
-        subgraph "Caching"
-            C[Redis Cache]
-        end
-        subgraph "Data & Retrieval"
-            DB[(PostgreSQL)]
-            F[FAISS Index]
-        end
+        C[Redis Cache]
+        DB[(PostgreSQL + pgvector)]
+        F[FAISS Index]
     end
 
     subgraph "External Services"
@@ -33,16 +29,12 @@ graph TD
         P[Prometheus]
     end
 
-    A -- "1. Check Cache" --> C
-    C -- "2. Cache Miss" --> A
-    A -- "3. Retrieve Docs" --> F
-    A -- "4. Fetch Content" --> DB
-    F & DB -- "5. Relevant Chunks" --> A
-    A -- "6. Augment & Query LLM" --> LLM
-    LLM -- "7. Generate Answer" --> A
-    A -- "8. Store in Cache" --> C
-    A -- "9. Send Response" --> U
-    A -- "Collects Metrics" --> P
+    U -- "HTTP Request" --> A
+    A -- "Caches Queries/Results" --> C
+    A -- "Retrieves Text & Vectors" --> DB
+    A -- "Finds Similar Chunks" --> F
+    A -- "Generates & Reranks" --> LLM
+    A -- "Exports Metrics" --> P
 ```
 
 ## ✨ Key Features
