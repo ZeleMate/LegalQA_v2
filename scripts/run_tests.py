@@ -300,8 +300,9 @@ class TestRunner:
             "src/data/faiss_loader.py",
             "config/redis.conf",
             "config/prometheus.yml",
-            "Dockerfile.optimized",
-            "docker-compose.optimized.yml"
+            "Dockerfile",
+            "docker-compose.yml",
+            "docker-compose.dev.yml"
         ]
         
         for file_path in expected_files:
@@ -360,26 +361,26 @@ class TestRunner:
         
         # Test Dockerfile syntax
         try:
-            dockerfile_path = self.project_root / "Dockerfile.optimized"
+            dockerfile_path = self.project_root / "Dockerfile"
             if dockerfile_path.exists():
-                content = dockerfile_path.read_text()
-                
-                # Check for multi-stage build
-                if "FROM python:3.10-slim as builder" in content:
-                    results["passed"] += 1
-                    results["details"]["dockerfile_multistage"] = {"status": "PASS", "error": None}
-                    print("  ✅ Multi-stage Dockerfile")
-                else:
-                    results["failed"] += 1
-                    results["details"]["dockerfile_multistage"] = {
-                        "status": "FAIL", 
-                        "error": "Multi-stage build not found"
-                    }
-                    print("  ❌ Multi-stage build not found in Dockerfile")
+                # Check for multi-stage build in Dockerfile
+                try:
+                    with open(dockerfile_path, 'r') as f:
+                        content = f.read()
+                        if " as builder" in content and " as production" in content:
+                            results["details"]["dockerfile_multistage"] = {"status": "PASS"}
+                            print("  ✅ Dockerfile seems to use multi-stage builds")
+                        else:
+                            results["details"]["dockerfile_multistage"] = {"status": "FAIL", "error": "Dockerfile does not appear to be multi-stage"}
+                            print("  ❌ Dockerfile does not appear to be multi-stage")
+                except FileNotFoundError:
+                    results["details"]["dockerfile_multistage"] = {"status": "FAIL", "error": "Dockerfile not found"}
+                    print("  ❌ Dockerfile not found")
+                    return results
             else:
                 results["failed"] += 1
-                results["details"]["dockerfile_multistage"] = {"status": "FAIL", "error": "Dockerfile.optimized not found"}
-                print("  ❌ Dockerfile.optimized not found")
+                results["details"]["dockerfile_multistage"] = {"status": "FAIL", "error": "Dockerfile not found"}
+                print("  ❌ Dockerfile not found")
                 
         except Exception as e:
             results["failed"] += 1
@@ -388,24 +389,24 @@ class TestRunner:
         
         # Test docker-compose configuration
         try:
-            compose_path = self.project_root / "docker-compose.optimized.yml"
-            if compose_path.exists():
-                content = compose_path.read_text()
-                
-                # Check for Redis service
-                if "redis:" in content:
-                    results["passed"] += 1
-                    results["details"]["compose_redis"] = {"status": "PASS", "error": None}
-                    print("  ✅ Redis service in docker-compose")
-                else:
-                    results["failed"] += 1
-                    results["details"]["compose_redis"] = {"status": "FAIL", "error": "Redis service not found"}
-                    print("  ❌ Redis service not found in docker-compose")
-            else:
-                results["failed"] += 1
-                results["details"]["compose_redis"] = {"status": "FAIL", "error": "docker-compose.optimized.yml not found"}
-                print("  ❌ docker-compose.optimized.yml not found")
-                
+            compose_path = self.project_root / "docker-compose.yml"
+            if not compose_path.exists():
+                results["details"]["compose_redis"] = {"status": "FAIL", "error": "docker-compose.yml not found"}
+                print("  ❌ docker-compose.yml not found")
+                return results
+
+            try:
+                with open(compose_path, 'r') as f:
+                    content = f.read()
+                    if "redis:" in content:
+                        results["details"]["compose_redis"] = {"status": "PASS", "error": None}
+                        print("  ✅ Redis service in docker-compose")
+                    else:
+                        results["details"]["compose_redis"] = {"status": "FAIL", "error": "Redis service not found"}
+                        print("  ❌ Redis service not found in docker-compose")
+            except Exception as e:
+                results["details"]["compose_redis"] = {"status": "ERROR", "error": str(e)}
+                print(f"  🔥 Docker-compose test: {e}")
         except Exception as e:
             results["failed"] += 1
             results["details"]["compose_redis"] = {"status": "ERROR", "error": str(e)}

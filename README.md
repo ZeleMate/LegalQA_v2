@@ -1,153 +1,198 @@
-# LegalQA: Advanced RAG for Hungarian Legal Documents
+# LegalQA: High-Performance RAG System for Legal Documents
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An advanced, Retrieval-Augmented Generation (RAG) system designed to answer complex legal questions based on a corpus of Hungarian court decisions. This project is containerized using Docker and managed with Docker Compose for robust and reproducible deployment.
+LegalQA is a production-ready, high-performance Retrieval-Augmented Generation (RAG) system designed to answer complex legal questions based on a large corpus of documents. It is built with a modern, scalable architecture, fully containerized with Docker, and ready for deployment.
 
-## Architecture
+## 🏗️ Architecture
 
-The system utilizes a multi-container Docker setup orchestrated by `docker-compose.yml`:
-
-- **`app` service:** A FastAPI application that serves the QA model, handles API requests, and contains all the core logic for the RAG pipeline.
-- **`db` service:** A PostgreSQL database to store document chunks efficiently.
+The system is designed for performance and scalability, leveraging asynchronous processing, multi-level caching, and a robust database backend.
 
 ```mermaid
 graph TD
-    U_in["User's Question"] -- "API Request" --> A["app: FastAPI Server"]
-    A -- "Search for relevant text" --> D["db: PostgreSQL"]
-    D -- "Return text chunks" --> A
-    A -- "Augment prompt with text" --> L["External LLM (OpenAI)"]
-    L -- "Generate Answer" --> A
-    A -- "API Response" --> U_out["Final Answer"]
+    subgraph "User Interaction"
+        U[User] -- "API Request" --> A
+    end
+
+    subgraph "Application Layer (Docker)"
+        A[FastAPI App]
+        subgraph "Caching"
+            C[Redis Cache]
+        end
+        subgraph "Data & Retrieval"
+            DB[(PostgreSQL)]
+            F[FAISS Index]
+        end
+    end
+
+    subgraph "External Services"
+        LLM[OpenAI LLM]
+    end
+    
+    subgraph "Monitoring"
+        P[Prometheus]
+    end
+
+    A -- "1. Check Cache" --> C
+    C -- "2. Cache Miss" --> A
+    A -- "3. Retrieve Docs" --> F
+    A -- "4. Fetch Content" --> DB
+    F & DB -- "5. Relevant Chunks" --> A
+    A -- "6. Augment & Query LLM" --> LLM
+    LLM -- "7. Generate Answer" --> A
+    A -- "8. Store in Cache" --> C
+    A -- "9. Send Response" --> U
+    A -- "Collects Metrics" --> P
 ```
 
-## Prerequisites
+## ✨ Key Features
 
-- [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/install/)
-- `make` command-line tool.
-- An OpenAI API key.
+- **High-Performance API**: Built with **FastAPI** for asynchronous, high-throughput request handling.
+- **Multi-Level Caching**: In-memory and **Redis** cache for rapid responses to repeated queries and reduced API costs.
+- **Efficient Document Retrieval**: A combination of **FAISS** for fast vector similarity search and a **PostgreSQL** database (with `pgvector`) for storing and retrieving text chunks.
+- **Advanced Reranking**: Utilizes a secondary LLM call to rerank retrieved documents, significantly improving the relevance of the context provided to the final generation model.
+- **Containerized & Reproducible**: Fully containerized with **Docker** and managed with **Docker Compose** for consistent development and production environments.
+- **Performance Monitoring**: Integrated **Prometheus** endpoint (`/metrics`) for real-time monitoring of application performance, request latency, and cache hit rates.
 
-## Installation
+## 🚀 Getting Started
 
-1.  **Clone the repository:**
+### Prerequisites
+
+- [Docker](https://www.docker.com/get-started) & [Docker Compose](https://docs.docker.com/compose/install/)
+- An OpenAI API key
+- `make` command-line utility (optional, but recommended)
+
+### Installation
+
+1.  **Clone the Repository**
     ```sh
-    git clone https://github.com/your-username/LegalQA_v2.git
+    git clone https://github.com/ZeleMate/LegalQA_v2.git
     cd LegalQA_v2
     ```
 
-2.  **Create the environment file:**
-    -   Create a `.env` file in the project root by copying and filling out the example below. This file will store your API key and other configuration variables.
-    -   **Important:** This file is listed in `.gitignore` and will not be committed to version control.
+2.  **Configure Environment**
+    Create a `.env` file in the project root. You can copy the structure from the example below. This file stores your API keys and other configuration variables. **It is ignored by Git.**
 
     ```env
     # --- API Keys ---
-    # Replace with your actual OpenAI API key
     OPENAI_API_KEY="sk-..."
 
-    # --- Database Configuration for Docker Compose ---
-    # The 'app' service will use these to connect to the 'db' service.
-    # 'POSTGRES_HOST' MUST be the service name ('db') for container networking.
+    # --- Database Configuration ---
+    # These are used by the app to connect to the 'db' service inside Docker.
+    # The POSTGRES_HOST must be the service name ('db').
     POSTGRES_USER=admin
     POSTGRES_PASSWORD=admin
     POSTGRES_DB=legalqa
     POSTGRES_HOST=db
     POSTGRES_PORT=5432
+
+    # --- Redis Configuration ---
+    REDIS_HOST=redis
+    REDIS_PORT=6379
     
     # --- Data File Configuration ---
-    # The name of the main parquet file located in the ./data directory
+    # The name of your main parquet file located in the ./data directory
     PARQUET_FILENAME=all_data.parquet
     ```
 
-3.  **Place the data file:**
-    -   Place your main Parquet data file (e.g., `all_data.parquet`) into the `data/` directory.
-    -   The filename must match the `PARQUET_FILENAME` variable in your `.env` file.
+3.  **Place Your Data**
+    -   Place your Parquet data file (e.g., `all_data.parquet`) into the `data/` directory.
+    -   The filename must match `PARQUET_FILENAME` in your `.env` file.
+    -   Ensure your data conforms to the schema described in the [Data Schema](#-data-schema) section.
 
-## Usage: Development vs. Production
+## Usage
 
-The project is designed with two distinct environments managed by the `Makefile`.
+The `Makefile` provides convenient commands for managing the application lifecycle for both development and production.
 
----
+### Development Environment
 
-### 1. Development Environment (Recommended for Local Use)
+The development environment uses a small sample of your data for a fast startup and enables hot-reloading for code changes.
 
-The development environment is designed for speed and convenience. It works with a small, randomly generated sample of your data, allowing the services to start quickly and enabling live-reloading for code changes.
-
-1.  **Create the sample data:**
-    -   This command runs a script that creates a small `sample_data.parquet` file from your main data file.
+1.  **Setup Development Data & Services:**
+    This command creates a sample dataset, builds a local FAISS index, and starts the services.
     ```sh
-    make setup-dev
+    make dev-setup
     ```
 
-2.  **Build the database and start the services:**
-    -   This command will:
-        -   Build the database using **only the sample data**.
-        -   Start the `app` and `db` services using `docker-compose.override.yml`.
-        -   Enable live-reloading for the `app` service. Any changes you make in the `src/` directory will automatically restart the server.
+2.  **Access the API:**
+    The API will be available at `http://localhost:8000`. The interactive Swagger UI documentation can be found at `http://localhost:8000/docs`.
+
+3.  **Stop the Development Environment:**
     ```sh
-    make dev
+    make dev-down
     ```
 
-3.  **Access the API:**
-    -   The API is now available at `http://localhost:8000`.
-    -   Interactive documentation (Swagger UI) is at `http://localhost:8000/docs`.
+### Production Environment
 
----
+The production environment uses the entire dataset and is optimized for performance.
 
-### 2. Production Environment (For Deployment)
-
-The production environment is intended for deployment on a server with sufficient resources. It uses the entire dataset and runs the services in a detached, optimized mode.
-
-**Warning:** Building the full database is a resource-intensive process and may take a very long time depending on your data size and machine performance.
-
-1.  **Build the production database:**
-    -   This command populates the PostgreSQL database with the **entire dataset** from your `all_data.parquet` file.
+1.  **Build and Setup Production:**
+    This command builds the production Docker images and populates the database with the full dataset.
     ```sh
-    make setup-prod
+    make prod-setup
     ```
 
-2.  **Start the services in production mode:**
-    -   This command starts the `app` and `db` services in the background.
+2.  **Start Production Services:**
     ```sh
-    make prod
+    make prod-up
     ```
 
-3.  **Interact with the API:**
-    -   The API is available at `http://localhost:8000` (or your server's address).
-    -   **Example `curl` request:**
-        ```sh
-        curl -X POST "http://localhost:8000/ask" \
-             -H "Content-Type: application/json" \
-             -d '{"question": "Mi a bűnszervezet fogalma a Btk. szerint?"}'
-        ```
----
-
-### Managing the Services
-
-The `Makefile` provides simple commands to manage the Docker containers.
-
--   **Stop all services:**
+3.  **Stop the Production Environment:**
     ```sh
-    make stop
-    ```
-    *(This stops the containers started by either `make dev` or `make prod`.)*
-
--   **Clean up the environment:**
-    -   This command stops the containers and removes all associated volumes (including the database data) and networks. Use with caution.
-    ```sh
-    make clean
+    make prod-down
     ```
 
-## Data Schema
+### Clean Up
+
+To stop all containers and remove all associated volumes (including database data), run:
+```sh
+make clean
+```
+
+## API Endpoints
+
+-   `POST /ask`: The main endpoint for asking questions.
+-   `GET /health`: A detailed health check that reports the status of the application, database, and cache.
+-   `GET /stats`: Provides real-time performance statistics.
+-   `GET /metrics`: Exposes performance metrics in a format compatible with Prometheus.
+-   `POST /clear-cache`: Clears the Redis cache.
+
+**Example `curl` Request:**
+```sh
+curl -X POST "http://localhost:8000/ask" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "question": "Mi a bűnszervezet fogalma a Btk. szerint?",
+       "use_cache": true
+     }'
+```
+
+## 🧪 Testing
+
+The project includes a comprehensive test suite. To run all tests:
+
+1.  Install development dependencies:
+    ```sh
+    make install
+    ```
+2.  Run the tests:
+    ```sh
+    make test
+    ```
+
+You can also run specific test types (e.g., `make test-functionality`, `make test-performance`) or lint the code (`make lint`).
+
+## 📋 Data Schema
 
 To use your own data, you must provide a Parquet file with the following columns:
 
--   `chunk_id`: A unique identifier for each text chunk.
--   `doc_id`: A unique identifier for the parent document.
--   `text`: The text content of the chunk.
--   `embedding`: The vector embedding of the `text`.
+-   `chunk_id` (string): A unique identifier for each text chunk.
+-   `doc_id` (string): A unique identifier for the parent document.
+-   `text` (string): The text content of the chunk.
+-   `embedding` (binary/vector): The vector embedding of the `text`.
 
 ---
 
-## License
+## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+This project is distributed under the MIT License. See `LICENSE` for more information.

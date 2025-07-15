@@ -1,145 +1,250 @@
-# Makefile for the LegalQA Project
-# Provides a clear and consistent set of commands for development and production tasks.
+# Optimized Makefile for LegalQA Performance Project
+# Provides enhanced commands for performance monitoring and optimization
 
-# --- Configuration ---
-# Use a variable to define the main service for one-off commands
+# Configuration
 APP_SERVICE_NAME = app
+PYTHON := python3
+DOCKER_COMPOSE_PROD := docker-compose -f docker-compose.yml
+DOCKER_COMPOSE_DEV := docker-compose -f docker-compose.yml -f docker-compose.dev.yml
+MONITORING := docker-compose -f docker-compose.yml --profile monitoring
 
-# ====================================================================================
-# VARIABLES
-# ====================================================================================
-# Use the Python interpreter from the virtual environment for local scripts
-PYTHON := ./venv/bin/python
-
-# ====================================================================================
-# HELP
-# ====================================================================================
-# By default, running "make" will show this help message.
 .DEFAULT_GOAL := help
 
+# Colors for output
+RED=\033[0;31m
+GREEN=\033[0;32m
+YELLOW=\033[1;33m
+BLUE=\033[0;34m
+NC=\033[0m # No Color
+
 help:
-	@echo "-------------------------------------------------------------------------"
-	@echo " LegalQA Project Makefile"
-	@echo "-------------------------------------------------------------------------"
-	@echo "Usage: make <target>"
+	@echo "${BLUE}=============================================================================${NC}"
+	@echo "${GREEN} LegalQA Optimized Performance Makefile ${NC}"
+	@echo "${BLUE}=============================================================================${NC}"
 	@echo ""
-	@echo "--- Core Commands ---"
-	@echo "  up              Start all services in detached mode (using docker-compose up)."
-	@echo "  down            Stop and remove all services, networks, and optionally volumes."
+	@echo "${YELLOW}🚀 PRODUCTION COMMANDS:${NC}"
+	@echo "  ${GREEN}prod-up${NC}            Start optimized production environment"
+	@echo "  ${GREEN}prod-build${NC}         Build optimized production images"
+	@echo "  ${GREEN}prod-setup${NC}         Complete production setup with database"
+	@echo "  ${GREEN}prod-down${NC}          Stop production environment"
 	@echo ""
-	@echo "--- Development ---"
-	@echo "  create-sample   Create a small sample of the main dataset for quick testing."
-	@echo "  build-db-dev    Build the database using only the SMALL SAMPLE dataset."
+	@echo "${YELLOW}⚡ DEVELOPMENT COMMANDS:${NC}"
+	@echo "  ${GREEN}dev-up${NC}             Start development environment with hot reload"
+	@echo "  ${GREEN}dev-setup${NC}          Setup development environment with sample data"
+	@echo "  ${GREEN}dev-down${NC}           Stop development environment"
 	@echo ""
-	@echo "--- Production ---"
-	@echo "  build-db        Build the database using the FULL dataset (can be slow)."
+	@echo "${YELLOW}📊 MONITORING COMMANDS:${NC}"
+	@echo "  ${GREEN}monitoring-up${NC}      Start monitoring stack (Prometheus + Grafana)"
+	@echo "  ${GREEN}monitoring-down${NC}    Stop monitoring stack"
+	@echo "  ${GREEN}metrics${NC}            Show current application metrics"
+	@echo "  ${GREEN}stats${NC}              Show performance statistics"
 	@echo ""
-	@echo "--- Docker Compose Management ---"
-	@echo "  build           Build or rebuild all service images."
-	@echo "  logs            Tail logs from all running services."
-	@echo "  ps              List running containers for this project."
+	@echo "${YELLOW}🔧 OPTIMIZATION COMMANDS:${NC}"
+	@echo "  ${GREEN}optimize-db${NC}        Optimize database performance"
+	@echo "  ${GREEN}clear-cache${NC}        Clear all application caches"
+	@echo "  ${GREEN}benchmark${NC}          Run performance benchmarks"
+	@echo "  ${GREEN}profile${NC}            Run performance profiling"
 	@echo ""
-	@echo "--- Local Python Tasks (run on host) ---"
-	@echo "  install         Install local Python dependencies from pyproject.toml."
-	@echo "  test            Run pytest for the test suite."
-	@echo "  lint            Run flake8 for code linting."
-	@echo "  clean           Remove temporary Python artifacts (__pycache__, etc.)."
-	@echo "-------------------------------------------------------------------------"
+	@echo "${YELLOW}🛠️ UTILITY COMMANDS:${NC}"
+	@echo "  ${GREEN}logs${NC}               Show application logs"
+	@echo "  ${GREEN}logs-follow${NC}        Follow application logs"
+	@echo "  ${GREEN}health${NC}             Check application health"
+	@echo "  ${GREEN}clean${NC}              Clean up resources and volumes"
+	@echo ""
+	@echo "${YELLOW}🧪 TESTING COMMANDS:${NC}"
+	@echo "  ${GREEN}validate${NC}           Quick validation of optimizations"
+	@echo "  ${GREEN}test${NC}               Run comprehensive test suite"
+	@echo "  ${GREEN}test-functionality${NC} Run functionality tests only"
+	@echo "  ${GREEN}test-performance${NC}   Run performance tests only"
+	@echo "  ${GREEN}test-integration${NC}   Run integration tests only"
+	@echo "  ${GREEN}test-ci${NC}            Run CI/CD test pipeline"
+	@echo ""
+	@echo "${BLUE}=============================================================================${NC}"
 
+.PHONY: help prod-up prod-build prod-setup prod-down dev-up dev-setup dev-down monitoring-up monitoring-down
 
-# Phony targets are not associated with files. This prevents conflicts.
-.PHONY: help install test lint clean build up down logs ps build-db create-sample build-db-dev setup-prod setup-dev setup-notebooks dev
+# ==============================================================================
+# PRODUCTION COMMANDS
+# ==============================================================================
 
-# ====================================================================================
-# CORE WORKFLOW (Split into Dev and Prod)
-# ====================================================================================
+prod-build:
+	@echo "${GREEN}🔨 Building optimized production images...${NC}"
+	$(DOCKER_COMPOSE_PROD) build --no-cache --parallel
 
-# --- Development Tasks ---
+prod-up:
+	@echo "${GREEN}🚀 Starting optimized production environment...${NC}"
+	$(DOCKER_COMPOSE_PROD) up -d
+	@echo "${GREEN}✅ Production environment started${NC}"
+	@echo "${BLUE}API available at: http://localhost:8000${NC}"
+	@echo "${BLUE}API docs at: http://localhost:8000/docs${NC}"
 
-create-sample:
-	@echo "--> Creating a small sample from the full dataset..."
-	@echo "--> NOTE: This command must be run while services are up ('make up')."
-	docker-compose exec $(APP_SERVICE_NAME) python scripts/create_sample.py
+prod-setup: prod-build
+	@echo "${GREEN}⚙️ Setting up production environment...${NC}"
+	$(DOCKER_COMPOSE_PROD) up -d db redis
+	@echo "${YELLOW}Waiting for database to be ready...${NC}"
+	@sleep 10
+	@echo "${GREEN}🗄️ Building production database...${NC}"
+	$(DOCKER_COMPOSE_PROD) run --rm $(APP_SERVICE_NAME) python scripts/build_database.py
+	@echo "${GREEN}🚀 Starting full production environment...${NC}"
+	$(DOCKER_COMPOSE_PROD) up -d
+	@echo "${GREEN}✅ Production setup completed${NC}"
 
-build-db-dev:
-	@echo "--> Building development database using SAMPLE data..."
-	@echo "--> This will create a small, temporary database for testing."
-	@echo "--> NOTE: This command must be run while services are up ('make up')."
-	docker-compose exec $(APP_SERVICE_NAME) python scripts/build_database.py \
-		--input-file /app/data/processed/sample_data.parquet \
-		--output-dir /app/data/processed/dev_index
+prod-down:
+	@echo "${YELLOW}🛑 Stopping production environment...${NC}"
+	$(DOCKER_COMPOSE_PROD) down
 
-# --- Production Task ---
+# ==============================================================================
+# DEVELOPMENT COMMANDS  
+# ==============================================================================
 
-build-db:
-	@echo "--> Building production database and FAISS index with FULL data..."
-	@echo "--> NOTE: This command must be run while services are up ('make up')."
-	@echo "--> WARNING: This can be a very long and resource-intensive process!"
-	docker-compose exec $(APP_SERVICE_NAME) python scripts/build_database.py
+dev-up:
+	@echo "${GREEN}⚡ Starting optimized development environment...${NC}"
+	$(DOCKER_COMPOSE_DEV) up -d --build
+	@echo "${GREEN}✅ Development environment started with hot reload${NC}"
+	@echo "${BLUE}API available at: http://localhost:8000${NC}"
+	@echo "${BLUE}API docs at: http://localhost:8000/docs${NC}"
 
-# ====================================================================================
-# DOCKER-COMPOSE WRAPPERS
-# ====================================================================================
-# These commands wrap the standard docker-compose commands for convenience.
+dev-setup:
+	@echo "${GREEN}⚙️ Setting up development environment...${NC}"
+	@echo "${GREEN}📝 Creating sample data...${NC}"
+	$(PYTHON) scripts/create_sample.py
+	@echo "${GREEN}🔨 Building local FAISS index...${NC}"
+	$(PYTHON) scripts/build_local_index.py
+	@echo "${GREEN}🚀 Starting development services...${NC}"
+	$(DOCKER_COMPOSE_DEV) up -d --build
+	@echo "${GREEN}✅ Development setup completed${NC}"
 
-build:
-	@echo "--> Building or rebuilding service images with no cache to ensure freshness..."
-	docker-compose build --no-cache
+dev-down:
+	@echo "${YELLOW}🛑 Stopping development environment...${NC}"
+	$(DOCKER_COMPOSE_DEV) down
 
-up:
-	@echo "--> Starting all services in detached mode (app & db)..."
-	docker-compose up -d
+# ==============================================================================
+# MONITORING COMMANDS
+# ==============================================================================
 
-down:
-	@echo "--> Stopping and removing services, containers, and networks..."
-	@echo "--> To also remove the database volume, run: docker-compose down --volumes"
-	docker-compose down
+monitoring-up:
+	@echo "${GREEN}📊 Starting monitoring stack...${NC}"
+	$(MONITORING) up -d
+	@echo "${GREEN}✅ Monitoring started${NC}"
+	@echo "${BLUE}Prometheus: http://localhost:9090${NC}"
+	@echo "${BLUE}Grafana: http://localhost:3000 (admin/admin)${NC}"
+
+monitoring-down:
+	@echo "${YELLOW}📊 Stopping monitoring stack...${NC}"
+	$(MONITORING) down
+
+metrics:
+	@echo "${GREEN}📈 Current application metrics:${NC}"
+	@curl -s http://localhost:8000/metrics | grep -E "^legalqa_" | head -20
+
+stats:
+	@echo "${GREEN}📊 Performance statistics:${NC}"
+	@curl -s http://localhost:8000/stats | python3 -m json.tool
+
+health:
+	@echo "${GREEN}🏥 Application health check:${NC}"
+	@curl -s http://localhost:8000/health | python3 -m json.tool
+
+# ==============================================================================
+# OPTIMIZATION COMMANDS
+# ==============================================================================
+
+optimize-db:
+	@echo "${GREEN}🔧 Optimizing database performance...${NC}"
+	$(DOCKER_COMPOSE_PROD) exec db psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "VACUUM ANALYZE;"
+	$(DOCKER_COMPOSE_PROD) exec db psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "REINDEX DATABASE ${POSTGRES_DB};"
+	@echo "${GREEN}✅ Database optimization completed${NC}"
+
+clear-cache:
+	@echo "${GREEN}🧹 Clearing application caches...${NC}"
+	@curl -s -X POST http://localhost:8000/clear-cache | python3 -m json.tool
+
+benchmark:
+	@echo "${GREEN}🏃 Running performance benchmarks...${NC}"
+	@echo "${BLUE}Testing API response times...${NC}"
+	@time curl -s -X POST "http://localhost:8000/ask" \
+		-H "Content-Type: application/json" \
+		-d '{"question": "Mi a bűnszervezet fogalma a Btk. szerint?"}' \
+		| python3 -m json.tool
+
+profile:
+	@echo "${GREEN}🔍 Running performance profiling...${NC}"
+	$(DOCKER_COMPOSE_PROD) exec $(APP_SERVICE_NAME) python -m cProfile -s cumulative scripts/profile_app.py
+
+# ==============================================================================
+# UTILITY COMMANDS
+# ==============================================================================
 
 logs:
-	@echo "--> Tailing logs for all services (Ctrl+C to stop)..."
-	docker-compose logs -f
+	@echo "${GREEN}📜 Showing application logs:${NC}"
+	$(DOCKER_COMPOSE_PROD) logs --tail=100 $(APP_SERVICE_NAME)
 
-ps:
-	@echo "--> Listing running containers for the project..."
-	docker-compose ps
-
-
-# ====================================================================================
-# LOCAL PYTHON TASKS
-# ====================================================================================
-# These tasks are run on the host machine, not in Docker.
-
-install:
-	@echo "--> Installing local dependencies for notebook and development use..."
-	pip install -e ".[notebook]"
-	@echo "--> Installation complete. Activate your venv with 'source venv/bin/activate'."
-
-test:
-	@echo "Running tests..."
-	python3 -m pytest tests/
-
-lint:
-	@echo "Linting files..."
-	flake8 src/ tests/
+logs-follow:
+	@echo "${GREEN}📜 Following application logs (Ctrl+C to stop):${NC}"
+	$(DOCKER_COMPOSE_PROD) logs -f $(APP_SERVICE_NAME)
 
 clean:
-	@echo "--> Cleaning up local python artifacts..."
-	find . -type f -name "*.pyc" -delete
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	@echo "--> Cleanup complete."
+	@echo "${YELLOW}🧹 Cleaning up resources...${NC}"
+	$(DOCKER_COMPOSE_PROD) down --volumes --remove-orphans
+	$(DOCKER_COMPOSE_DEV) down --volumes --remove-orphans
+	$(MONITORING) down --volumes --remove-orphans
+	@echo "${GREEN}✅ Cleanup completed${NC}"
 
-setup-prod:
-	@echo "--- Building production database from full dataset... ---"
-	@docker-compose run --rm app python scripts/build_database.py
+clean-all: clean
+	@echo "${YELLOW}🧹 Removing all images and containers...${NC}"
+	docker system prune -a -f --volumes
+	@echo "${GREEN}✅ Full cleanup completed${NC}"
 
-setup-dev:
-	@echo "--- Creating sample data file... ---"
-	@$(PYTHON) scripts/create_sample.py
+# ==============================================================================
+# TESTING COMMANDS
+# ==============================================================================
 
-setup-notebooks:
-	@echo "--- Building local FAISS index from sample data for notebooks... ---"
-	@$(PYTHON) scripts/build_local_index.py
+validate:
+	@echo "${GREEN}🔍 Running quick validation...${NC}"
+	$(PYTHON) scripts/validate_optimizations.py
 
-dev:
-	@echo "--- Starting development environment with live-reload... ---"
-	@docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d --build
+test:
+	@echo "${GREEN}🧪 Running comprehensive tests...${NC}"
+	$(PYTHON) scripts/run_tests.py
+
+test-functionality:
+	@echo "${GREEN}🔧 Running functionality tests...${NC}"
+	$(PYTHON) -m pytest tests/test_functionality.py -v
+
+test-performance:
+	@echo "${GREEN}⚡ Running performance tests...${NC}"
+	$(PYTHON) -m pytest tests/test_performance.py -v
+
+test-integration:
+	@echo "${GREEN}🔗 Running integration tests...${NC}"
+	$(PYTHON) -m pytest tests/test_integration.py -v
+
+test-ci:
+	@echo "${GREEN}🚀 Running CI test suite...${NC}"
+	$(PYTHON) scripts/validate_optimizations.py
+	@if [ $$? -eq 0 ]; then \
+		echo "${GREEN}✅ Validation passed, running full tests...${NC}"; \
+		$(PYTHON) scripts/run_tests.py; \
+	else \
+		echo "${RED}❌ Validation failed, skipping full tests${NC}"; \
+		exit 1; \
+	fi
+
+lint:
+	@echo "${GREEN}🔍 Running code linting...${NC}"
+	$(PYTHON) -m black --check src/ tests/
+	$(PYTHON) -m isort --check-only src/ tests/
+	$(PYTHON) -m mypy src/
+
+format:
+	@echo "${GREEN}✨ Formatting code...${NC}"
+	$(PYTHON) -m black src/ tests/
+	$(PYTHON) -m isort src/ tests/
+
+# ==============================================================================
+# INSTALLATION COMMANDS
+# ==============================================================================
+
+install:
+	@echo "${GREEN}📦 Installing dependencies...${NC}"
+	$(PYTHON) -m pip install -e ".[dev]"

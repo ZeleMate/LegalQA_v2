@@ -10,6 +10,7 @@ import json
 import time
 from unittest.mock import Mock, patch, AsyncMock
 from fastapi.testclient import TestClient
+from dotenv import load_dotenv
 
 from tests import TEST_CONFIG
 
@@ -27,7 +28,7 @@ class TestBasicFunctionality:
             # Test new optimized components
             from src.infrastructure.cache_manager import CacheManager, get_cache_manager
             from src.infrastructure.db_manager import DatabaseManager, get_db_manager
-            from src.rag.optimized_retriever import OptimizedCustomRetriever, OptimizedRerankingRetriever
+            from src.rag.retriever import CustomRetriever, RerankingRetriever
             
             assert True, "All imports successful"
         except ImportError as e:

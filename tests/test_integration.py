@@ -146,8 +146,8 @@ class TestSystemIntegration:
         assert "Generated answer" in result
 
 
-class TestAPIIntegration:
-    """Test API integration with optimized components."""
+class TestApiIntegration:
+    """Test API integration with all components."""
     
     def test_fastapi_app_structure(self):
         """Test that FastAPI app can be structured correctly."""

@@ -1,40 +1,106 @@
-# 1. Base Image
-# We use an official Python image. Using a specific version (e.g., 3.10) is recommended for reproducibility.
-# The 'slim' variant is a good compromise between size and having necessary tools.
-FROM python:3.10-slim
+# Optimized Multi-stage Dockerfile for LegalQA
+# This version provides better performance, smaller image size, and faster builds
 
-# 2. Set Environment Variables
-# These prevent Python from writing .pyc files and buffers stdout/stderr, which is good practice for Docker.
+# Build stage - Install dependencies
+FROM python:3.10-slim as builder
+
+# Set environment variables for build optimization
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# 3. Set Working Directory
-# All subsequent commands (COPY, RUN, CMD) will be relative to this path.
-WORKDIR /app
+# Install system dependencies needed for building
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    musl-dev \
+    libffi-dev \
+    libssl-dev \
+    postgresql-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# 4. Install Dependencies using pyproject.toml
-# This approach leverages the modern Python packaging standard.
-# First, copy only the files necessary for dependency installation.
-# This allows Docker to cache this layer effectively.
+# Create and use virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies
+WORKDIR /build
 COPY pyproject.toml .
-
-# Install dependencies defined in pyproject.toml.
-# The '.' refers to the current directory, where pyproject.toml is located.
+RUN pip install --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir .
 
-# 5. Copy Application Code
-# Now, copy the rest of the application's source code.
-# This layer will be rebuilt on code changes, but the dependency layer remains cached.
-COPY ./src /app/src
-COPY ./scripts /app/scripts
+# Production stage - Minimal runtime image
+FROM python:3.10-slim as production
 
-# 6. Expose Port
-# Inform Docker that the container listens on port 8000 at runtime.
-# This needs to match the port your application (e.g., Uvicorn/FastAPI) will run on.
+# Runtime environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONOPTIMIZE=2
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install only runtime system dependencies
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy virtual environment from builder stage
+COPY --from=builder /opt/venv /opt/venv
+
+# Create non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy application code with proper ownership
+COPY --chown=appuser:appuser ./src /app/src
+COPY --chown=appuser:appuser ./scripts /app/scripts
+
+# Create directories for data and ensure proper permissions
+RUN mkdir -p /app/data/processed /app/logs \
+    && chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose port
 EXPOSE 8000
 
-# 7. Command to Run the Application
-# This is the command that will be executed when the container starts.
-# We'll run the FastAPI app using Uvicorn.
-# Note: We assume your FastAPI app instance is named 'app' in 'src/inference/app.py'.
-CMD ["uvicorn", "src.inference.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use uvicorn with optimized settings for production
+CMD ["uvicorn", "src.inference.app:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--worker-connections", "1000", \
+     "--max-requests", "10000", \
+     "--max-requests-jitter", "1000", \
+     "--preload", \
+     "--log-level", "info"]
+
+# Development stage - For development with hot reload
+FROM production as development
+
+# Switch back to root for installing development tools
+USER root
+
+# Install development dependencies
+RUN pip install --no-cache-dir jupyter ipython pytest black isort mypy
+
+# Switch back to appuser
+USER appuser
+
+# Development command with hot reload
+CMD ["uvicorn", "src.inference.app:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--reload", \
+     "--reload-dir", "/app/src", \
+     "--log-level", "debug"]

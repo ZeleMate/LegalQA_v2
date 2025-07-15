@@ -103,12 +103,14 @@ def validate_file_structure():
     
     required_files = [
         "src/infrastructure/cache_manager.py",
-        "src/infrastructure/db_manager.py", 
-        "src/data/faiss_loader.py",
-        "Dockerfile.optimized",
-        "docker-compose.optimized.yml",
+        "src/infrastructure/db_manager.py",
+        "src/rag/retriever.py",
+        "src/inference/app.py",
+        "Dockerfile",
+        "docker-compose.yml",
         "config/redis.conf",
-        "PERFORMANCE_ANALYSIS.md"
+        "config/prometheus.yml",
+        "Makefile"
     ]
     
     all_exist = True
@@ -149,17 +151,25 @@ def validate_performance_configs():
         
         print(f"  ✅ Performance dependencies present in pyproject.toml")
         
-        # Check Docker configuration
-        dockerfile_path = project_root / "Dockerfile.optimized"
+        # Check Dockerfile for multi-stage build and other settings
+        dockerfile_path = project_root / "Dockerfile"
         if dockerfile_path.exists():
-            dockerfile_content = dockerfile_path.read_text()
-            if "FROM python:3.10-slim as builder" in dockerfile_content:
-                print(f"  ✅ Multi-stage Dockerfile configured")
+            content = dockerfile_path.read_text()
+            if "as builder" in content and "USER appuser" in content and "HEALTHCHECK" in content:
+                print(f"  ✅ Dockerfile contains key performance and security settings.")
             else:
-                print(f"  ❌ Multi-stage Dockerfile not properly configured")
+                print(f"  ❌ Dockerfile missing some performance/security settings (multi-stage, non-root user, healthcheck).")
                 return False
         else:
-            print(f"  ❌ Dockerfile.optimized missing")
+            print(f"  ❌ Dockerfile missing")
+            return False
+        
+        # Check docker-compose for redis and prometheus
+        compose_path = project_root / "docker-compose.yml"
+        if compose_path.exists():
+            print(f"  ✅ docker-compose.yml exists")
+        else:
+            print(f"  ❌ docker-compose.yml missing")
             return False
         
         return True

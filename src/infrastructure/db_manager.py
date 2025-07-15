@@ -242,37 +242,36 @@ class DatabaseManager:
                 logger.warning(f"Optimization query failed: {e}")
     
     async def close(self):
-        """Close database connections."""
+        """Closes the database connection pool."""
         if self.pool:
             await self.pool.close()
         if self.sync_pool:
             self.sync_pool.closeall()
         self._initialized = False
-        logger.info("Database connections closed")
+        logger.info("Database connection pool closed.")
 
 
-# Global database manager instance
-db_manager = None
+# Singleton instance of the database manager
+_db_manager = None
 
 def get_db_manager() -> DatabaseManager:
-    """Get the global database manager instance."""
-    global db_manager
-    if db_manager is None:
-        db_manager = DatabaseManager()
-    return db_manager
+    """Returns a singleton instance of the DatabaseManager."""
+    global _db_manager
+    if _db_manager is None:
+        _db_manager = DatabaseManager()
+    return _db_manager
 
 
-# Utility functions for common database operations
-async def fetch_chunks_optimized(chunk_ids: List[str]) -> Dict[str, Dict[str, Any]]:
-    """Optimized function to fetch chunks with caching support."""
-    db = get_db_manager()
-    return await db.fetch_chunks_by_ids(chunk_ids)
+async def fetch_chunks(chunk_ids: List[str]) -> Dict[str, Dict[str, Any]]:
+    """Function to fetch chunks with caching support."""
+    db_manager = get_db_manager()
+    return await db_manager.fetch_chunks_by_ids(chunk_ids)
 
 
-async def ensure_database_optimized():
-    """Ensure database is optimized with proper indices."""
-    db = get_db_manager()
-    await db.optimize_database()
+async def ensure_database_setup():
+    """Ensure database is set up with proper indices."""
+    db_manager = get_db_manager()
+    await db_manager.optimize_database()
 
 
 # Context manager for database operations
