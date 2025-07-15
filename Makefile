@@ -40,7 +40,7 @@ help:
 	@echo "  ps              List running containers for this project."
 	@echo ""
 	@echo "--- Local Python Tasks (run on host) ---"
-	@echo "  install         Install local Python dependencies from requirements.txt."
+	@echo "  install         Install local Python dependencies from pyproject.toml."
 	@echo "  test            Run pytest for the test suite."
 	@echo "  lint            Run flake8 for code linting."
 	@echo "  clean           Remove temporary Python artifacts (__pycache__, etc.)."
