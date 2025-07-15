@@ -115,12 +115,12 @@ install:
 	@echo "--> Installation complete. Activate your venv with 'source venv/bin/activate'."
 
 test:
-	@echo "--> Running local tests..."
-	python3 -m pytest test/
+	@echo "Running tests..."
+	python3 -m pytest tests/
 
 lint:
-	@echo "--> Running local linter..."
-	flake8 src/ test/
+	@echo "Linting files..."
+	flake8 src/ tests/
 
 clean:
 	@echo "--> Cleaning up local python artifacts..."
