@@ -154,7 +154,7 @@ make clean
 curl -X POST "http://localhost:8000/ask" \
      -H "Content-Type: application/json" \
      -d '{
-       "question": "Mi a bűnszervezet fogalma a Btk. szerint?",
+       "question": "Milyen ítéleteket hozott a Kúria 2024-ben?",
        "use_cache": true
      }'
 ```
