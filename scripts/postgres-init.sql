@@ -24,7 +24,7 @@ BEGIN
         chunk_id VARCHAR PRIMARY KEY,
         doc_id VARCHAR REFERENCES documents(doc_id) ON DELETE CASCADE,
         text TEXT NOT NULL,
-        embedding vector(1536), -- OpenAI embedding dimension
+        embedding vector(768), -- Sentence transformer embedding dimension
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );

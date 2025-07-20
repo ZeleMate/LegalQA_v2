@@ -65,7 +65,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input-file", 
         type=str, 
-        default="data/processed/processed_documents_with_embeddings.parquet",
+        default="data/processed/documents_with_embeddings.parquet",
         help="Path to the source Parquet file."
     )
     parser.add_argument(
