@@ -11,6 +11,7 @@ from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_openai import ChatOpenAI
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -25,7 +26,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
     """Retriever with caching and async database operations."""
     
     alpha: float = 0.7
-    embeddings: HuggingFaceEmbeddings = Field(...)
+    embeddings: Embeddings = Field(...)
     faiss_index: faiss.Index = Field(...)
     id_mapping: dict = Field(...)
     k: int = 20
@@ -74,7 +75,11 @@ class CustomRetriever(BaseRetriever, BaseModel):
             logger.debug(f"Found {len(retrieved_chunk_ids)} chunks from FAISS")
             
             # Fetch documents from database (async)
-            docs_from_db = await self._get_docs_from_db_async(list(set(retrieved_chunk_ids)))
+            try:
+                docs_from_db = await self._get_docs_from_db_async(list(set(retrieved_chunk_ids)))
+            except Exception as e:
+                logger.warning(f"Failed to fetch documents from DB: {e}")
+                docs_from_db = {}
             
             if not docs_from_db:
                 logger.warning("No documents found in DB for retrieved IDs")
@@ -151,7 +156,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
     retriever: CustomRetriever = Field(...)
     llm: ChatOpenAI = Field(...)
     reranker_prompt: PromptTemplate = Field(...)
-    embeddings: HuggingFaceEmbeddings = Field(...)
+    embeddings: Embeddings = Field(...)
     k: int = 5
     chunk_size: int = 512
     chunk_overlap: int = 50

@@ -86,11 +86,17 @@ async def lifespan(app: FastAPI):
         get_db_manager()
         get_cache_manager()
         
-        # Load environment variables
-        # ... (env var loading) ...
-
         # Load components in parallel
-        # ... (component loading) ...
+        logger.info("📊 Loading FAISS components...")
+        faiss_index, id_mapping = await load_faiss_components()
+        
+        logger.info("🤖 Initializing AI models...")
+        embeddings, reranker_llm, reranker_prompt = await initialize_models()
+        
+        # Initialize cache and database managers
+        logger.info("🗄️ Initializing cache and database managers...")
+        cache_manager = await initialize_cache()
+        db_manager = await initialize_database()
         
         # Build retrievers
         logger.info("⚡ Building retrieval pipeline...")
