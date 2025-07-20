@@ -8,14 +8,15 @@ from typing import List, Optional
 import numpy as np
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_core.embeddings import Embeddings
+from langchain_openai import ChatOpenAI
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from sklearn.metrics.pairwise import cosine_similarity
 import faiss
-
 from src.infrastructure import get_cache_manager, get_db_manager, cache_embedding_query
 
 logger = logging.getLogger(__name__)
@@ -24,13 +25,12 @@ class CustomRetriever(BaseRetriever, BaseModel):
     """Retriever with caching and async database operations."""
     
     alpha: float = 0.7
-    embeddings: OpenAIEmbeddings = Field(...)
+    embeddings: HuggingFaceEmbeddings = Field(...)
     faiss_index: faiss.Index = Field(...)
     id_mapping: dict = Field(...)
     k: int = 20
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     async def _get_docs_from_db_async(self, chunk_ids: List[str]) -> dict:
         """
@@ -127,19 +127,22 @@ class CustomRetriever(BaseRetriever, BaseModel):
             return documents
         
         except Exception as e:
-            logger.error(f"Error during document retrieval: {e}")
+            logger.error(f"Error during document retrieval: {e}", exc_info=True)
             raise
 
     def _get_relevant_documents(self, query: str, *, run_manager=None) -> List[Document]:
         """Sync wrapper for async retrieval method."""
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
         if loop.is_running():
-            # If we're already in an async context, create a new task
             task = asyncio.create_task(self._get_relevant_documents_async(query))
             return asyncio.run_coroutine_threadsafe(task, loop).result()
         else:
-            # If not in async context, run normally
-            return asyncio.run(self._get_relevant_documents_async(query))
+            return loop.run_until_complete(self._get_relevant_documents_async(query))
 
 
 class RerankingRetriever(BaseRetriever, BaseModel):
@@ -148,13 +151,13 @@ class RerankingRetriever(BaseRetriever, BaseModel):
     retriever: CustomRetriever = Field(...)
     llm: ChatOpenAI = Field(...)
     reranker_prompt: PromptTemplate = Field(...)
-    embeddings: OpenAIEmbeddings = Field(...)
+    embeddings: HuggingFaceEmbeddings = Field(...)
     k: int = 5
     chunk_size: int = 512
     chunk_overlap: int = 50
+    reranking_enabled: bool = True
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     async def _get_prioritized_snippets_cached(self, 
                                              doc: Document, 
@@ -249,6 +252,9 @@ class RerankingRetriever(BaseRetriever, BaseModel):
         # Get initial documents
         initial_docs = await self.retriever._get_relevant_documents_async(query)
         
+        if not self.reranking_enabled:
+            return initial_docs[:self.k]
+
         if not initial_docs:
             return []
         
@@ -320,9 +326,20 @@ class RerankingRetriever(BaseRetriever, BaseModel):
 
     def _get_relevant_documents(self, query: str, *, run_manager=None) -> List[Document]:
         """Sync wrapper for async reranking method."""
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
         if loop.is_running():
             task = asyncio.create_task(self._get_relevant_documents_async(query))
             return asyncio.run_coroutine_threadsafe(task, loop).result()
         else:
-            return asyncio.run(self._get_relevant_documents_async(query))
+            return loop.run_until_complete(self._get_relevant_documents_async(query))
+
+def initialize_retriever(embeddings, faiss_index, id_mapping, llm, reranker_prompt, k_retriever=25, k_reranker=5):
+    """
+    Initialize a new retriever with the given parameters.
+    """
+    # ... existing code ...
