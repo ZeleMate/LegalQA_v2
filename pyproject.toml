@@ -18,7 +18,7 @@ dependencies = [
     "langchain-openai",
     "langchain-core",
     "langchain-community",
-    "rank-llm",
+    "sentence-transformers",
     "fastapi",
     "uvicorn[standard]", # uvicorn is needed to run fastapi
     "psycopg2-binary",
@@ -44,6 +44,8 @@ dev = [
     "isort",
     "mypy",
     "psutil>=5.9.0",  # For performance monitoring in tests
+    "toml",
+    "pyyaml",
 ]
 notebook = [
     "matplotlib",
