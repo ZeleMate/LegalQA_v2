@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     musl-dev \
     libffi-dev \
     libssl-dev \
-    postgresql-dev \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create and use virtual environment
@@ -73,16 +73,10 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Expose port
 EXPOSE 8000
 
-# Use uvicorn with optimized settings for production
+# Use uvicorn with single worker to avoid startup issues
 CMD ["uvicorn", "src.inference.app:app", \
      "--host", "0.0.0.0", \
      "--port", "8000", \
-     "--workers", "4", \
-     "--worker-class", "uvicorn.workers.UvicornWorker", \
-     "--worker-connections", "1000", \
-     "--max-requests", "10000", \
-     "--max-requests-jitter", "1000", \
-     "--preload", \
      "--log-level", "info"]
 
 # Development stage - For development with hot reload

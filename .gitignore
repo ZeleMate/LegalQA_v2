@@ -204,3 +204,11 @@ outputs/
 # Docker
 .dockerignore
 docker-compose.yml
+
+# Testing
+/test-results/
+/test_report.json
+test_run.log
+.pytest_cache/
+.coverage
+*.pyc

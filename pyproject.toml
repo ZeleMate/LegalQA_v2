@@ -18,6 +18,7 @@ dependencies = [
     "langchain-openai",
     "langchain-core",
     "langchain-community",
+    "langchain-huggingface",
     "sentence-transformers",
     "fastapi",
     "uvicorn[standard]", # uvicorn is needed to run fastapi
