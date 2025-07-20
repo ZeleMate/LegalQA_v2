@@ -11,6 +11,7 @@ import time
 from unittest.mock import Mock, patch, AsyncMock
 from fastapi.testclient import TestClient
 from dotenv import load_dotenv
+from pathlib import Path
 
 from tests import TEST_CONFIG
 
@@ -241,6 +242,46 @@ class TestAPICompatibility:
         assert hasattr(response, 'metadata')
 
 
+class TestProjectStructure:
+    """Tests for project structure and configuration files."""
+
+    def test_expected_files_exist(self):
+        """Test that key project files and directories exist."""
+        project_root = Path(__file__).parent.parent
+        expected_paths = [
+            "src/infrastructure/cache_manager.py",
+            "src/infrastructure/db_manager.py",
+            "src/data/faiss_loader.py",
+            "config/redis.conf",
+            "config/prometheus.yml",
+            "Dockerfile",
+            "docker-compose.yml",
+            "docker-compose.dev.yml",
+            "pyproject.toml"
+        ]
+        for path in expected_paths:
+            assert (project_root / path).exists(), f"File or directory not found: {path}"
+
+    def test_pyproject_toml_dependencies(self):
+        """Check for key performance dependencies in pyproject.toml."""
+        project_root = Path(__file__).parent.parent
+        pyproject_path = project_root / "pyproject.toml"
+        assert pyproject_path.exists(), "pyproject.toml not found"
+
+        try:
+            import toml
+            pyproject_data = toml.load(pyproject_path)
+            dependencies = pyproject_data.get("project", {}).get("dependencies", [])
+            
+            performance_deps = ["asyncpg", "aioredis", "prometheus-client"]
+            for dep in performance_deps:
+                assert any(dep in d for d in dependencies), f"Missing performance dependency in pyproject.toml: {dep}"
+        except ImportError:
+            pytest.skip("toml package not installed, skipping pyproject.toml check.")
+        except Exception as e:
+            pytest.fail(f"Failed to parse pyproject.toml: {e}")
+
+
 class TestEnvironmentConfiguration:
     """Test environment configuration and setup."""
     
@@ -280,7 +321,7 @@ class TestErrorHandling:
         from src.data.faiss_loader import load_faiss_index
         
         with pytest.raises((FileNotFoundError, RuntimeError)):
-            load_faiss_index("nonexistent_index.bin", "nonexistent_mapping.pkl")
+            load_faiss_index("nonexistent_index.bin", "nonexistent_mapping.json")
     
     def test_cache_manager_error_handling(self):
         """Test cache manager handles errors gracefully."""

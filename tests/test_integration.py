@@ -11,6 +11,7 @@ import time
 import tempfile
 from unittest.mock import Mock, patch, AsyncMock
 from pathlib import Path
+import pytest
 
 from tests import TEST_CONFIG
 
@@ -27,7 +28,7 @@ class TestSystemIntegration:
         mock_embeddings.embed_documents.return_value = [[0.1] * 1536, [0.2] * 1536]
         
         mock_faiss_index = Mock()
-        mock_faiss_index.search.return_value = ([0.5, 0.7], [[0, 1]])
+        mock_faiss_index.search.return_value = ([[0.5, 0.7]], [[0, 1]])
         
         mock_id_mapping = {0: "chunk_1", 1: "chunk_2"}
         
@@ -401,7 +402,7 @@ class TestEnvironmentIntegration:
             
             # Create mock files
             faiss_index_path = temp_path / "data" / "processed" / "faiss_index.bin"
-            id_mapping_path = temp_path / "data" / "processed" / "id_mapping.pkl"
+            id_mapping_path = temp_path / "data" / "processed" / "doc_id_map.json"
             
             faiss_index_path.write_bytes(b"mock faiss index data")
             id_mapping_path.write_bytes(b"mock id mapping data")
@@ -489,10 +490,10 @@ class TestUpgradeCompatibility:
         }
         
         def extract_core_response(response):
-            """Extract core response that old clients expect."""
+            """Extract core fields for comparison."""
             return {
-                "answer": response["answer"],
-                "sources": response.get("sources", [])
+                "answer": response.get("answer"),
+                "sources": response.get("sources")
             }
         
         # Test that new response can be converted to old format
@@ -506,7 +507,40 @@ class TestUpgradeCompatibility:
         assert old_core["answer"] == "Legal answer"
 
 
+class TestDockerSetup:
+    """Tests for Docker configuration and setup."""
+
+    @pytest.fixture(scope="class")
+    def project_root(self):
+        """Provide the project root directory."""
+        return Path(__file__).parent.parent
+
+    def test_dockerfile_is_multistage(self, project_root):
+        """Check if the Dockerfile appears to be a multi-stage build."""
+        dockerfile_path = project_root / "Dockerfile"
+        assert dockerfile_path.exists(), "Dockerfile not found"
+        
+        content = dockerfile_path.read_text()
+        assert " as builder" in content and " as production" in content, \
+            "Dockerfile does not appear to be a multi-stage build"
+
+    def test_docker_compose_has_redis(self, project_root):
+        """Check for Redis service in docker-compose.yml."""
+        compose_path = project_root / "docker-compose.yml"
+        assert compose_path.exists(), "docker-compose.yml not found"
+
+        try:
+            import yaml
+            with open(compose_path, 'r') as f:
+                compose_data = yaml.safe_load(f)
+            
+            assert "redis" in compose_data.get("services", {}), "Redis service not found in docker-compose.yml"
+        except ImportError:
+            pytest.skip("PyYAML not installed, skipping docker-compose check.")
+        except Exception as e:
+            pytest.fail(f"Failed to parse docker-compose.yml: {e}")
+
+
 if __name__ == "__main__":
-    import pytest
     # Run integration tests
     pytest.main([__file__, "-v", "--tb=short"])
