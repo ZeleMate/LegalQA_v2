@@ -76,9 +76,20 @@ class DatabaseManager:
             await self.initialize()
         
         if self.pool:
-            # Async connection
-            async with self.pool.acquire() as connection:
+            # Async connection with better error handling
+            connection = None
+            try:
+                connection = await self.pool.acquire()
                 yield connection
+            except Exception as e:
+                logger.error(f"Error acquiring connection: {e}")
+                raise
+            finally:
+                if connection:
+                    try:
+                        await self.pool.release(connection)
+                    except Exception as e:
+                        logger.warning(f"Error releasing connection: {e}")
         elif self.sync_pool:
             # Sync connection in thread pool
             connection = None
@@ -98,51 +109,60 @@ class DatabaseManager:
         """
         if not chunk_ids:
             return {}
-        
+
         # Remove duplicates while preserving order
         unique_ids = list(dict.fromkeys(chunk_ids))
-        
-        async with self.get_connection() as conn:
-            if self.pool:  # asyncpg
-                query = """
-                    SELECT chunk_id, doc_id, text, embedding
-                    FROM chunks 
-                    WHERE chunk_id = ANY($1::text[])
-                """
-                rows = await conn.fetch(query, unique_ids)
-                
-                docs_data = {}
-                for row in rows:
-                    chunk_id = row['chunk_id']
-                    docs_data[chunk_id] = {
-                        'chunk_id': chunk_id,
-                        'doc_id': row['doc_id'],
-                        'text': row['text'],
-                        'embedding': self._parse_pgvector_embedding(row['embedding'])
-                    }
-                
-            else:  # psycopg2
-                with conn.cursor() as cursor:
-                    query = """
-                        SELECT chunk_id, doc_id, text, embedding
-                        FROM chunks 
-                        WHERE chunk_id = ANY(%s)
-                    """
-                    cursor.execute(query, (unique_ids,))
-                    rows = cursor.fetchall()
-                    
-                    # Get column names
-                    colnames = [desc[0] for desc in cursor.description]
-                    
-                    docs_data = {}
-                    for row in rows:
-                        row_dict = dict(zip(colnames, row))
-                        chunk_id = row_dict['chunk_id']
-                        row_dict['embedding'] = self._parse_pgvector_embedding(row_dict['embedding'])
-                        docs_data[chunk_id] = row_dict
-        
-        logger.debug(f"Fetched {len(docs_data)} chunks from database")
-        return docs_data
+
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                async with self.get_connection() as conn:
+                    if self.pool:  # asyncpg
+                        query = """
+                            SELECT chunk_id, doc_id, text, embedding
+                            FROM chunks 
+                            WHERE chunk_id = ANY($1::text[])
+                        """
+                        rows = await conn.fetch(query, unique_ids)
+
+                        docs_data = {}
+                        for row in rows:
+                            chunk_id = row['chunk_id']
+                            docs_data[chunk_id] = {
+                                'chunk_id': chunk_id,
+                                'doc_id': row['doc_id'],
+                                'text': row['text'],
+                                'embedding': self._parse_pgvector_embedding(row['embedding'])
+                            }
+                    else:  # psycopg2
+                        with conn.cursor() as cursor:
+                            query = """
+                                SELECT chunk_id, doc_id, text, embedding
+                                FROM chunks 
+                                WHERE chunk_id = ANY(%s)
+                            """
+                            cursor.execute(query, (unique_ids,))
+                            rows = cursor.fetchall()
+
+                            # Get column names
+                            colnames = [desc[0] for desc in cursor.description]
+
+                            docs_data = {}
+                            for row in rows:
+                                row_dict = dict(zip(colnames, row))
+                                chunk_id = row_dict['chunk_id']
+                                row_dict['embedding'] = self._parse_pgvector_embedding(row_dict['embedding'])
+                                docs_data[chunk_id] = row_dict
+
+                logger.debug(f"Fetched {len(docs_data)} chunks from database")
+                return docs_data
+
+            except Exception as e:
+                logger.warning(f"Database fetch attempt {attempt + 1}/{max_retries} failed: {e}")
+                if attempt == max_retries - 1:
+                    logger.error(f"All database fetch attempts failed for chunk_ids: {chunk_ids[:5]}...")
+                    return {}
+                await asyncio.sleep(0.1 * (attempt + 1))  # Exponential backoff
     
     def _parse_pgvector_embedding(self, embedding_str: str) -> Optional[str]:
         """
@@ -212,7 +232,7 @@ class DatabaseManager:
             "ANALYZE chunks;",
             "ANALYZE documents;",
             
-            # Create indices if they don't exist
+            # Create indices if they don't exist (only if not already created)
             """
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_chunk_id 
             ON chunks(chunk_id);
@@ -220,11 +240,6 @@ class DatabaseManager:
             """
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_doc_id 
             ON chunks(doc_id);
-            """,
-            """
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_embedding_cosine 
-            ON chunks USING ivfflat (embedding vector_cosine_ops) 
-            WITH (lists = 100);
             """,
         ]
         
@@ -240,6 +255,8 @@ class DatabaseManager:
                 logger.info(f"Executed optimization query: {query[:50]}...")
             except Exception as e:
                 logger.warning(f"Optimization query failed: {e}")
+                # Don't fail the entire optimization if one query fails
+                continue
     
     async def close(self):
         """Closes the database connection pool."""
