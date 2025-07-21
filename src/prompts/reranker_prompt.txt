@@ -1,44 +1,41 @@
-ROLE:
-You are an expert legal assistant specializing in Hungarian court decisions. Your task is to analyze a set of legal documents and rank them based on their relevance to a given legal question.
-
 GOAL:
-From the list of provided documents, identify the top {k} most relevant ones that directly answer the user's question. You must provide a relevance score and a brief justification for your decision for each selected document.
+From the provided list of legal documents, select the top {k} documents that are most relevant to the user's legal question. For each selected document, assign a relevance score and provide a brief justification in Hungarian.
 
 RANKING CRITERIA:
-1.  **Direct Answer:** The document explicitly and clearly answers the legal question. This is the most important criterion.
-2.  **Legal Context:** The document provides strong, relevant legal context, even if it doesn't answer the question directly.
-3.  **Judicial Authority:** Prefer documents from higher courts (Kúria > Ítélőtábla > Törvényszék).
-4.  **Recency:** Prefer newer documents if all other criteria are equal.
-5.  **Irrelevance:** If a document is completely irrelevant, do not include it in the output.
+1. **Direct Answer:** Prefer documents that explicitly and clearly answer the question.
+2. **Legal Context:** If no direct answer, prefer documents that provide strong, relevant legal context.
+3. **Judicial Authority:** Prefer higher court documents (Kúria > Ítélőtábla > Törvényszék).
+4. **Recency:** If all else is equal, prefer newer documents.
+5. **Irrelevance:** Do not include documents that are completely irrelevant.
 
 INPUT:
-- A list of legal documents, each with a unique ID.
-- A user's legal question.
+- A list of legal documents, each with a unique "doc_id".
+- The user's legal question.
 
 OUTPUT FORMAT:
-You **MUST** return a single, valid JSON object. Do not add any text before or after the JSON object.
-The JSON object must have a single key: "ranked_documents".
-The value of "ranked_documents" should be a list of JSON objects, where each object represents a relevant document and has the following structure:
-- "doc_id": The original ID of the document (e.g., "Kfv.37356/2007/3").
-- "relevance_score": An integer score from 1 (least relevant) to 5 (most relevant).
-- "reason": A brief, one-sentence explanation in Hungarian for the assigned score.
+- Return a single, valid JSON object (no extra text).
+- The JSON must have one key: "ranked_documents".
+- The value is a list of objects, each with:
+  - "doc_id": The document's ID (e.g., "Kfv.37356/2007/3").
+  - "relevance_score": Integer from 1 (least relevant) to 5 (most relevant).
+  - "reason": A brief justification in Hungarian for the assigned score.
 
 EXAMPLE OUTPUT:
 ```json
-{{
+{
   "ranked_documents": [
-    {{
+    {
       "doc_id": "Pfv.21582/2009/4",
       "relevance_score": 5,
-      "reason": "Ez a dokumentum közvetlenül definiálja a kártérítés fogalmát és feltételeit a perben."
-    }},
-    {{
+      "reason": "Ez a dokumentum közvetlenül válaszol a kérdésre, és pontos jogi definíciót tartalmaz."
+    },
+    {
       "doc_id": "Kfv.35062/2007/5",
       "relevance_score": 3,
-      "reason": "A dokumentum releváns kontextust ad a vámügyekben, de nem válaszolja meg a kérdést közvetlenül."
-    }}
+      "reason": "A dokumentum releváns kontextust ad, de nem válaszolja meg közvetlenül a kérdést."
+    }
   ]
-}}
+}
 ```
 
 ---
@@ -52,4 +49,4 @@ Here is the data to process:
 {query}
 [/LEGAL QUESTION]
 
-Produce the JSON output now.
+Return only the JSON output.
