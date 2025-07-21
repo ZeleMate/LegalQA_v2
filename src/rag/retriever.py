@@ -4,7 +4,7 @@ Retriever implementation with caching and performance improvements.
 
 import asyncio
 import logging
-from typing import List, Optional
+from typing import List, Optional, Any
 import numpy as np
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.documents import Document
@@ -135,20 +135,17 @@ class CustomRetriever(BaseRetriever, BaseModel):
             logger.error(f"Error during document retrieval: {e}", exc_info=True)
             raise
 
-    def _get_relevant_documents(self, query: str, *, run_manager=None) -> List[Document]:
-        """Sync wrapper for async retrieval method."""
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        
-        if loop.is_running():
-            task = asyncio.create_task(self._get_relevant_documents_async(query))
-            return asyncio.run_coroutine_threadsafe(task, loop).result()
-        else:
-            return loop.run_until_complete(self._get_relevant_documents_async(query))
+    def _get_relevant_documents(self, query: str, *, run_manager: Optional[Any] = None) -> list:
+        """
+        Dummy method required by BaseRetriever abstract interface. Do not use!
+        """
+        raise NotImplementedError("Use only the async _get_relevant_documents_async method!")
 
+    async def _aget_relevant_documents(self, query: str, *, run_manager: Optional[Any] = None) -> list:
+        """
+        Async interface for LCEL pipeline compatibility.
+        """
+        return await self._get_relevant_documents_async(query)
 
 class RerankingRetriever(BaseRetriever, BaseModel):
     """Reranking retriever with caching and batch processing."""
@@ -329,19 +326,17 @@ class RerankingRetriever(BaseRetriever, BaseModel):
         logger.debug(f"Reranking completed, returning {len(final_docs)} documents")
         return final_docs[:self.k]
 
-    def _get_relevant_documents(self, query: str, *, run_manager=None) -> List[Document]:
-        """Sync wrapper for async reranking method."""
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-        if loop.is_running():
-            task = asyncio.create_task(self._get_relevant_documents_async(query))
-            return asyncio.run_coroutine_threadsafe(task, loop).result()
-        else:
-            return loop.run_until_complete(self._get_relevant_documents_async(query))
+    def _get_relevant_documents(self, query: str, *, run_manager: Optional[Any] = None) -> list:
+        """
+        Dummy method required by BaseRetriever abstract interface. Do not use!
+        """
+        raise NotImplementedError("Use only the async _get_relevant_documents_async method!")
+
+    async def _aget_relevant_documents(self, query: str, *, run_manager: Optional[Any] = None) -> list:
+        """
+        Async interface for LCEL pipeline compatibility.
+        """
+        return await self._get_relevant_documents_async(query)
 
 def initialize_retriever(embeddings, faiss_index, id_mapping, llm, reranker_prompt, k_retriever=25, k_reranker=5):
     """
