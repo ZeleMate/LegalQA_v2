@@ -358,7 +358,7 @@ class TestEnvironmentConfiguration:
         required_vars = [
             "OPENAI_API_KEY",
             "POSTGRES_USER",
-            "POSTGRES_PASSWORD",
+            "POSTGRES_PASSWORD", 
             "POSTGRES_DB",
             "REDIS_HOST"
         ]
@@ -409,17 +409,17 @@ class TestErrorHandling:
         
         with patch.dict('sys.modules', {'aioredis': mock_aioredis}):
             from src.infrastructure.cache_manager import CacheManager
-            
+
             # Initialize the manager. It will use the mocked aioredis.
             cache_manager = CacheManager(redis_url="redis://dummy")
-            
+
             logger.debug("Simulating Redis connection error on 'redis.get' method.")
-            
+
             # The CacheManager's 'get' method should catch the error and return None
             result = await cache_manager.get("some_key")
-            
-            assert result is None
-            
+
+        assert result is None
+
         logger.info("✅ CacheManager gracefully handled Redis connection error.")
             
     def test_database_connection_error_handling(self):
