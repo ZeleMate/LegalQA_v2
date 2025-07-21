@@ -126,7 +126,7 @@ def create_schema_fresh(engine):
             connection.execute(text('DROP TABLE IF EXISTS chunks CASCADE'))
             connection.execute(text('DROP TABLE IF EXISTS documents CASCADE'))
             connection.commit()
-            print("Existing tables dropped.")
+        print("Existing tables dropped.")
 
         # Create tables with proper schema
         create_tables_if_not_exist(engine)
@@ -328,159 +328,81 @@ def restart_script_from_row_group(start_row_group, batch_size, max_row_groups_pe
     print("Exiting current session to allow manual restart...")
     sys.exit(0)
 
-def safe_insert_data(engine, parquet_path, batch_size=1000, start_row_group=0, max_row_groups_per_session=2, auto_mode=False):
+def safe_insert_data(engine, parquet_path, batch_size=1000):
     """
-    Safely insert data using ON CONFLICT DO NOTHING to handle duplicates from chunking overlap.
-    This approach gracefully handles duplicate chunk_ids that occur due to sliding window overlap.
-    Uses smaller batches to avoid memory issues.
-    Automatically skips already processed batches within row groups.
+    Simplified, batch-based data import for sample workflow: processes all batches in one run, without session logic.
+    Ensures every sample record is inserted into the database. No restart or progress check needed.
     """
     print(f"Starting safe data import from: {parquet_path}")
     print(f"Using batch size: {batch_size}")
     print("Using ON CONFLICT DO NOTHING to handle duplicates from chunking overlap...")
-    print("Will automatically skip already processed batches...")
-    
+    print("Processing all batches in one run (sample workflow)...")
+
     try:
         parquet_file = pq.ParquetFile(parquet_path)
-        print(f"Total number of row groups to process: {parquet_file.num_row_groups}")
         print(f"Total rows in file: {parquet_file.metadata.num_rows}")
+        print(f"Processing in batches of size: {batch_size}")
 
-        # Check current progress
-        with engine.connect() as conn:
-            current_count = conn.execute(text('SELECT COUNT(*) FROM chunks')).scalar()
-            print(f"Current chunks in database: {current_count}")
+        batch_iterator = parquet_file.iter_batches(batch_size=batch_size)
+        batch_num = 0
+        total_inserted = 0
+        total_skipped = 0
 
-        with engine.connect() as conn:
-            end_row_group = min(start_row_group + max_row_groups_per_session, parquet_file.num_row_groups)
-            
-            for i in range(start_row_group, end_row_group):
-                
-                print(f"\nProcessing row group {i + 1}/{parquet_file.num_row_groups}... (session: {start_row_group + 1}-{end_row_group})")
-                try:
-                    df = parquet_file.read_row_group(i).to_pandas()
-                    print(f"Row group {i + 1} has {len(df)} rows")
-                    
-                    # Process in smaller batches within the row group
-                    total_batches = (len(df) + batch_size - 1) // batch_size
-                    print(f"Will process in {total_batches} batches of size {batch_size}")
-                    
-                    for batch_start in range(0, len(df), batch_size):
-                        batch_end = min(batch_start + batch_size, len(df))
-                        batch_df = df.iloc[batch_start:batch_end]
-                        
-                        batch_num = batch_start // batch_size + 1
-                        print(f"  Checking batch {batch_num}/{total_batches}: rows {batch_start}-{batch_end-1}")
-                        
-                        # Check if this batch is already processed
-                        sample_chunks = get_sample_chunks_from_batch(batch_df)
-                        if is_batch_processed(engine, sample_chunks):
-                            print(f"    Batch {batch_num} already processed - skipping")
-                            del batch_df
-                            continue
-                        
-                        print(f"    Processing batch {batch_num} (new data)")
-                        
-                        # Get unique doc_ids for this batch
-                        unique_docs = batch_df[['doc_id']].drop_duplicates()
-                        for _, row in unique_docs.iterrows():
-                            doc_id = row['doc_id']
-                            source = 'N/A'  # Default source
-                            
-                            # Insert document with conflict handling - handles doc_id duplicates
-                            conn.execute(text('''
-                                INSERT INTO documents (doc_id, source) 
-                                VALUES (:doc_id, :source) 
-                                ON CONFLICT (doc_id) DO NOTHING
-                            '''), {'doc_id': doc_id, 'source': source})
-                        
-                        # Insert chunks with duplicate handling
-                        chunks_inserted = 0
-                        chunks_skipped = 0
-                        
-                        for _, row in batch_df.iterrows():
-                            chunk_id = row.get('chunk_id')
-                            doc_id = row.get('doc_id')
-                            text_content = row.get('text')
-                            embedding_vector = row.get('embedding')
-                            
-                            # Generate chunk_id if missing
-                            if not chunk_id:
-                                chunk_id = str(uuid.uuid4())
-                            
-                            if doc_id and embedding_vector is not None:
-                                # Convert embedding to proper format
-                                embedding = np.array(embedding_vector, dtype=np.float32)
-                                embedding_str = '[' + ','.join(map(str, embedding)) + ']'
-                                
-                                # Insert chunk with conflict handling - handles chunk_id duplicates from overlap
-                                result = conn.execute(text('''
-                                    INSERT INTO chunks (chunk_id, doc_id, text, embedding) 
-                                    VALUES (:chunk_id, :doc_id, :text, CAST(:embedding_vec AS vector)) 
-                                    ON CONFLICT (chunk_id) DO NOTHING
-                                    RETURNING chunk_id
-                                '''), {
-                                    'chunk_id': chunk_id,
-                                    'doc_id': doc_id,
-                                    'text': text_content,
-                                    'embedding_vec': embedding_str
-                                })
-                                
-                                if result.rowcount > 0:
-                                    chunks_inserted += 1
-                                else:
-                                    chunks_skipped += 1
-                        
-                        conn.commit()
-                        print(f"      Inserted: {chunks_inserted}, Skipped: {chunks_skipped}")
-                        
-                        # Clear batch from memory
-                        del batch_df
-                    
-                    # Clear row group from memory
-                    del df
-                    
-                    # Check progress after each row group
-                    current_count = conn.execute(text('SELECT COUNT(*) FROM chunks')).scalar()
-                    print(f"Row group {i + 1} completed. Total chunks in database: {current_count}")
-                    
-                except Exception as e:
-                    print(f"Error processing row group {i + 1}: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    print(f"Continuing with next row group...")
-                    continue
-        
-        # Check if we need to continue with more row groups
-        if end_row_group < parquet_file.num_row_groups:
-            print(f"\nSession completed. Processed row groups {start_row_group + 1}-{end_row_group}")
-            print(f"Remaining row groups: {parquet_file.num_row_groups - end_row_group}")
-            
-            # Clean memory before restart
-            clean_memory()
-            
-            # Verify data integrity before restart
+        for batch in batch_iterator:
+            batch_num += 1
+            batch_df = batch.to_pandas()
+            print(f"Processing batch {batch_num}: {len(batch_df)} rows")
+
+            # Get unique doc_ids for this batch
+            unique_docs = batch_df[['doc_id']].drop_duplicates()
             with engine.connect() as conn:
-                result = conn.execute(text("SELECT COUNT(*) FROM chunks")).fetchone()
-                chunk_count = result[0] if result else 0
-                print(f"Current chunk count before restart: {chunk_count}")
-            
-            if auto_mode:
-                # In automated mode, just return to let the caller handle the next iteration
-                print(f"Session finished. Returning control to automated process...")
-                return
-            else:
-                # In manual mode, provide restart command and exit
-                restart_script_from_row_group(end_row_group, batch_size, max_row_groups_per_session)
-        else:
-            print(f"\nAll row groups processed successfully!")
-            print(f"Final database statistics:")
-            with engine.connect() as conn:
-                chunks_result = conn.execute(text("SELECT COUNT(*) FROM chunks")).fetchone()
-                docs_result = conn.execute(text("SELECT COUNT(DISTINCT doc_id) FROM chunks")).fetchone()
-                print(f"Total chunks: {chunks_result[0] if chunks_result else 0}")
-                print(f"Unique documents: {docs_result[0] if docs_result else 0}")
-            print("Data import completed successfully!")
-        
+                for _, row in unique_docs.iterrows():
+                    doc_id = row['doc_id']
+                    source = 'N/A'  # Default source
+                    conn.execute(text('''
+                        INSERT INTO documents (doc_id, source) 
+                        VALUES (:doc_id, :source) 
+                        ON CONFLICT (doc_id) DO NOTHING
+                    '''), {'doc_id': doc_id, 'source': source})
+
+                # Insert chunks with duplicate handling
+                chunks_inserted = 0
+                chunks_skipped = 0
+                for _, row in batch_df.iterrows():
+                    chunk_id = row.get('chunk_id')
+                    doc_id = row.get('doc_id')
+                    text_content = row.get('text_chunk')
+                    embedding_vector = row.get('embedding')
+
+                    # Generate chunk_id if missing
+                    if not chunk_id:
+                        chunk_id = str(uuid.uuid4())
+
+                    if doc_id and embedding_vector is not None:
+                        embedding = np.array(embedding_vector, dtype=np.float32)
+                        embedding_str = '[' + ','.join(map(str, embedding)) + ']'
+                        result = conn.execute(text('''
+                            INSERT INTO chunks (chunk_id, doc_id, text, embedding) 
+                            VALUES (:chunk_id, :doc_id, :text, CAST(:embedding_vec AS vector)) 
+                            ON CONFLICT (chunk_id) DO NOTHING
+                            RETURNING chunk_id
+                        '''), {
+                            'chunk_id': chunk_id,
+                            'doc_id': doc_id,
+                            'text': text_content,
+                            'embedding_vec': embedding_str
+                        })
+                        if result.rowcount > 0:
+                            chunks_inserted += 1
+                        else:
+                            chunks_skipped += 1
+                conn.commit()
+                print(f"  Inserted: {chunks_inserted}, Skipped: {chunks_skipped}")
+                total_inserted += chunks_inserted
+                total_skipped += chunks_skipped
+            del batch_df
+            gc.collect()
+        print(f"All batches processed. Total inserted: {total_inserted}, Skipped: {total_skipped}")
     except Exception as e:
         print(f"An error occurred during data import: {e}")
         import traceback
@@ -565,7 +487,7 @@ def build_faiss_index(engine, output_dir, batch_size=10000):
             
             # Convert to numpy array
             batch_embedding_matrix = np.array(batch_embeddings, dtype=np.float32)
-            
+        
             # Initialize index with first batch
             if index is None:
                 d = batch_embedding_matrix.shape[1]
@@ -712,45 +634,25 @@ if __name__ == "__main__":
 
     if check_db_connection(db_engine):
         if args.faiss_only:
-            # Csak FAISS index építés
-            print("🔍 FAISS index építés meglévő adatbázis adatokból...")
+            # Only build FAISS index from existing database data
+            print("🔍 Building FAISS index from existing database data...")
             success = build_faiss_index(db_engine, args.output_dir, args.faiss_batch_size)
             if success:
-                print("✅ FAISS index építés sikeresen befejezése!")
+                print("✅ FAISS index build completed successfully!")
             else:
-                print("❌ FAISS index építés sikertelen")
+                print("❌ FAISS index build failed")
                 sys.exit(1)
         else:
-            # Adatbázis építés + FAISS index
+            # Always use batch-based, memory-efficient import
             if args.fresh_start:
                 print("Using fresh start mode - dropping existing tables...")
                 create_schema_fresh(db_engine)
             else:
                 print("Using safe mode - preserving existing data and handling duplicates...")
                 create_tables_if_not_exist(db_engine)
-            
-            if args.auto_full:
-                # Automatikus teljes folyamat
-                print("🤖 Automatikus teljes adatbázis építés indítása...")
-                success = run_automated_full_process(db_engine, args.input_file, args.batch_size)
-                if success:
-                    print("✅ Automatikus folyamat sikeresen befejezése!")
-                    check_data_count(db_engine)
-                    build_faiss_index(db_engine, args.output_dir, args.faiss_batch_size)
-                else:
-                    print("❌ Automatikus folyamat megszakadt hibák miatt")
-                    sys.exit(1)
-            else:
-                # Manuális/session-alapú mód
-                # Auto-determine start row group if requested
-                start_row_group = args.start_row_group
-                if args.auto_continue:
-                    last_processed = get_last_processed_row_group(db_engine)
-                    start_row_group = max(0, last_processed + 1)
-                    print(f"Auto-continue mode: starting from row group {start_row_group + 1}")
-                
-                safe_insert_data(db_engine, args.input_file, args.batch_size, start_row_group, args.max_row_groups)
-                check_data_count(db_engine)
-                build_faiss_index(db_engine, args.output_dir, args.faiss_batch_size)
-        
-        print("--- Database Build Process Completed Successfully ---") 
+
+            safe_insert_data(db_engine, args.input_file, args.batch_size)
+            check_data_count(db_engine)
+            build_faiss_index(db_engine, args.output_dir, args.faiss_batch_size)
+
+    print("--- Database Build Process Completed Successfully ---")
