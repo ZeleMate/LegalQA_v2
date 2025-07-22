@@ -12,7 +12,8 @@ class DatabaseManager:
     """Optimized database manager with connection pooling and async support."""
     
     def __init__(self):
-        self.pool = None
+        self.async_pool = None
+        self.async_pool = None
         self.sync_pool = None
         self._initialized = False
     
@@ -35,7 +36,7 @@ class DatabaseManager:
         try:
             # Try to use asyncpg for better performance
             import asyncpg
-            self.pool = await asyncpg.create_pool(
+            self.async_pool = await asyncpg.create_pool(
                 **db_config,
                 min_size=5,
                 max_size=20,
@@ -75,11 +76,11 @@ class DatabaseManager:
         if not self._initialized:
             await self.initialize()
         
-        if self.pool:
+        if self.async_pool:
             # Async connection with better error handling
             connection = None
             try:
-                connection = await self.pool.acquire()
+                connection = await self.async_pool.acquire()
                 yield connection
             except Exception as e:
                 logger.error(f"Error acquiring connection: {e}")
@@ -87,7 +88,7 @@ class DatabaseManager:
             finally:
                 if connection:
                     try:
-                        await self.pool.release(connection)
+                        await self.async_pool.release(connection)
                     except Exception as e:
                         logger.warning(f"Error releasing connection: {e}")
         elif self.sync_pool:
@@ -117,7 +118,7 @@ class DatabaseManager:
         for attempt in range(max_retries):
             try:
                 async with self.get_connection() as conn:
-                    if self.pool:  # asyncpg
+                    if self.async_pool:  # asyncpg
                         query = """
                             SELECT chunk_id, doc_id, text, embedding
                             FROM chunks 
@@ -190,7 +191,7 @@ class DatabaseManager:
     async def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
         """Execute a general query and return results."""
         async with self.get_connection() as conn:
-            if self.pool:  # asyncpg
+            if self.async_pool:  # asyncpg
                 if params:
                     rows = await conn.fetch(query, *params)
                 else:
@@ -246,7 +247,7 @@ class DatabaseManager:
         for query in optimization_queries:
             try:
                 async with self.get_connection() as conn:
-                    if self.pool:
+                    if self.async_pool:
                         await conn.execute(query)
                     else:
                         with conn.cursor() as cursor:
@@ -260,8 +261,8 @@ class DatabaseManager:
     
     async def close(self):
         """Closes the database connection pool."""
-        if self.pool:
-            await self.pool.close()
+        if self.async_pool:
+            await self.async_pool.close()
         if self.sync_pool:
             self.sync_pool.closeall()
         self._initialized = False

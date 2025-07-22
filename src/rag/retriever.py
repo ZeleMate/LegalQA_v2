@@ -51,7 +51,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
         """Get embedding with caching support."""
         return await cache_embedding_query(query, self.embeddings)
 
-    async def _get_relevant_documents_async(self, query: str) -> List[Document]:
+    async def _aget_relevant_documents_async(self, query: str) -> List[Document]:
         """
         Async version of document retrieval with caching.
         """
@@ -145,7 +145,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
         """
         Async interface for LCEL pipeline compatibility.
         """
-        return await self._get_relevant_documents_async(query)
+        return await self._aget_relevant_documents_async(query)
 
 class RerankingRetriever(BaseRetriever, BaseModel):
     """Reranking retriever with caching and batch processing."""
@@ -245,14 +245,14 @@ class RerankingRetriever(BaseRetriever, BaseModel):
         
         return initial_docs
 
-    async def _get_relevant_documents_async(self, query: str) -> List[Document]:
+    async def _aget_relevant_documents_async(self, query: str) -> List[Document]:
         """
         Async version of reranking retrieval.
         """
         logger.debug(f"Starting reranking for query: {query[:50]}...")
         
         # Get initial documents
-        initial_docs = await self.retriever._get_relevant_documents_async(query)
+        initial_docs = await self.retriever._aget_relevant_documents_async(query)
         
         if not self.reranking_enabled:
             return initial_docs[:self.k]
@@ -285,7 +285,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
             chain = self.reranker_prompt | self.llm | parser
             
             try:
-                reranked_results = chain.invoke({
+                reranked_results = await chain.ainvoke({
                     "query": query,
                     "documents": doc_texts,
                     "k": self.k
@@ -336,7 +336,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
         """
         Async interface for LCEL pipeline compatibility.
         """
-        return await self._get_relevant_documents_async(query)
+        return await self._aget_relevant_documents_async(query)
 
 def initialize_retriever(embeddings, faiss_index, id_mapping, llm, reranker_prompt, k_retriever=25, k_reranker=5):
     """

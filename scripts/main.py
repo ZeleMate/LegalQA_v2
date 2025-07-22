@@ -44,7 +44,7 @@ while True:
     if question.strip().lower() in ["exit", "quit"]:
         break
     
-    result = qa_chain.invoke({
+    result = qa_chain.ainvoke({
         "question": question,
         "chat_history": chat_history
         })

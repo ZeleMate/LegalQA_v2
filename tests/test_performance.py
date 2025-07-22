@@ -458,7 +458,7 @@ class TestQALatency:
         logger.info("✅ QA Chain for latency test setup complete.")
         return chain
 
-    def test_average_qa_latency(self, qa_chain):
+    async def test_average_qa_latency(self, qa_chain):
         """Test that the average QA response time is within the threshold."""
         logger.info("--- Running QA Latency Test ---")
         questions = [
@@ -471,7 +471,7 @@ class TestQALatency:
         for i, q in enumerate(questions):
             logger.debug(f"Invoking QA chain for question #{i+1}...")
             start_time = time.time()
-            qa_chain.invoke(q)
+            await qa_chain.ainvoke(q)
             end_time = time.time()
             latency = end_time - start_time
             latencies.append(latency)

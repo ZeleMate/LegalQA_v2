@@ -1,17 +1,23 @@
 from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
 from pathlib import Path
 import os
+import logging
 
 from src.rag.retriever import RerankingRetriever
 
 def format_docs(docs):
     """Helper function to format documents for the prompt."""
+    logger = logging.getLogger(__name__)
+    logger.info(f"format_docs called with {len(docs)} documents. Type of first: {type(docs[0]) if docs else 'N/A'}")
+    # Log the first few context chunks for debugging
+    for i, doc in enumerate(docs[:3]):
+        logger.info(f"CONTEXT CHUNK {i+1} (chunk_id={getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')}): {getattr(doc, 'page_content', '')[:200]}")
     return "\n\n".join(
-        f"### Document ID: {doc.metadata.get('chunk_id', 'N/A')}\\n"
-        f"Content:\\n{doc.page_content}"
+        f"### Document ID: {getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')}\n"
+        f"Content:\n{getattr(doc, 'page_content', '')}"
         for doc in docs
     )
 
@@ -45,11 +51,18 @@ def build_qa_chain(retriever: RerankingRetriever):
     )
 
     # 3. Build the LCEL chain
-    rag_chain = (
-        {
-            "context": retriever | format_docs,
-            "question": RunnablePassthrough(),
+    async def retrieve_context_and_question(question):
+        logger = logging.getLogger(__name__)
+        logger.info(f"retrieve_context_and_question called with question: {question}")
+        docs = await retriever._aget_relevant_documents(question)
+        logger.info(f"retrieve_context_and_question returning {len(docs)} documents. Type of first: {type(docs[0]) if docs else 'N/A'}")
+        return {
+            "context": format_docs(docs),
+            "question": question
         }
+
+    rag_chain = (
+        RunnableLambda(retrieve_context_and_question)
         | prompt
         | llm
         | StrOutputParser()
