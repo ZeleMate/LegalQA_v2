@@ -15,7 +15,7 @@ from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Performance monitoring
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
@@ -30,6 +30,7 @@ from src.infrastructure import (
     get_db_manager, 
     ensure_database_setup
 )
+from src.infrastructure.gemini_embeddings import GeminiEmbeddings
 
 # Setup logging
 logging.basicConfig(
@@ -163,25 +164,20 @@ async def initialize_models():
     """Initialize AI models."""
     logger.info("Initializing AI models...")
     
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    if not openai_api_key:
-        raise ValueError("OPENAI_API_KEY environment variable is required")
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+    if not google_api_key:
+        raise ValueError("GOOGLE_API_KEY environment variable is required")
     
-    # Initialize models in parallel
-    embeddings_task = asyncio.create_task(
-        asyncio.to_thread(OpenAIEmbeddings, openai_api_key=openai_api_key)
+    embeddings = GeminiEmbeddings(api_key=google_api_key, output_dim=768)
+    
+    # Reranker LLM és prompt marad
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+    reranker_llm = await asyncio.to_thread(
+        ChatGoogleGenerativeAI, 
+        model="gemini-2.5-pro", 
+        temperature=0, 
+        api_key=google_api_key
     )
-    
-    reranker_llm_task = asyncio.create_task(
-        asyncio.to_thread(
-            ChatOpenAI, 
-            model_name="gpt-4o-mini", 
-            temperature=0, 
-            openai_api_key=openai_api_key
-        )
-    )
-    
-    # Load reranker prompt
     reranker_prompt_path = Path(__file__).parent.parent / "prompts" / "reranker_prompt.txt"
     try:
         reranker_template = reranker_prompt_path.read_text(encoding="utf-8")
@@ -189,9 +185,6 @@ async def initialize_models():
     except FileNotFoundError:
         logger.error(f"Reranker prompt not found at: {reranker_prompt_path}")
         raise
-    
-    embeddings, reranker_llm = await asyncio.gather(embeddings_task, reranker_llm_task)
-    
     return embeddings, reranker_llm, reranker_prompt
 
 

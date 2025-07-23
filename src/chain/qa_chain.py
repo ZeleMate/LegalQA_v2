@@ -1,7 +1,7 @@
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pathlib import Path
 import os
 import logging
@@ -21,7 +21,7 @@ def format_docs(docs):
         for doc in docs
     )
 
-def build_qa_chain(retriever: RerankingRetriever):
+def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
     """
     Builds a Question-Answering chain using LangChain Expression Language (LCEL).
 
@@ -45,9 +45,10 @@ def build_qa_chain(retriever: RerankingRetriever):
     prompt = PromptTemplate.from_template(template)
 
     # 2. Define the LLM for generating the final answer
-    llm = ChatOpenAI(
-        model_name="o3-2025-04-16",
-        openai_api_key=os.getenv("OPENAI_API_KEY")
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-pro",
+        temperature=0,
+        api_key=google_api_key
     )
 
     # 3. Build the LCEL chain

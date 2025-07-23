@@ -8,10 +8,7 @@ from typing import List, Optional, Any
 import numpy as np
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.documents import Document
-from langchain_core.embeddings import Embeddings
-from langchain_openai import ChatOpenAI
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -26,7 +23,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
     """Retriever with caching and async database operations."""
     
     alpha: float = 0.7
-    embeddings: Embeddings = Field(...)
+    embeddings: GoogleGenerativeAIEmbeddings = Field(...)
     faiss_index: faiss.Index = Field(...)
     id_mapping: dict = Field(...)
     k: int = 20
@@ -151,9 +148,9 @@ class RerankingRetriever(BaseRetriever, BaseModel):
     """Reranking retriever with caching and batch processing."""
     
     retriever: CustomRetriever = Field(...)
-    llm: ChatOpenAI = Field(...)
+    llm: ChatGoogleGenerativeAI = Field(...)
     reranker_prompt: PromptTemplate = Field(...)
-    embeddings: Embeddings = Field(...)
+    embeddings: GoogleGenerativeAIEmbeddings = Field(...)
     k: int = 5
     chunk_size: int = 512
     chunk_overlap: int = 50
