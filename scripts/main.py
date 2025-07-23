@@ -4,18 +4,18 @@ import pandas as pd
 from src.data.faiss_loader import load_faiss_index
 from src.rag.retriever import CustomRetriever
 from src.chain.qa_chain import build_qa_chain
-from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 PARQUET_PATH = os.getenv("PARQUET_PATH")
 FAISS_INDEX_PATH = os.getenv("FAISS_INDEX_PATH")
 ID_MAPPING_PATH = os.getenv("ID_MAPPING_PATH")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 required_env_vars = [
     "PARQUET_PATH",
     "FAISS_INDEX_PATH",
     "ID_MAPPING_PATH",
-    "OPENAI_API_KEY",
+    "GOOGLE_API_KEY",
 ]
 
 missing_vars = [var for var in required_env_vars if not os.getenv(var)]
@@ -25,7 +25,7 @@ if missing_vars:
 
 df = pd.read_parquet(PARQUET_PATH)
 faiss_index, id_mapping = load_faiss_index(FAISS_INDEX_PATH, ID_MAPPING_PATH)
-embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001", api_key=GOOGLE_API_KEY, output_dim=768)
 
 retriever = CustomRetriever(
     embeddings=embeddings,
