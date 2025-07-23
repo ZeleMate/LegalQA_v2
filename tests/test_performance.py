@@ -20,6 +20,8 @@ from tests import TEST_CONFIG
 # Configure logging for this test file
 logger = logging.getLogger(__name__)
 
+google_api_key = os.getenv("GOOGLE_API_KEY")
+
 
 class TestPerformanceMetrics:
     """Test performance metrics and thresholds."""
@@ -404,13 +406,13 @@ class TestQALatency:
     """Test the latency of the full QA pipeline."""
 
     @pytest.fixture(scope="class")
-    def qa_chain(self, embeddings_model):
+    def qa_chain(self):
         """Fixture to build the QA chain for latency tests."""
         logger.info("--- Setting up QA Chain for Latency Test (once per class) ---")
         from src.chain.qa_chain import build_qa_chain
         from src.rag.retriever import RerankingRetriever, CustomRetriever
         from src.data.faiss_loader import load_faiss_index
-        from langchain_openai import ChatOpenAI
+        from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
         from langchain_core.prompts import PromptTemplate
         from dotenv import load_dotenv
         from pathlib import Path
@@ -429,13 +431,14 @@ class TestQALatency:
             pytest.fail("Failed to load FAISS index for latency test.")
 
         logger.debug("FAISS index loaded successfully.")
-        llm = ChatOpenAI(model_name="o3-2025-04-16", temperature=0)
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0, api_key=google_api_key)
+        embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001", api_key=google_api_key, output_dim=768)
         logger.debug("LLM initialized.")
 
         custom_retriever = CustomRetriever(
             faiss_index=faiss_index,
             id_mapping=id_mapping,
-            embeddings=embeddings_model,
+            embeddings=embeddings,
             k=25
         )
         logger.debug("CustomRetriever initialized.")
@@ -448,7 +451,7 @@ class TestQALatency:
             retriever=custom_retriever,
             llm=llm,
             reranker_prompt=reranker_prompt,
-            embeddings=embeddings_model,
+            embeddings=embeddings,
             k=5,
             reranking_enabled=False
         )

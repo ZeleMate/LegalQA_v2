@@ -1,12 +1,17 @@
 import pytest
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+import os
+
+google_api_key = os.getenv("GOOGLE_API_KEY")
 
 @pytest.fixture(scope="session")
 def embeddings_model():
     """
-    Fixture to initialize and share the HuggingFaceEmbeddings model across tests.
+    Fixture to initialize and share the GeminiEmbeddings model across tests.
     The model is loaded only once per test session.
     """
-    return HuggingFaceEmbeddings(
-        model_name="Snowflake/snowflake-arctic-embed-m"
+    return GoogleGenerativeAIEmbeddings(
+        model="gemini-embedding-001",
+        api_key=google_api_key,
+        output_dim=768
     ) 

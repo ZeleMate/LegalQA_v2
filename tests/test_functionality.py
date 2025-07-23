@@ -356,7 +356,7 @@ class TestEnvironmentConfiguration:
         """Test that required environment variables are documented."""
         logger.info("--- Running Required Environment Variables Test ---")
         required_vars = [
-            "OPENAI_API_KEY",
+            "GOOGLE_API_KEY",
             "POSTGRES_USER",
             "POSTGRES_PASSWORD", 
             "POSTGRES_DB",

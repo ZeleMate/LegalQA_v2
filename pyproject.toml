@@ -16,9 +16,9 @@ dependencies = [
     "faiss-cpu",
     "langchain",
     "langchain-openai",
+    "langchain-google-genai",
     "langchain-core",
     "langchain-community",
-    "langchain-huggingface",
     "sentence-transformers",
     "fastapi",
     "uvicorn[standard]", # uvicorn is needed to run fastapi
@@ -26,6 +26,7 @@ dependencies = [
     "pgvector",
     "scikit-learn",
     "numpy<2.0",
+    "google-genai",
     # Performance optimizations
     "asyncpg>=0.28.0",  # Faster async PostgreSQL driver
     "aioredis>=2.0.0",  # Redis for caching
