@@ -56,9 +56,7 @@ class TestBasicFunctionality:
             logger.info("✅ CacheManager initialized successfully.")
 
         except Exception as e:
-            logger.error(
-                f"❌ Cache manager initialization failed: {e}", exc_info=True
-            )
+            logger.error(f"❌ Cache manager initialization failed: {e}", exc_info=True)
             pytest.fail(f"Cache manager initialization failed: {e}")
 
     def test_database_manager_initialization(self):
@@ -135,9 +133,7 @@ class TestCacheSystem:
         logger.debug("Simulating time travel to expire the cache key...")
         cache_manager.memory_cache.cache[key] = (
             value,
-            cache_manager.memory_cache.cache[key][1].__class__(
-                1970, 1, 1
-            ),  # Past date
+            cache_manager.memory_cache.cache[key][1].__class__(1970, 1, 1),  # Past date
         )
 
         assert cache_manager.memory_cache.get(key) is None
@@ -149,9 +145,7 @@ class TestCacheSystem:
         key1 = cache_manager._generate_key("test", "data")
         key2 = cache_manager._generate_key("test", "data")
         key3 = cache_manager._generate_key("test", "different_data")
-        logger.debug(
-            f"Generated keys: key1='{key1}', key2='{key2}', key3='{key3}'."
-        )
+        logger.debug(f"Generated keys: key1='{key1}', key2='{key2}', key3='{key3}'.")
 
         assert key1 == key2  # Same input should generate same key
         assert key1 != key3  # Different input should generate different key
@@ -200,9 +194,7 @@ class TestDatabaseOperations:
             logger.info("✅ Embedding string parsed successfully.")
         except ImportError:
             # Skip if numpy not available in test environment
-            logger.warning(
-                "NumPy not available, skipping embedding parsing test."
-            )
+            logger.warning("NumPy not available, skipping embedding parsing test.")
             pytest.skip("NumPy not available for testing")
 
 
@@ -290,9 +282,7 @@ class TestAPICompatibility:
             cache_hit=True,
             metadata={"key": "value"},
         )
-        logger.debug(
-            f"Created sample response model: {response.model_dump_json()}"
-        )
+        logger.debug(f"Created sample response model: {response.model_dump_json()}")
 
         assert hasattr(response, "answer")
         assert hasattr(response, "sources")
@@ -326,9 +316,7 @@ class TestProjectStructure:
                 logger.error(f"❌ Missing project file: {path}")
                 missing_files.append(path)
 
-        assert (
-            not missing_files
-        ), f"File(s) not found: {', '.join(missing_files)}"
+        assert not missing_files, f"File(s) not found: {', '.join(missing_files)}"
         logger.info("✅ All key project files are present.")
 
     def test_pyproject_toml_dependencies(self):
@@ -343,9 +331,7 @@ class TestProjectStructure:
 
             logger.debug("Loading pyproject.toml...")
             pyproject_data = toml.load(pyproject_path)
-            dependencies = pyproject_data.get("project", {}).get(
-                "dependencies", []
-            )
+            dependencies = pyproject_data.get("project", {}).get("dependencies", [])
 
             performance_deps = ["asyncpg", "aioredis", "prometheus-client"]
             logger.debug(f"Checking for dependencies: {performance_deps}")
@@ -358,23 +344,13 @@ class TestProjectStructure:
             assert (
                 not missing_deps
             ), f"Missing dependencies in pyproject.toml: {', '.join(missing_deps)}"
-            logger.info(
-                "✅ All performance dependencies found in pyproject.toml."
-            )
+            logger.info("✅ All performance dependencies found in pyproject.toml.")
         except ImportError:
-            logger.warning(
-                "toml package not installed, skipping pyproject.toml check."
-            )
-            pytest.skip(
-                "toml package not installed, skipping pyproject.toml check."
-            )
+            logger.warning("toml package not installed, skipping pyproject.toml check.")
+            pytest.skip("toml package not installed, skipping pyproject.toml check.")
         except Exception as e:
-            logger.error(
-                f"Failed to parse pyproject.toml: {e}", exc_info=True
-            )
-            pytest.fail(
-                f"Failed to parse pyproject.toml: {e}"
-            )
+            logger.error(f"Failed to parse pyproject.toml: {e}", exc_info=True)
+            pytest.fail(f"Failed to parse pyproject.toml: {e}")
 
 
 class TestEnvironmentConfiguration:
@@ -393,9 +369,7 @@ class TestEnvironmentConfiguration:
 
         # This test checks for documentation, not actual values.
         # A more robust test could check if they are set during CI.
-        logger.debug(
-            "Checking for documentation of required vars."
-        )
+        logger.debug("Checking for documentation of required vars.")
         assert isinstance(required_vars, list)
         logger.info("✅ Test passed (checks for documentation existence).")
 
@@ -424,9 +398,7 @@ class TestErrorHandling:
 
             logger.debug(f"Caught expected exception: {excinfo.value}")
             assert "Index file not found" in str(excinfo.value)
-        logger.info(
-            "Correctly raised FileNotFoundError for missing FAISS index."
-        )
+        logger.info("Correctly raised FileNotFoundError for missing FAISS index.")
 
     @pytest.mark.asyncio
     async def test_cache_manager_error_handling(self):
@@ -445,18 +417,14 @@ class TestErrorHandling:
             # Initialize the manager. It will use the mocked aioredis.
             cache_manager = CacheManager(redis_url="redis://dummy")
 
-            logger.debug(
-                "Simulating Redis connection error on 'redis.get' method."
-            )
+            logger.debug("Simulating Redis connection error on 'redis.get' method.")
 
             # The CacheManager's 'get' method should catch the error and return None
             result = await cache_manager.get("some_key")
 
         assert result is None
 
-        logger.info(
-            "✅ CacheManager gracefully handled Redis connection error."
-        )
+        logger.info("✅ CacheManager gracefully handled Redis connection error.")
 
     def test_database_connection_error_handling(self):
         """Test database connection error handling."""
@@ -466,17 +434,11 @@ class TestErrorHandling:
         db_manager = DatabaseManager()
 
         # Mock the asyncpg.create_pool to raise an error
-        with patch(
-            "asyncpg.create_pool", side_effect=OSError("DB connection refused")
-        ):
-            logger.debug(
-                "Simulating database connection refusal via create_pool."
-            )
+        with patch("asyncpg.create_pool", side_effect=OSError("DB connection refused")):
+            logger.debug("Simulating database connection refusal via create_pool.")
             with pytest.raises(OSError):
                 asyncio.run(db_manager.initialize())
-        logger.info(
-            "DatabaseManager correctly propagated connection error."
-        )
+        logger.info("DatabaseManager correctly propagated connection error.")
 
 
 if __name__ == "__main__":

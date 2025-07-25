@@ -17,12 +17,10 @@ TEST_DATA_DIR = project_root / "tests" / "data"
 TEST_CONFIG = {
     "sample_questions": [
         "Mi a bűnszervezet fogalma a Btk. szerint?",
-        "Milyen jogkövetkezmények vonatkoznak a korrupciós "
-        "bűncselekményekre?",
+        "Milyen jogkövetkezmények vonatkoznak a korrupciós " "bűncselekményekre?",
         "Hogyan kell értelmezni az önvédelem fogalmát?",
         "Mi a különbség a csalás és a sikkasztás között?",
-        "Milyen feltételek mellett alkalmazható a feltételes "
-        "szabadságra bocsátás?",
+        "Milyen feltételek mellett alkalmazható a feltételes " "szabadságra bocsátás?",
     ],
     "performance_thresholds": {
         "max_response_time": 2.0,  # seconds

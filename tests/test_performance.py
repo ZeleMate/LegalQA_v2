@@ -27,9 +27,7 @@ class TestPerformanceMetrics:
     def test_response_time_benchmark(self):
         """Test that response times meet performance thresholds."""
         logger.info("--- Running Response Time Benchmark ---")
-        max_response_time = TEST_CONFIG["performance_thresholds"][
-            "max_response_time"
-        ]
+        max_response_time = TEST_CONFIG["performance_thresholds"]["max_response_time"]
 
         # Simulate API response time measurement
         start_time = time.time()
@@ -46,19 +44,15 @@ class TestPerformanceMetrics:
 
         assert (
             response_time < max_response_time
-        ), (
-            "Response time {:.3f}s exceeds threshold {:.3f}s".format(
-                response_time, max_response_time
-            )
+        ), "Response time {:.3f}s exceeds threshold {:.3f}s".format(
+            response_time, max_response_time
         )
         logger.info("✅ Response time is within the threshold.")
 
     def test_startup_time_benchmark(self):
         """Test that startup time meets performance thresholds."""
         logger.info("--- Running Startup Time Benchmark ---")
-        max_startup_time = TEST_CONFIG["performance_thresholds"][
-            "max_startup_time"
-        ]
+        max_startup_time = TEST_CONFIG["performance_thresholds"]["max_startup_time"]
 
         # Simulate application startup
         start_time = time.time()
@@ -75,10 +69,8 @@ class TestPerformanceMetrics:
 
         assert (
             startup_time < max_startup_time
-        ), (
-            "Startup time {:.3f}s exceeds threshold {:.3f}s".format(
-                startup_time, max_startup_time
-            )
+        ), "Startup time {:.3f}s exceeds threshold {:.3f}s".format(
+            startup_time, max_startup_time
         )
         logger.info("✅ Startup time is within the threshold.")
 
@@ -116,9 +108,7 @@ class TestPerformanceMetrics:
         # For testing, we'll just check the current process doesn't exceed limits
         assert (
             memory_mb < max_memory_mb * 2
-        ), (
-            "Test process memory {:.1f}MB seems too high".format(memory_mb)
-        )
+        ), "Test process memory {:.1f}MB seems too high".format(memory_mb)
         logger.info("✅ Memory usage is within acceptable limits.")
 
     def test_concurrent_request_handling(self):
@@ -135,26 +125,15 @@ class TestPerformanceMetrics:
         num_concurrent = 5
         logger.debug(f"Simulating {num_concurrent} concurrent requests...")
         with ThreadPoolExecutor(max_workers=num_concurrent) as executor:
-            futures = [
-                executor.submit(simulate_request)
-                for _ in range(num_concurrent)
-            ]
+            futures = [executor.submit(simulate_request) for _ in range(num_concurrent)]
             response_times = [future.result() for future in futures]
         logger.debug(f"Concurrent request response times: {response_times}")
 
         # All requests should complete in reasonable time
-        max_response_time = TEST_CONFIG["performance_thresholds"][
-            "max_response_time"
-        ]
+        max_response_time = TEST_CONFIG["performance_thresholds"]["max_response_time"]
         for response_time in response_times:
-            assert (
-                response_time < max_response_time
-            ), (
-                "Concurrent request too slow."
-            )
-        logger.info(
-            "✅ All concurrent requests completed within the time threshold."
-        )
+            assert response_time < max_response_time, "Concurrent request too slow."
+        logger.info("✅ All concurrent requests completed within the time threshold.")
 
 
 class TestCachePerformance:
@@ -163,9 +142,7 @@ class TestCachePerformance:
     def test_cache_hit_rate_simulation(self):
         """Test cache hit rate meets minimum threshold."""
         logger.info("--- Running Cache Hit Rate Simulation ---")
-        min_cache_hit_rate = TEST_CONFIG["performance_thresholds"][
-            "min_cache_hit_rate"
-        ]
+        min_cache_hit_rate = TEST_CONFIG["performance_thresholds"]["min_cache_hit_rate"]
 
         # Simulate cache operations
         cache_hits = 0
@@ -183,11 +160,7 @@ class TestCachePerformance:
             )
         )
 
-        assert (
-            cache_hit_rate >= min_cache_hit_rate
-        ), (
-            "Cache hit rate too low."
-        )
+        assert cache_hit_rate >= min_cache_hit_rate, "Cache hit rate too low."
         logger.info("✅ Simulated cache hit rate meets the threshold.")
 
     def test_cache_memory_efficiency(self):
@@ -204,9 +177,7 @@ class TestCachePerformance:
         import sys
 
         cache_size = sys.getsizeof(cache_items)
-        logger.debug(
-            f"Simulated cache size for 1000 items: {cache_size} bytes."
-        )
+        logger.debug(f"Simulated cache size for 1000 items: {cache_size} bytes.")
 
         # Should be less than 1MB for this test
         assert (
@@ -236,11 +207,7 @@ class TestCachePerformance:
         logger.debug(f"Access time for 100 items: {access_time:.6f}s")
 
         # Should be very fast (under 1ms)
-        assert (
-            access_time < 0.001
-        ), (
-            "Cache access too slow."
-        )
+        assert access_time < 0.001, "Cache access too slow."
         logger.info("✅ Cache access speed is within limits.")
 
 
@@ -265,18 +232,14 @@ class TestDatabasePerformance:
         for _ in range(10):
             create_connection()
         no_pool_time = time.time() - start_time
-        logger.debug(
-            f"Simulated time without connection pooling: {no_pool_time:.4f}s"
-        )
+        logger.debug(f"Simulated time without connection pooling: {no_pool_time:.4f}s")
 
         # Test with pooling
         start_time = time.time()
         for _ in range(10):
             get_pooled_connection()
         pool_time = time.time() - start_time
-        logger.debug(
-            f"Simulated time with connection pooling: {pool_time:.4f}s"
-        )
+        logger.debug(f"Simulated time with connection pooling: {pool_time:.4f}s")
 
         # Pooling should be significantly faster
         assert (
@@ -312,20 +275,14 @@ class TestDatabasePerformance:
             )
         )
         logger.debug(
-            "Batch query time for {} items: {:.4f}s".format(
-                num_items, batch_time
-            )
+            "Batch query time for {} items: {:.4f}s".format(num_items, batch_time)
         )
 
         # Batch should be faster
         assert (
             batch_time < individual_time
-        ), (
-            "Batch query not faster than individual queries"
-        )
-        logger.info(
-            "✅ Batch query simulation is faster than individual queries."
-        )
+        ), "Batch query not faster than individual queries"
+        logger.info("✅ Batch query simulation is faster than individual queries.")
 
     def test_index_usage_simulation(self):
         """Test that proper indexing improves query performance."""
@@ -358,12 +315,8 @@ class TestDatabasePerformance:
         # Indexed search should be much faster
         assert (
             indexed_time < linear_time
-        ), (
-            "Index not providing expected performance improvement"
-        )
-        logger.info(
-            "✅ Indexed search simulation is faster than linear search."
-        )
+        ), "Index not providing expected performance improvement"
+        logger.info("✅ Indexed search simulation is faster than linear search.")
 
 
 class TestAsyncPerformance:
@@ -402,9 +355,9 @@ class TestAsyncPerformance:
         logger.debug(f"Sync sequential time: {sync_time:.4f}s")
 
         # Async should be faster
-        assert async_time < sync_time, (
-            "Async execution was not faster than sync for concurrent tasks."
-        )
+        assert (
+            async_time < sync_time
+        ), "Async execution was not faster than sync for concurrent tasks."
 
     def test_async_database_operations(self):
         """Test async database operations provide performance benefits."""
@@ -426,17 +379,11 @@ class TestAsyncPerformance:
         start_time = time.time()
         asyncio.run(test_concurrent_queries())
         total_time = time.time() - start_time
-        logger.debug(
-            f"Total time for concurrent async queries: {total_time:.4f}s"
-        )
+        logger.debug(f"Total time for concurrent async queries: {total_time:.4f}s")
 
         # Should be faster than 5 * 0.01s (50ms)
-        assert total_time < 0.05, (
-            "Concurrent async database queries took too long."
-        )
-        logger.info(
-            "✅ Concurrent async database queries completed efficiently."
-        )
+        assert total_time < 0.05, "Concurrent async database queries took too long."
+        logger.info("✅ Concurrent async database queries completed efficiently.")
 
 
 class TestLoadTesting:
@@ -452,15 +399,11 @@ class TestLoadTesting:
 
         # Simulate 100 requests over a short period
         num_requests = 100
-        logger.debug(
-            f"Simulating {num_requests} requests with 10 worker threads..."
-        )
+        logger.debug(f"Simulating {num_requests} requests with 10 worker threads...")
         start_time = time.time()
 
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [
-                executor.submit(simulate_request) for _ in range(num_requests)
-            ]
+            futures = [executor.submit(simulate_request) for _ in range(num_requests)]
             for future in futures:
                 future.result()
 
@@ -470,10 +413,8 @@ class TestLoadTesting:
         # Should complete in a reasonable timeframe (e.g., under 0.5s)
         assert (
             total_time < 0.5
-        ), (
-            "Sustained load test took {:.3f}s, indicating potential bottlenecks".format(
-                total_time
-            )
+        ), "Sustained load test took {:.3f}s, indicating potential bottlenecks".format(
+            total_time
         )
         logger.info("✅ System is stable under sustained load simulation.")
 
@@ -500,9 +441,7 @@ class TestLoadTesting:
         # This is a loose check, real memory profiling is more complex
         assert (
             final_memory_mb - initial_memory_mb < 50
-        ), (
-            "Memory usage increased too much."
-        )
+        ), "Memory usage increased too much."
         logger.info("✅ Memory usage remained stable under load.")
 
 
@@ -512,9 +451,7 @@ class TestQALatency:
     @pytest.fixture(scope="class")
     def qa_chain(self):
         """Fixture to build the QA chain for latency tests."""
-        logger.info(
-            "--- Setting up QA Chain for Latency Test (once per class) ---"
-        )
+        logger.info("--- Setting up QA Chain for Latency Test (once per class) ---")
         from pathlib import Path
 
         from dotenv import load_dotenv
@@ -530,17 +467,11 @@ class TestQALatency:
 
         load_dotenv()
 
-        faiss_path = os.getenv(
-            "FAISS_INDEX_PATH", "data/processed/sample_faiss.bin"
-        )
-        id_mapping_path = os.getenv(
-            "ID_MAPPING_PATH", "data/processed/id_mapping.pkl"
-        )
+        faiss_path = os.getenv("FAISS_INDEX_PATH", "data/processed/sample_faiss.bin")
+        id_mapping_path = os.getenv("ID_MAPPING_PATH", "data/processed/id_mapping.pkl")
 
         if not faiss_path or not id_mapping_path:
-            pytest.skip(
-                "FAISS index paths not configured, skipping latency test."
-            )
+            pytest.skip("FAISS index paths not configured, skipping latency test.")
 
         faiss_index, id_mapping = load_faiss_index(faiss_path, id_mapping_path)
         if not faiss_index:
@@ -566,15 +497,10 @@ class TestQALatency:
         logger.debug("CustomRetriever initialized.")
 
         prompt_path = (
-            Path(__file__).parent.parent
-            / "src"
-            / "prompts"
-            / "reranker_prompt.txt"
+            Path(__file__).parent.parent / "src" / "prompts" / "reranker_prompt.txt"
         )
         reranker_prompt_template = prompt_path.read_text(encoding="utf-8")
-        reranker_prompt = PromptTemplate.from_template(
-            reranker_prompt_template
-        )
+        reranker_prompt = PromptTemplate.from_template(reranker_prompt_template)
 
         reranking_retriever = RerankingRetriever(
             retriever=custom_retriever,
@@ -602,25 +528,19 @@ class TestQALatency:
 
         latencies = []
         for i, q in enumerate(questions):
-            logger.debug(f"Invoking QA chain for question #{i+1}...")
+            logger.debug(f"Invoking QA chain for question # {i + 1} ...")
             start_time = time.time()
             await qa_chain.ainvoke(q)
             end_time = time.time()
             latency = end_time - start_time
             latencies.append(latency)
-            logger.debug(f"Question #{i+1} latency: {latency:.2f}s")
+            logger.debug(f"Question #{i + 1} latency: {latency:.2f}s")
 
         avg_latency = sum(latencies) / len(latencies)
         threshold = 10.0
-        logger.info(
-            f"Average QA latency: {avg_latency:.2f}s (Threshold: {threshold}s)"
-        )
+        logger.info(f"Average QA latency: {avg_latency:.2f}s (Threshold: {threshold}s)")
 
-        assert (
-            avg_latency <= threshold
-        ), (
-            "Average latency too high."
-        )
+        assert avg_latency <= threshold, "Average latency too high."
         logger.info("✅ Average QA latency is within the threshold.")
 
 

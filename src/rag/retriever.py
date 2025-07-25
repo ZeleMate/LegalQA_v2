@@ -58,9 +58,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
         """Get embedding with caching support."""
         return await cache_embedding_query(query, self.embeddings)
 
-    async def _aget_relevant_documents_async(
-        self, query: str
-    ) -> List[Document]:
+    async def _aget_relevant_documents_async(self, query: str) -> List[Document]:
         """
         Async version of document retrieval with caching.
         """
@@ -73,9 +71,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
 
             # Search FAISS index
             logger.debug("Searching FAISS index...")
-            distances, indices = self.faiss_index.search(
-                query_vector, k=self.k
-            )
+            distances, indices = self.faiss_index.search(query_vector, k=self.k)
 
             # Map FAISS indices to chunk_ids
             retrieved_chunk_ids = []
@@ -143,23 +139,15 @@ class CustomRetriever(BaseRetriever, BaseModel):
                             }
                         )
 
-                        documents.append(
-                            Document(page_content=text, metadata=metadata)
-                        )
+                        documents.append(Document(page_content=text, metadata=metadata))
 
             # Sort by final score
-            documents.sort(
-                key=lambda d: d.metadata.get("final_score", 0), reverse=True
-            )
-            logger.debug(
-                f"Retrieval completed, returning {len(documents)} documents"
-            )
+            documents.sort(key=lambda d: d.metadata.get("final_score", 0), reverse=True)
+            logger.debug(f"Retrieval completed, returning {len(documents)} documents")
             return documents
 
         except Exception as e:
-            logger.error(
-                f"Error during document retrieval: {e}", exc_info=True
-            )
+            logger.error(f"Error during document retrieval: {e}", exc_info=True)
             raise
 
     def _get_relevant_documents(
@@ -205,9 +193,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
 
         # Create cache key based on document content and query
         doc_hash = cache_manager._generate_key("doc", doc.page_content)
-        query_hash = cache_manager._generate_key(
-            "query", query_vector.tobytes()
-        )
+        query_hash = cache_manager._generate_key("query", query_vector.tobytes())
         cache_key = f"snippets:{doc_hash}:{query_hash}:{k}"
 
         # Try to get from cache
@@ -232,9 +218,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
                 chunk_embeddings.append(embedding)
 
             chunk_embeddings_array = np.array(chunk_embeddings)
-            similarities = cosine_similarity(
-                query_vector, chunk_embeddings_array
-            )[0]
+            similarities = cosine_similarity(query_vector, chunk_embeddings_array)[0]
 
             def keyword_score_boost(chunk: str, score: float) -> float:
                 normalized_chunk = chunk.replace(" ", "").lower()
@@ -271,9 +255,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
         # Process documents in parallel
         tasks = []
         for doc in initial_docs:
-            task = self._get_prioritized_snippets_cached(
-                doc, query_vector, k=3
-            )
+            task = self._get_prioritized_snippets_cached(doc, query_vector, k=3)
             tasks.append(task)
 
         # Wait for all snippet extractions to complete
@@ -285,18 +267,14 @@ class RerankingRetriever(BaseRetriever, BaseModel):
 
         return initial_docs
 
-    async def _aget_relevant_documents_async(
-        self, query: str
-    ) -> List[Document]:
+    async def _aget_relevant_documents_async(self, query: str) -> List[Document]:
         """
         Async version of reranking retrieval.
         """
         logger.debug(f"Starting reranking for query: {query[:50]}...")
 
         # Get initial documents
-        initial_docs = await self.retriever._aget_relevant_documents_async(
-            query
-        )
+        initial_docs = await self.retriever._aget_relevant_documents_async(query)
 
         if not self.reranking_enabled:
             return initial_docs[: self.k]
@@ -305,9 +283,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
             return []
 
         # Process documents in batch
-        processed_docs = await self._batch_process_documents(
-            initial_docs, query
-        )
+        processed_docs = await self._batch_process_documents(initial_docs, query)
 
         # Create context for reranker
         doc_texts = ""
@@ -315,9 +291,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
             context = doc.metadata.get(
                 "best_snippet_for_reranker", doc.page_content[:500]
             )
-            doc_texts += (
-                f"### Document {i+1} (ID: {doc.metadata.get('chunk_id')})\\n"
-            )
+            doc_texts += f"### Document {i + 1} (ID: {doc.metadata.get('chunk_id')})\n"
             doc_texts += context
             doc_texts += "\\n---\\n"
 
@@ -341,9 +315,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
                     {"query": query, "documents": doc_texts, "k": self.k}
                 )
                 # Cache the result
-                await cache_manager.set(
-                    reranker_key, reranked_results, ttl=600
-                )
+                await cache_manager.set(reranker_key, reranked_results, ttl=600)
             except Exception as e:
                 logger.error(f"Error during reranker invocation: {e}")
                 return initial_docs[: self.k]
@@ -381,9 +353,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
             if doc.metadata.get("chunk_id") not in seen_chunk_ids:
                 final_docs.append(doc)
 
-        logger.debug(
-            f"Reranking completed, returning {len(final_docs)} documents"
-        )
+        logger.debug(f"Reranking completed, returning {len(final_docs)} documents")
         return final_docs[: self.k]
 
     def _get_relevant_documents(

@@ -15,15 +15,11 @@ class GeminiEmbeddings:
     def embed_query(self, text: str) -> np.ndarray:
         result = self.client.embed_content(
             contents=text,
-            config=GoogleGenerativeAIEmbeddings(
-                api_key=self.api_key
-            ),
+            config=GoogleGenerativeAIEmbeddings(api_key=self.api_key),
         )
         [embedding_obj] = result.embeddings
         embedding_values_np = np.array(embedding_obj.values)
-        normed_embedding = embedding_values_np / np.linalg.norm(
-            embedding_values_np
-        )
+        normed_embedding = embedding_values_np / np.linalg.norm(embedding_values_np)
         return normed_embedding
 
     async def aembed_query(self, text: str) -> np.ndarray:

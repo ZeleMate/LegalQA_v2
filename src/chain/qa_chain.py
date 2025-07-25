@@ -14,27 +14,25 @@ def format_docs(docs):
     logger = logging.getLogger(__name__)
     logger.info(
         "format_docs called with {} documents. Type of first: {}".format(
-            len(docs), type(docs[0]) if docs else 'N/A'
+            len(docs), type(docs[0]) if docs else "N/A"
         )
     )
     # Log the first few context chunks for debugging
     for i, doc in enumerate(docs[:3]):
-        chunk_id = getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')
-        page_content = getattr(doc, 'page_content', '')[:2]
+        chunk_id = getattr(doc, "metadata", {}).get("chunk_id", "N/A")
+        page_content = getattr(doc, "page_content", "")[:2]
         if len(page_content) > 2:
             page_content += ".."
-        logger.info(
-            "CONTEXT CHUNK {} (chunk_id={}):".format(i + 1, chunk_id)
-        )
-        logger.info(
-            "CONTENT PREVIEW: {}".format(page_content)
-        )
+        logger.info("CONTEXT CHUNK {} (chunk_id={}):".format(i + 1, chunk_id))
+        logger.info("CONTENT PREVIEW: {}".format(page_content))
     lines = [
         "### Document ID: {}\nContent:\n{}...".format(
-            getattr(doc, 'metadata', {}).get('chunk_id', 'N/A'),
-            (getattr(doc, 'page_content', '')[:2] + ".."
-             if len(getattr(doc, 'page_content', '')) > 2
-             else getattr(doc, 'page_content', ''))
+            getattr(doc, "metadata", {}).get("chunk_id", "N/A"),
+            (
+                getattr(doc, "page_content", "")[:2] + ".."
+                if len(getattr(doc, "page_content", "")) > 2
+                else getattr(doc, "page_content", "")
+            ),
         )
         for doc in docs
     ]
@@ -57,9 +55,7 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
     """
     # 1. Load the prompt template for the legal assistant
     prompt_path = (
-        Path(__file__).parent.parent
-        / "prompts"
-        / "legal_assistant_prompt.txt"
+        Path(__file__).parent.parent / "prompts" / "legal_assistant_prompt.txt"
     )
     try:
         template = prompt_path.read_text(encoding="utf-8")
@@ -88,11 +84,11 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
             "retrieve_context_and_question returning {} documents.".format(len(docs))
         )
         if docs:
-            logger.info(
-                "Type of first: {}".format(type(docs[0]))
-            )
+            logger.info("Type of first: {}".format(type(docs[0])))
         return {"context": format_docs(docs), "question": question}
 
-    rag_chain = RunnableLambda(retrieve_context_and_question) | prompt | llm | StrOutputParser()
+    rag_chain = (
+        RunnableLambda(retrieve_context_and_question) | prompt | llm | StrOutputParser()
+    )
 
     return rag_chain

@@ -54,12 +54,8 @@ REQUEST_COUNT = Counter(
 REQUEST_LATENCY = Histogram(
     "legalqa_request_duration_seconds", "Request processing time in seconds"
 )
-CACHE_HITS = Counter(
-    "legalqa_cache_hits_total", "Total cache hits", ["cache_type"]
-)
-DATABASE_QUERIES = Counter(
-    "legalqa_database_queries_total", "Total database queries"
-)
+CACHE_HITS = Counter("legalqa_cache_hits_total", "Total cache hits", ["cache_type"])
+DATABASE_QUERIES = Counter("legalqa_database_queries_total", "Total database queries")
 EMBEDDING_REQUESTS = Counter(
     "legalqa_embedding_requests_total", "Total embedding requests"
 )
@@ -132,7 +128,7 @@ async def lifespan(app: FastAPI):
 
         logger.info(
             "✅ Application startup complete in {:.2f} seconds.".format(
-                app_state['startup_time']
+                app_state["startup_time"]
             )
         )
 
@@ -244,9 +240,7 @@ async def performance_middleware(request: Request, call_next):
 
         # Add performance headers
         response.headers["X-Process-Time"] = str(process_time)
-        response.headers["X-Startup-Time"] = str(
-            app_state.get("startup_time", 0)
-        )
+        response.headers["X-Startup-Time"] = str(app_state.get("startup_time", 0))
 
         return response
 
@@ -380,9 +374,7 @@ async def ask_question(req: QuestionRequest, request: Request):
         processing_time = time.time() - start_time
 
         logger.info(
-            "Question processed successfully in {:.3f}s".format(
-                processing_time
-            )
+            "Question processed successfully in {:.3f}s".format(processing_time)
         )
 
         return QuestionResponse(
@@ -398,12 +390,8 @@ async def ask_question(req: QuestionRequest, request: Request):
         )
 
     except Exception as e:
-        logger.error(
-            "Error processing question: {}".format(str(e)[:60])
-        )
-        raise HTTPException(
-            status_code=500, detail=f"Internal server error: {str(e)}"
-        )
+        logger.error("Error processing question: {}".format(str(e)[:60]))
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.post("/clear-cache", tags=["Management"])
@@ -414,9 +402,7 @@ async def clear_cache():
         await cache_manager.clear_all()
         return {"status": "Cache cleared successfully"}
     else:
-        raise HTTPException(
-            status_code=503, detail="Cache manager not available"
-        )
+        raise HTTPException(status_code=503, detail="Cache manager not available")
 
 
 @app.get("/", tags=["General"])
