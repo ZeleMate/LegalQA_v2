@@ -5,17 +5,14 @@ End-to-end tests that verify the complete system works correctly.
 """
 
 import asyncio
-import json
 import logging
 import os
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
-
-from tests import TEST_CONFIG
 
 # Configure logging for this test file
 logger = logging.getLogger(__name__)
@@ -194,7 +191,6 @@ class TestApiIntegration:
 
         except ImportError:
             logger.warning("FastAPI not installed, skipping structure test.")
-            pass
 
     def test_middleware_integration(self):
         """Test middleware can be integrated properly."""

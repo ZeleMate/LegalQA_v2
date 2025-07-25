@@ -5,13 +5,10 @@ Tests performance improvements and ensures optimizations work as expected.
 """
 
 import asyncio
-import json
 import logging
 import os
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from unittest.mock import Mock, patch
 
 import psutil
 import pytest

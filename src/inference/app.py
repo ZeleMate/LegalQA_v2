@@ -9,7 +9,6 @@ import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request

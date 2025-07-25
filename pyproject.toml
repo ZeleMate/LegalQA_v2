@@ -66,3 +66,6 @@ multi_line_output = 3
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"] 
+
+[tool.flake8]
+max-line-length = 88 

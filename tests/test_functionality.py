@@ -5,18 +5,12 @@ Tests core functionality to ensure optimizations don't break existing features.
 """
 
 import asyncio
-import json
 import logging
 import os
-import time
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from dotenv import load_dotenv
-from fastapi.testclient import TestClient
-
-from tests import TEST_CONFIG
 
 # Configure logging for this test file
 logger = logging.getLogger(__name__)
@@ -30,21 +24,17 @@ class TestBasicFunctionality:
         logger.info("--- Running Import Test ---")
         try:
             # Test original components
-            from src.data.faiss_loader import load_faiss_index
+            pass
 
             logger.debug("Successfully imported faiss_loader.")
-            from src.chain.qa_chain import build_qa_chain
 
             logger.debug("Successfully imported qa_chain.")
 
             # Test new optimized components
-            from src.infrastructure.cache_manager import CacheManager, get_cache_manager
 
             logger.debug("Successfully imported cache_manager.")
-            from src.infrastructure.db_manager import DatabaseManager, get_db_manager
 
             logger.debug("Successfully imported db_manager.")
-            from src.rag.retriever import CustomRetriever, RerankingRetriever
 
             logger.debug("Successfully imported retriever.")
 

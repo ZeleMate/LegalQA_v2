@@ -4,11 +4,8 @@ LegalQA Test Suite
 Comprehensive testing framework for performance optimizations and functionality validation.
 """
 
-import os
 import sys
 from pathlib import Path
-
-import pytest
 
 # Add src to Python path for imports
 project_root = Path(__file__).parent.parent
