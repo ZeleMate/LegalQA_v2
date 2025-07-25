@@ -1,5 +1,6 @@
 # LegalQA: High-Performance RAG System for Legal Documents
 
+[![CI](https://github.com/ZeleMate/LegalQA_v2/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeleMate/LegalQA_v2/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 LegalQA is a production-ready, high-performance Retrieval-Augmented Generation (RAG) system designed to answer complex legal questions based on a large corpus of documents. It is built with a modern, scalable architecture, fully containerized with Docker, and ready for deployment.
