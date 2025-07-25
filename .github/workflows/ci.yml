@@ -1,0 +1,94 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    name: Lint Python code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: 3.10
+      - name: Install dependencies (conda/pip fallback)
+        run: |
+          if [ -f environment.yml ]; then
+            conda env update -f environment.yml --prune
+            conda install flake8 black isort mypy bandit pytest pytest-cov
+          else
+            python -m pip install --upgrade pip
+            pip install flake8 black isort mypy bandit pytest pytest-cov
+          fi
+      - name: Run flake8
+        run: flake8 src/ tests/
+      - name: Run black
+        run: black --check src/ tests/
+      - name: Run isort
+        run: isort --check-only src/ tests/
+      - name: Run mypy
+        run: mypy src/
+      - name: Run bandit (security)
+        run: bandit -r src/
+
+  test:
+    name: Run Pytest & Coverage
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: 3.10
+      - name: Install dependencies (conda/pip fallback)
+        run: |
+          if [ -f environment.yml ]; then
+            conda env update -f environment.yml --prune
+            conda install pytest pytest-cov
+          else
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt || pip install pytest pytest-cov
+          fi
+      - name: Run tests with coverage
+        run: pytest --maxfail=1 --disable-warnings --tb=short --cov=src --cov-report=xml
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+
+  docker-build:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t legalqa:ci .
+
+  merge-check:
+    name: Prevent Merge Collisions
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for merge conflicts
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          git merge --no-commit --no-ff origin/${{ github.base_ref }} || (echo 'Merge conflict detected!' && exit 1)
+
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [merge-check]
+    steps:
+      - name: All checks passed
+        run: echo "All CI checks passed!" 
