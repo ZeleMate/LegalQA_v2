@@ -1,7 +1,7 @@
 # Optimized Multi-stage Dockerfile for LegalQA
 
 # Build stage - Install dependencies
-FROM python:3.10-slim AS builder
+FROM python:3.10-slim as builder
 
 # Set environment variables for build optimization
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -30,7 +30,7 @@ RUN pip install --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir .
 
 # Production stage - Minimal runtime image
-FROM python:3.10-slim AS production
+FROM python:3.10-slim as production
 
 # Runtime environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -79,7 +79,7 @@ CMD ["uvicorn", "src.inference.app:app", \
      "--log-level", "info"]
 
 # Development stage - For development with hot reload
-FROM production AS development
+FROM production as development
 
 # Switch back to root for installing development tools
 USER root

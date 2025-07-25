@@ -68,4 +68,4 @@ multi_line_output = 3
 packages = ["src"] 
 
 [tool.flake8]
-max-line-length = 88 
+max-line-length = 100

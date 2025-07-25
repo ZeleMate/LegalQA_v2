@@ -7,7 +7,11 @@ This module contains:
 - Performance monitoring utilities
 """
 
-from .cache_manager import CacheManager, cache_embedding_query, get_cache_manager
+from .cache_manager import (
+    CacheManager,
+    cache_embedding_query,
+    get_cache_manager,
+)
 from .db_manager import (
     DatabaseManager,
     ensure_database_setup,

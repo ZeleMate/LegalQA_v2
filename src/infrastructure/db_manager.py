@@ -160,8 +160,10 @@ class DatabaseManager:
                             for row in rows:
                                 row_dict = dict(zip(colnames, row))
                                 chunk_id = row_dict["chunk_id"]
-                                row_dict["embedding"] = self._parse_pgvector_embedding(
-                                    row_dict["embedding"]
+                                row_dict["embedding"] = (
+                                    self._parse_pgvector_embedding(
+                                        row_dict["embedding"]
+                                    )
                                 )
                                 docs_data[chunk_id] = row_dict
 
@@ -196,7 +198,9 @@ class DatabaseManager:
 
             # Convert to numpy array more efficiently
             values = np.fromstring(clean_str, sep=",", dtype=np.float32)
-            return values.tobytes().hex()  # Return as hex string for consistency
+            return (
+                values.tobytes().hex()
+            )  # Return as hex string for consistency
 
         except (ValueError, AttributeError) as e:
             logger.warning(f"Failed to parse embedding: {e}")
@@ -239,7 +243,9 @@ class DatabaseManager:
             results = await self.execute_query(stats_query)
             return {row["tablename"]: row for row in results}
         except Exception as e:
-            logger.error(f"Failed to get database stats: {e}")
+            logger.error(
+                f"Failed to get database stats: {str(e)[:60]}..."
+            )
             return {}
 
     async def optimize_database(self):

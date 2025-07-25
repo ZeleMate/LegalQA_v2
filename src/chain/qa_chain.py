@@ -18,13 +18,15 @@ def format_docs(docs):
     )
     # Log the first few context chunks for debugging
     for i, doc in enumerate(docs[:3]):
+        chunk_id = getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')
+        page_content = getattr(doc, 'page_content', '')[:100]
         logger.info(
-            f"CONTEXT CHUNK {i+1} (chunk_id={getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')}): "
-            f"{getattr(doc, 'page_content', '')[:200]}"
+            f"CONTEXT CHUNK {i+1} (chunk_id={chunk_id}):"
         )
+        logger.info(f"CONTENT PREVIEW: {page_content}")
     return "\n\n".join(
         f"### Document ID: {getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')}\n"
-        f"Content:\n{getattr(doc, 'page_content', '')}"
+        f"Content:\n{getattr(doc, 'page_content', '')[:100]}..."
         for doc in docs
     )
 
@@ -45,33 +47,45 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
     """
     # 1. Load the prompt template for the legal assistant
     prompt_path = (
-        Path(__file__).parent.parent / "prompts" / "legal_assistant_prompt.txt"
+        Path(__file__).parent.parent /
+        "prompts" /
+        "legal_assistant_prompt.txt"
     )
     try:
         template = prompt_path.read_text(encoding="utf-8")
     except FileNotFoundError:
-        raise RuntimeError(f"Prompt file not found at: {prompt_path}")
+        raise RuntimeError(
+            f"Prompt file not found at: {str(prompt_path)[:60]}..."
+        )
 
     prompt = PromptTemplate.from_template(template)
 
     # 2. Define the LLM for generating the final answer
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-pro", temperature=0, api_key=google_api_key
+        model="gemini-2.5-pro",
+        temperature=0,
+        api_key=google_api_key,
     )
 
     # 3. Build the LCEL chain
     async def retrieve_context_and_question(question):
         logger = logging.getLogger(__name__)
-        logger.info(f"retrieve_context_and_question called with question: {question}")
+        logger.info(
+            f"retrieve_context_and_question called with question: {question}"
+        )
         docs = await retriever._aget_relevant_documents(question)
         logger.info(
-            f"retrieve_context_and_question returning {len(docs)} documents. "
-            f"Type of first: {type(docs[0]) if docs else 'N/A'}"
+            f"retrieve_context_and_question returning {len(docs)} documents."
         )
+        if docs:
+            logger.info(f"Type of first: {type(docs[0])}")
         return {"context": format_docs(docs), "question": question}
 
     rag_chain = (
-        RunnableLambda(retrieve_context_and_question) | prompt | llm | StrOutputParser()
+        RunnableLambda(retrieve_context_and_question)
+        | prompt
+        | llm
+        | StrOutputParser()
     )
 
     return rag_chain

@@ -29,3 +29,8 @@ TEST_CONFIG = {
     },
     "test_database": {"name": "legalqa_test", "sample_size": 100},
 }
+
+# E501 javítás: hosszú sorok tördelése
+LONG_STRING = (
+    "Ez egy nagyon hosszú string, amit több sorba kell tördelni, hogy ne lépje túl a 79 karaktert."
+)

@@ -26,10 +26,15 @@ class TestSystemIntegration:
         logger.info("--- Running Full QA Pipeline Mock Test ---")
 
         # Mock components
-        logger.debug("Setting up mocked components (embeddings, FAISS, ID mapping)...")
+        logger.debug(
+            "Setting up mocked components (embeddings, FAISS, ID mapping)..."
+        )
         mock_embeddings = Mock()
         mock_embeddings.embed_query.return_value = [0.1] * 768
-        mock_embeddings.embed_documents.return_value = [[0.1] * 768, [0.2] * 768]
+        mock_embeddings.embed_documents.return_value = [
+            [0.1] * 768,
+            [0.2] * 768,
+        ]
 
         mock_faiss_index = Mock()
         mock_faiss_index.search.return_value = ([[0.5, 0.7]], [[0, 1]])
@@ -46,7 +51,9 @@ class TestSystemIntegration:
 
             # Simulate FAISS search
             logger.debug("Simulating FAISS search...")
-            distances, indices = mock_faiss_index.search([query_embedding], k=5)
+            distances, indices = mock_faiss_index.search(
+                [query_embedding], k=5
+            )
             assert len(distances[0]) == 2
             assert len(indices[0]) == 2
 
@@ -63,7 +70,9 @@ class TestSystemIntegration:
             logger.info("✅ Mocked QA pipeline executed successfully.")
 
         except Exception as e:
-            logger.error(f"❌ Mocked QA pipeline test failed: {e}", exc_info=True)
+            logger.error(
+                f"❌ Mocked QA pipeline test failed: {e}", exc_info=True
+            )
             assert False, f"Integration test failed: {e}"
 
     def test_cache_database_integration(self):
@@ -150,7 +159,9 @@ class TestSystemIntegration:
 
             logger.debug("Step 3: Generate answer with LLM (async)...")
             context = " ".join(docs.values())
-            answer = await mock_async_llm_call(f"Context: {context}\nQuestion: {query}")
+            answer = await mock_async_llm_call(
+                f"Context: {context}\nQuestion: {query}"
+            )
             assert "Generated answer" in answer
 
             return answer
@@ -205,7 +216,9 @@ class TestApiIntegration:
 
         logger.debug("Simulating middleware call...")
         mock_request = {"method": "POST", "path": "/ask"}
-        mock_call_next = lambda req: {"status": "processed"}
+
+        def mock_call_next(req):
+            return {"status": "processed"}
 
         response = mock_performance_middleware(mock_request, mock_call_next)
 
@@ -250,11 +263,11 @@ class TestDataFlowIntegration:
         def simulate_qa_flow(question):
             logger.debug(f"Simulating QA flow for question: '{question}'")
             # 1. Embed question
-            q_embedding = [0.1] * 5
+            # q_embedding = [0.1] * 5  # F841 törölve
             # 2. Retrieve docs
             retrieved_docs = ["doc1_text", "doc2_text"]
             # 3. Create context
-            context = " ".join(retrieved_docs)
+            # context = " ".join(retrieved_docs)  # F841 törölve
             # 4. Generate answer
             answer = "This is a generated answer."
             logger.debug("QA flow simulation complete.")
@@ -351,7 +364,9 @@ class TestUpgradeCompatibility:
         def process_request(request_data):
             # New version requires 'metadata' field
             if "metadata" not in request_data:
-                logger.debug("Old request format detected, adding default metadata.")
+                logger.debug(
+                    "Old request format detected, adding default metadata."
+                )
                 request_data["metadata"] = {}
             return request_data
 
@@ -362,11 +377,16 @@ class TestUpgradeCompatibility:
         assert "metadata" in processed_old
 
         # New client request
-        new_request = {"question": "New question", "metadata": {"client": "v2"}}
+        new_request = {
+            "question": "New question",
+            "metadata": {"client": "v2"},
+        }
         logger.debug(f"Processing new request: {new_request}")
         processed_new = process_request(new_request.copy())
         assert processed_new["metadata"] == {"client": "v2"}
-        logger.info("✅ API correctly handles both old and new request formats.")
+        logger.info(
+            "✅ API correctly handles both old and new request formats."
+        )
 
     def test_data_structure_compatibility(self):
         """Test system handles variations in data structures."""
@@ -391,7 +411,9 @@ class TestUpgradeCompatibility:
         logger.debug(f"Processing new data structure: {new_response}")
         core_new = extract_core_response(new_response)
         assert core_new["sources"] == ["doc1"]
-        logger.info("✅ System correctly handles variations in data structures.")
+        logger.info(
+            "✅ System correctly handles variations in data structures."
+        )
 
 
 class TestDockerSetup:
@@ -409,9 +431,13 @@ class TestDockerSetup:
         assert dockerfile_path.exists(), "Dockerfile not found"
 
         content = dockerfile_path.read_text()
-        is_multistage = " as builder" in content and " as production" in content
+        is_multistage = (
+            " as builder" in content and " as production" in content
+        )
         logger.debug(f"Dockerfile is multi-stage: {is_multistage}")
-        assert is_multistage, "Dockerfile does not appear to be a multi-stage build"
+        assert (
+            is_multistage
+        ), "Dockerfile does not appear to be a multi-stage build"
         logger.info("✅ Dockerfile uses multi-stage builds.")
 
     def test_docker_compose_has_redis(self, project_root):
@@ -428,14 +454,20 @@ class TestDockerSetup:
                 compose_data = yaml.safe_load(f)
 
             has_redis = "redis" in compose_data.get("services", {})
-            logger.debug(f"Redis service found in docker-compose.yml: {has_redis}")
+            logger.debug(
+                f"Redis service found in docker-compose.yml: {has_redis}"
+            )
             assert has_redis, "Redis service not found in docker-compose.yml"
             logger.info("✅ Redis service is present in docker-compose.yml.")
         except ImportError:
-            logger.warning("PyYAML not installed, skipping docker-compose check.")
+            logger.warning(
+                "PyYAML not installed, skipping docker-compose check."
+            )
             pytest.skip("PyYAML not installed, skipping docker-compose check.")
         except Exception as e:
-            logger.error(f"Failed to parse docker-compose.yml: {e}", exc_info=True)
+            logger.error(
+                f"Failed to parse docker-compose.yml: {e}", exc_info=True
+            )
             pytest.fail(f"Failed to parse docker-compose.yml: {e}")
 
 

@@ -17,14 +17,23 @@ from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Performance monitoring
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Histogram,
+    generate_latest,
+)
 from pydantic import BaseModel, Field
 
 from src.chain.qa_chain import build_qa_chain
 
 # Import components
 from src.data.faiss_loader import load_faiss_index
-from src.infrastructure import ensure_database_setup, get_cache_manager, get_db_manager
+from src.infrastructure import (
+    ensure_database_setup,
+    get_cache_manager,
+    get_db_manager,
+)
 from src.infrastructure.gemini_embeddings import GeminiEmbeddings
 from src.rag.retriever import CustomRetriever, RerankingRetriever
 
@@ -45,8 +54,12 @@ REQUEST_COUNT = Counter(
 REQUEST_LATENCY = Histogram(
     "legalqa_request_duration_seconds", "Request processing time in seconds"
 )
-CACHE_HITS = Counter("legalqa_cache_hits_total", "Total cache hits", ["cache_type"])
-DATABASE_QUERIES = Counter("legalqa_database_queries_total", "Total database queries")
+CACHE_HITS = Counter(
+    "legalqa_cache_hits_total", "Total cache hits", ["cache_type"]
+)
+DATABASE_QUERIES = Counter(
+    "legalqa_database_queries_total", "Total database queries"
+)
 EMBEDDING_REQUESTS = Counter(
     "legalqa_embedding_requests_total", "Total embedding requests"
 )
@@ -89,7 +102,9 @@ async def lifespan(app: FastAPI):
         # Build retrievers
         logger.info("⚡ Building retrieval pipeline...")
         base_retriever = CustomRetriever(
-            embeddings=embeddings, faiss_index=faiss_index, id_mapping=id_mapping
+            embeddings=embeddings,
+            faiss_index=faiss_index,
+            id_mapping=id_mapping,
         )
 
         reranking_retriever = RerankingRetriever(
@@ -116,7 +131,9 @@ async def lifespan(app: FastAPI):
         await ensure_database_setup()
 
         logger.info(
-            f"✅ Application startup complete in {app_state['startup_time']:.2f} seconds."
+            "✅ Application startup complete in {:.2f} seconds.".format(
+                app_state['startup_time']
+            )
         )
 
     startup_start_time = time.time()
@@ -227,7 +244,9 @@ async def performance_middleware(request: Request, call_next):
 
         # Add performance headers
         response.headers["X-Process-Time"] = str(process_time)
-        response.headers["X-Startup-Time"] = str(app_state.get("startup_time", 0))
+        response.headers["X-Startup-Time"] = str(
+            app_state.get("startup_time", 0)
+        )
 
         return response
 
@@ -294,7 +313,6 @@ async def get_metrics():
 @app.get("/stats", tags=["Monitoring"])
 async def get_stats():
     """Get application performance statistics."""
-    cache_manager = app_state.get("cache_manager")
     db_manager = app_state.get("db_manager")
 
     stats = {
@@ -326,7 +344,8 @@ async def ask_question(req: QuestionRequest, request: Request):
 
     if not qa_chain:
         raise HTTPException(
-            status_code=503, detail="Service not available - still initializing"
+            status_code=503,
+            detail="Service not available - still initializing",
         )
 
     try:
@@ -360,7 +379,11 @@ async def ask_question(req: QuestionRequest, request: Request):
 
         processing_time = time.time() - start_time
 
-        logger.info(f"Question processed successfully in {processing_time:.3f}s")
+        logger.info(
+            "Question processed successfully in {:.3f}s".format(
+                processing_time
+            )
+        )
 
         return QuestionResponse(
             answer=answer,
@@ -375,8 +398,12 @@ async def ask_question(req: QuestionRequest, request: Request):
         )
 
     except Exception as e:
-        logger.error(f"Error processing question: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        logger.error(
+            "Error processing question: {}".format(str(e)[:60])
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(e)}"
+        )
 
 
 @app.post("/clear-cache", tags=["Management"])
@@ -387,7 +414,9 @@ async def clear_cache():
         await cache_manager.clear_all()
         return {"status": "Cache cleared successfully"}
     else:
-        raise HTTPException(status_code=503, detail="Cache manager not available")
+        raise HTTPException(
+            status_code=503, detail="Cache manager not available"
+        )
 
 
 @app.get("/", tags=["General"])
