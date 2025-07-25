@@ -15,7 +15,6 @@ class DatabaseManager:
 
     def __init__(self):
         self.async_pool = None
-        self.async_pool = None
         self.sync_pool = None
         self._initialized = False
 
