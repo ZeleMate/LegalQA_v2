@@ -394,9 +394,7 @@ class TestEnvironmentConfiguration:
         # This test checks for documentation, not actual values.
         # A more robust test could check if they are set during CI.
         logger.debug(
-            "Checking for documentation of required vars: {}".format(
-                ", ".join(required_vars)
-            )
+            "Checking for documentation of required vars."
         )
         assert isinstance(required_vars, list)
         logger.info("✅ Test passed (checks for documentation existence).")
@@ -477,8 +475,7 @@ class TestErrorHandling:
             with pytest.raises(OSError):
                 asyncio.run(db_manager.initialize())
         logger.info(
-            "DatabaseManager correctly propagated connection error from "
-            "create_pool."
+            "DatabaseManager correctly propagated connection error."
         )
 
 

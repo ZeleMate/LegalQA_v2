@@ -176,10 +176,7 @@ class DatabaseManager:
                 )
                 if attempt == max_retries - 1:
                     logger.error(
-                        "All database fetch attempts failed for chunk_ids: {}...".format(
-                            str(chunk_ids[:1]) + "..."
-                            if len(chunk_ids) > 1 else str(chunk_ids)
-                        )
+                        "All database fetch attempts failed."
                     )
                     return {}
                 await asyncio.sleep(0.1 * (attempt + 1))  # Exponential backoff

@@ -150,7 +150,7 @@ class TestPerformanceMetrics:
             assert (
                 response_time < max_response_time
             ), (
-                "Concurrent request took {:.3f}s".format(response_time)
+                "Concurrent request too slow."
             )
         logger.info(
             "✅ All concurrent requests completed within the time threshold."
@@ -186,9 +186,7 @@ class TestCachePerformance:
         assert (
             cache_hit_rate >= min_cache_hit_rate
         ), (
-            "Cache hit rate {:.2f} below threshold {:.2f}".format(
-                cache_hit_rate, min_cache_hit_rate
-            )
+            "Cache hit rate too low."
         )
         logger.info("✅ Simulated cache hit rate meets the threshold.")
 
@@ -241,7 +239,7 @@ class TestCachePerformance:
         assert (
             access_time < 0.001
         ), (
-            "Cache access time {:.6f}s too slow".format(access_time)
+            "Cache access too slow."
         )
         logger.info("✅ Cache access speed is within limits.")
 
@@ -503,9 +501,7 @@ class TestLoadTesting:
         assert (
             final_memory_mb - initial_memory_mb < 50
         ), (
-            "Memory usage increased from {:.1f}MB to {:.1f}MB under load".format(
-                initial_memory_mb, final_memory_mb
-            )
+            "Memory usage increased too much."
         )
         logger.info("✅ Memory usage remained stable under load.")
 
@@ -623,9 +619,7 @@ class TestQALatency:
         assert (
             avg_latency <= threshold
         ), (
-            "Average latency {:.2f}s exceeds threshold {:.2f}s".format(
-                avg_latency, threshold
-            )
+            "Average latency too high."
         )
         logger.info("✅ Average QA latency is within the threshold.")
 

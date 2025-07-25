@@ -20,24 +20,25 @@ def format_docs(docs):
     # Log the first few context chunks for debugging
     for i, doc in enumerate(docs[:3]):
         chunk_id = getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')
-        page_content = getattr(doc, 'page_content', '')[:100]
+        page_content = getattr(doc, 'page_content', '')[:2]
+        if len(page_content) > 2:
+            page_content += ".."
         logger.info(
-            "CONTEXT CHUNK {} (chunk_id={}):".format(i+1, chunk_id)
+            "CONTEXT CHUNK {} (chunk_id={}):".format(i + 1, chunk_id)
         )
-        preview = page_content[:30]
-        if len(page_content) > 30:
-            preview += "..."
         logger.info(
-            "CONTENT PREVIEW: {}".format(preview)
+            "CONTENT PREVIEW: {}".format(page_content)
         )
-    return "\n\n".join(
-        "### Document ID: {}\nContent:\n{}...".format(
-            getattr(doc, 'metadata', {}).get('chunk_id', 'N/A'),
-            (getattr(doc, 'page_content', '')[:30] + "..."
-             if len(getattr(doc, 'page_content', '')) > 30
-             else getattr(doc, 'page_content', ''))
+    return (
+        "\n\n".join(
+            "### Document ID: {}\nContent:\n{}...".format(
+                getattr(doc, 'metadata', {}).get('chunk_id', 'N/A'),
+                (getattr(doc, 'page_content', '')[:2] + ".."
+                 if len(getattr(doc, 'page_content', '')) > 2
+                 else getattr(doc, 'page_content', ''))
+            )
+            for doc in docs
         )
-        for doc in docs
     )
 
 
