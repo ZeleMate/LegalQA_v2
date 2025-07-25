@@ -71,13 +71,13 @@ class CacheManager:
     def _generate_key(self, prefix: str, data: Any) -> str:
         """Generate a consistent cache key from data."""
         if isinstance(data, str):
-            content = data
+            content = data.encode()
         elif isinstance(data, np.ndarray):
             content = data.tobytes()
         else:
-            content = str(data)
+            content = str(data).encode()
 
-        hash_object = hashlib.md5(content.encode())
+        hash_object = hashlib.md5(content)
         return f"{prefix}:{hash_object.hexdigest()}"
 
     async def get(self, key: str) -> Optional[Any]:
@@ -142,6 +142,8 @@ class CacheManager:
             @wraps(func)
             async def wrapper(self_obj, text: str, *args, **kwargs):
                 cache_key = self._generate_key("embedding", text)
+                if 'ttl' in kwargs:
+                    kwargs.pop('ttl')
                 return await self.get_or_compute(
                     cache_key, func, ttl, self_obj, text, *args, **kwargs
                 )
@@ -159,6 +161,8 @@ class CacheManager:
                 # Create cache key from query and relevant parameters
                 key_data = f"{query}:{str(args)}:{str(sorted(kwargs.items()))}"
                 cache_key = self._generate_key("query", key_data)
+                if 'ttl' in kwargs:
+                    kwargs.pop('ttl')
                 return await self.get_or_compute(
                     cache_key, func, ttl, self_obj, query, *args, **kwargs
                 )
@@ -176,6 +180,12 @@ class CacheManager:
                 logger.info("All caches cleared")
             except Exception as e:
                 logger.warning(f"Redis clear error: {e}")
+
+    async def close(self) -> None:
+        """Close the cache manager."""
+        if self.redis:
+            await self.redis.close()
+            logger.info("Redis cache closed")
 
 
 # Global cache manager instance

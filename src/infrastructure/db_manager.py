@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, AsyncGenerator
 
 import numpy as np
 from dotenv import load_dotenv
@@ -75,7 +75,7 @@ class DatabaseManager:
         self._initialized = True
 
     @asynccontextmanager
-    async def get_connection(self):
+    async def get_connection(self) -> AsyncGenerator[Any, None]:
         """Get a database connection from the pool."""
         if not self._initialized:
             await self.initialize()
