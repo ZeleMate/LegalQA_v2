@@ -513,9 +513,8 @@ class TestQALatency:
             model="gemini-2.5-pro", temperature=0, api_key=google_api_key
         )
         embeddings = GoogleGenerativeAIEmbeddings(
-            model="gemini-embedding-001",
+            model="models/text-embedding-004",
             api_key=google_api_key,
-            output_dim=768,
         )
         logger.debug("LLM initialized.")
 
@@ -544,14 +543,15 @@ class TestQALatency:
             reranker_prompt=reranker_prompt,
             embeddings=embeddings,
             k=5,
-            reranking_enabled=False,
+            reranking_enabled=True,
         )
         logger.debug("RerankingRetriever initialized (reranking disabled).")
 
-        chain = build_qa_chain(reranking_retriever)
+        chain = build_qa_chain(reranking_retriever, google_api_key)
         logger.info("✅ QA Chain for latency test setup complete.")
         return chain
 
+    @pytest.mark.asyncio
     async def test_average_qa_latency(self, qa_chain):
         """Test that the average QA response time is within the threshold."""
         logger.info("--- Running QA Latency Test ---")

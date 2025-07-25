@@ -174,7 +174,7 @@ async def initialize_models():
     if not google_api_key:
         raise ValueError("GOOGLE_API_KEY environment variable is required")
 
-    embeddings = GeminiEmbeddings(api_key=google_api_key, output_dim=768)
+    embeddings = GeminiEmbeddings(api_key=google_api_key)
 
     # Reranker LLM és prompt marad
     google_api_key = os.getenv("GOOGLE_API_KEY")

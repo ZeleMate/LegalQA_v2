@@ -13,5 +13,5 @@ def embeddings_model():
     The model is loaded only once per test session.
     """
     return GoogleGenerativeAIEmbeddings(
-        model="gemini-embedding-001", api_key=google_api_key, output_dim=768
+        model="models/text-embedding-004", api_key=google_api_key
     )

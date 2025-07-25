@@ -25,7 +25,7 @@ if missing_vars:
 
 df = pd.read_parquet(PARQUET_PATH)
 faiss_index, id_mapping = load_faiss_index(FAISS_INDEX_PATH, ID_MAPPING_PATH)
-embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001", api_key=GOOGLE_API_KEY, output_dim=768)
+embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", api_key=GOOGLE_API_KEY)
 
 retriever = CustomRetriever(
     embeddings=embeddings,
@@ -34,7 +34,7 @@ retriever = CustomRetriever(
     documents_df=df,
 )
 
-qa_chain = build_qa_chain(retriever)
+qa_chain = build_qa_chain(retriever, GOOGLE_API_KEY)
 
 print("\n📘 LegalQA Bot. Type your question or 'exit' to quit.")
 chat_history = []
