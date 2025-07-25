@@ -142,8 +142,8 @@ class CacheManager:
             @wraps(func)
             async def wrapper(self_obj, text: str, *args, **kwargs):
                 cache_key = self._generate_key("embedding", text)
-                if 'ttl' in kwargs:
-                    kwargs.pop('ttl')
+                if "ttl" in kwargs:
+                    kwargs.pop("ttl")
                 return await self.get_or_compute(
                     cache_key, func, ttl, self_obj, text, *args, **kwargs
                 )
@@ -161,8 +161,8 @@ class CacheManager:
                 # Create cache key from query and relevant parameters
                 key_data = f"{query}:{str(args)}:{str(sorted(kwargs.items()))}"
                 cache_key = self._generate_key("query", key_data)
-                if 'ttl' in kwargs:
-                    kwargs.pop('ttl')
+                if "ttl" in kwargs:
+                    kwargs.pop("ttl")
                 return await self.get_or_compute(
                     cache_key, func, ttl, self_obj, query, *args, **kwargs
                 )
