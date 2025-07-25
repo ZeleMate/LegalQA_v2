@@ -30,7 +30,7 @@ jobs:
       - name: Run black
         run: black --check src/ tests/
       - name: Run isort
-        run: isort --check-only src/ tests/
+        run: isort --check src/ tests/
       - name: Run mypy
         run: mypy src/
       - name: Run bandit (security)

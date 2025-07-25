@@ -1,4 +1,5 @@
 import os
+
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -24,13 +25,8 @@ def load_parquet_file(parquet_path: str) -> pd.DataFrame:
     """
     df = pd.read_parquet(parquet_path)
     required_columns = ["text", "embeddings"]
-    missing_columns = [
-        col for col in required_columns if col not in df.columns
-    ]
+    missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
-        msg = (
-            "Hiányzik a következő oszlop(ok): "
-            f"{str(missing_columns)[:60]}..."
-        )
+        msg = "Hiányzik a következő oszlop(ok): " f"{str(missing_columns)[:60]}..."
         raise ValueError(msg)
     return df

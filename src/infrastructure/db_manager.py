@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import numpy as np
 from dotenv import load_dotenv
@@ -50,9 +50,7 @@ class DatabaseManager:
             logger.info("Async database pool initialized with asyncpg")
 
         except ImportError:
-            logger.warning(
-                "asyncpg not available, falling back to synchronous connections"
-            )
+            logger.warning("asyncpg not available, falling back to synchronous connections")
             # Fallback to psycopg2 with connection pooling
             try:
                 import psycopg2.pool
@@ -107,9 +105,7 @@ class DatabaseManager:
         else:
             raise RuntimeError("No database pool available")
 
-    async def fetch_chunks_by_ids(
-        self, chunk_ids: List[str]
-    ) -> Dict[str, Dict[str, Any]]:
+    async def fetch_chunks_by_ids(self, chunk_ids: List[str]) -> Dict[str, Dict[str, Any]]:
         """
         Optimized method to fetch document chunks by IDs.
         Uses batch queries and optimized data processing.
@@ -138,9 +134,7 @@ class DatabaseManager:
                                 "chunk_id": chunk_id,
                                 "doc_id": row["doc_id"],
                                 "text": row["text"],
-                                "embedding": self._parse_pgvector_embedding(
-                                    row["embedding"]
-                                ),
+                                "embedding": self._parse_pgvector_embedding(row["embedding"]),
                             }
                     else:  # psycopg2
                         with conn.cursor() as cursor:
@@ -168,9 +162,7 @@ class DatabaseManager:
 
             except Exception as e:
                 logger.warning(
-                    "Database fetch attempt {}/{} failed: {}".format(
-                        attempt + 1, max_retries, e
-                    )
+                    "Database fetch attempt {}/{} failed: {}".format(attempt + 1, max_retries, e)
                 )
                 if attempt == max_retries - 1:
                     logger.error("All database fetch attempts failed.")
