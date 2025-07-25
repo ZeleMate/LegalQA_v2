@@ -1,6 +1,6 @@
 [flake8]
 max-line-length = 100
-ignore = W291,W292
+ignore = W291,W292,W503,W504
 exclude = venv,env,.git,__pycache__
 
 # Alapértelmezett target könyvtárak

@@ -29,17 +29,16 @@ def format_docs(docs):
         logger.info(
             "CONTENT PREVIEW: {}".format(page_content)
         )
-    return (
-        "\n\n".join(
-            "### Document ID: {}\nContent:\n{}...".format(
-                getattr(doc, 'metadata', {}).get('chunk_id', 'N/A'),
-                (getattr(doc, 'page_content', '')[:2] + ".."
-                 if len(getattr(doc, 'page_content', '')) > 2
-                 else getattr(doc, 'page_content', ''))
-            )
-            for doc in docs
+    lines = [
+        "### Document ID: {}\nContent:\n{}...".format(
+            getattr(doc, 'metadata', {}).get('chunk_id', 'N/A'),
+            (getattr(doc, 'page_content', '')[:2] + ".."
+             if len(getattr(doc, 'page_content', '')) > 2
+             else getattr(doc, 'page_content', ''))
         )
-    )
+        for doc in docs
+    ]
+    return "\n\n".join(lines)
 
 
 def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
@@ -58,9 +57,9 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
     """
     # 1. Load the prompt template for the legal assistant
     prompt_path = (
-        Path(__file__).parent.parent /
-        "prompts" /
-        "legal_assistant_prompt.txt"
+        Path(__file__).parent.parent
+        / "prompts"
+        / "legal_assistant_prompt.txt"
     )
     try:
         template = prompt_path.read_text(encoding="utf-8")
@@ -94,11 +93,6 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
             )
         return {"context": format_docs(docs), "question": question}
 
-    rag_chain = (
-        RunnableLambda(retrieve_context_and_question)
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
+    rag_chain = RunnableLambda(retrieve_context_and_question) | prompt | llm | StrOutputParser()
 
     return rag_chain
