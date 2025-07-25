@@ -39,12 +39,18 @@ class TestPerformanceMetrics:
 
         response_time = time.time() - start_time
         logger.debug(
-            f"Simulated response time: {response_time:.3f}s (Threshold: {max_response_time}s)"
+            "Simulated response time: {:.3f}s (Threshold: {}s)".format(
+                response_time, max_response_time
+            )
         )
 
         assert (
             response_time < max_response_time
-        ), f"Response time {response_time:.3f}s exceeds threshold {max_response_time}s"
+        ), (
+            "Response time {:.3f}s exceeds threshold {:.3f}s".format(
+                response_time, max_response_time
+            )
+        )
         logger.info("✅ Response time is within the threshold.")
 
     def test_startup_time_benchmark(self):
@@ -62,12 +68,18 @@ class TestPerformanceMetrics:
 
         startup_time = time.time() - start_time
         logger.debug(
-            f"Simulated startup time: {startup_time:.3f}s (Threshold: {max_startup_time}s)"
+            "Simulated startup time: {:.3f}s (Threshold: {}s)".format(
+                startup_time, max_startup_time
+            )
         )
 
         assert (
             startup_time < max_startup_time
-        ), f"Startup time {startup_time:.3f}s exceeds threshold {max_startup_time}s"
+        ), (
+            "Startup time {:.3f}s exceeds threshold {:.3f}s".format(
+                startup_time, max_startup_time
+            )
+        )
         logger.info("✅ Startup time is within the threshold.")
 
     def _simulate_component_loading(self):
@@ -96,13 +108,17 @@ class TestPerformanceMetrics:
         memory_info = process.memory_info()
         memory_mb = memory_info.rss / 1024 / 1024
         logger.debug(
-            f"Current memory usage: {memory_mb:.1f}MB (Threshold: {max_memory_mb}MB)"
+            "Current memory usage: {:.1f}MB (Threshold: {}MB)".format(
+                memory_mb, max_memory_mb
+            )
         )
 
         # For testing, we'll just check the current process doesn't exceed limits
         assert (
             memory_mb < max_memory_mb * 2
-        ), f"Test process memory {memory_mb:.1f}MB seems too high"
+        ), (
+            "Test process memory {:.1f}MB seems too high".format(memory_mb)
+        )
         logger.info("✅ Memory usage is within acceptable limits.")
 
     def test_concurrent_request_handling(self):
@@ -133,7 +149,9 @@ class TestPerformanceMetrics:
         for response_time in response_times:
             assert (
                 response_time < max_response_time
-            ), f"Concurrent request took {response_time:.3f}s"
+            ), (
+                "Concurrent request took {:.3f}s".format(response_time)
+            )
         logger.info(
             "✅ All concurrent requests completed within the time threshold."
         )
@@ -160,12 +178,18 @@ class TestCachePerformance:
 
         cache_hit_rate = cache_hits / total_requests
         logger.debug(
-            f"Simulated cache hit rate: {cache_hit_rate:.2f} (Threshold: {min_cache_hit_rate:.2f})"
+            "Simulated cache hit rate: {:.2f} (Threshold: {:.2f})".format(
+                cache_hit_rate, min_cache_hit_rate
+            )
         )
 
         assert (
             cache_hit_rate >= min_cache_hit_rate
-        ), f"Cache hit rate {cache_hit_rate:.2f} below threshold {min_cache_hit_rate:.2f}"
+        ), (
+            "Cache hit rate {:.2f} below threshold {:.2f}".format(
+                cache_hit_rate, min_cache_hit_rate
+            )
+        )
         logger.info("✅ Simulated cache hit rate meets the threshold.")
 
     def test_cache_memory_efficiency(self):
@@ -216,7 +240,9 @@ class TestCachePerformance:
         # Should be very fast (under 1ms)
         assert (
             access_time < 0.001
-        ), f"Cache access time {access_time:.6f}s too slow"
+        ), (
+            "Cache access time {:.6f}s too slow".format(access_time)
+        )
         logger.info("✅ Cache access speed is within limits.")
 
 
@@ -283,16 +309,22 @@ class TestDatabasePerformance:
         individual_time = individual_queries(num_items)
         batch_time = batch_query(num_items)
         logger.debug(
-            f"Individual query time for {num_items} items: {individual_time:.4f}s"
+            "Individual query time for {} items: {:.4f}s".format(
+                num_items, individual_time
+            )
         )
         logger.debug(
-            f"Batch query time for {num_items} items: {batch_time:.4f}s"
+            "Batch query time for {} items: {:.4f}s".format(
+                num_items, batch_time
+            )
         )
 
         # Batch should be faster
         assert (
             batch_time < individual_time
-        ), "Batch query not faster than individual queries"
+        ), (
+            "Batch query not faster than individual queries"
+        )
         logger.info(
             "✅ Batch query simulation is faster than individual queries."
         )
@@ -328,7 +360,9 @@ class TestDatabasePerformance:
         # Indexed search should be much faster
         assert (
             indexed_time < linear_time
-        ), "Index not providing expected performance improvement"
+        ), (
+            "Index not providing expected performance improvement"
+        )
         logger.info(
             "✅ Indexed search simulation is faster than linear search."
         )
@@ -370,9 +404,8 @@ class TestAsyncPerformance:
         logger.debug(f"Sync sequential time: {sync_time:.4f}s")
 
         # Async should be faster
-        assert async_time < sync_time
-        logger.info(
-            "✅ Async execution was faster than sync for concurrent tasks."
+        assert async_time < sync_time, (
+            "Async execution was not faster than sync for concurrent tasks."
         )
 
     def test_async_database_operations(self):
@@ -400,7 +433,9 @@ class TestAsyncPerformance:
         )
 
         # Should be faster than 5 * 0.01s (50ms)
-        assert total_time < 0.05
+        assert total_time < 0.05, (
+            "Concurrent async database queries took too long."
+        )
         logger.info(
             "✅ Concurrent async database queries completed efficiently."
         )
@@ -437,7 +472,11 @@ class TestLoadTesting:
         # Should complete in a reasonable timeframe (e.g., under 0.5s)
         assert (
             total_time < 0.5
-        ), f"Sustained load test took {total_time:.3f}s, indicating potential bottlenecks"
+        ), (
+            "Sustained load test took {:.3f}s, indicating potential bottlenecks".format(
+                total_time
+            )
+        )
         logger.info("✅ System is stable under sustained load simulation.")
 
     def test_memory_stability_under_load(self):
@@ -462,8 +501,12 @@ class TestLoadTesting:
         # Memory should not have increased by more than a reasonable amount (e.g., 50MB)
         # This is a loose check, real memory profiling is more complex
         assert (
-            final_memory_mb - initial_memory_mb
-        ) < 50, f"Memory usage increased from {initial_memory_mb:.1f}MB to {final_memory_mb:.1f}MB under load"
+            final_memory_mb - initial_memory_mb < 50
+        ), (
+            "Memory usage increased from {:.1f}MB to {:.1f}MB under load".format(
+                initial_memory_mb, final_memory_mb
+            )
+        )
         logger.info("✅ Memory usage remained stable under load.")
 
 
@@ -579,7 +622,11 @@ class TestQALatency:
 
         assert (
             avg_latency <= threshold
-        ), f"Average latency {avg_latency:.2f}s exceeds threshold {threshold}s"
+        ), (
+            "Average latency {:.2f}s exceeds threshold {:.2f}s".format(
+                avg_latency, threshold
+            )
+        )
         logger.info("✅ Average QA latency is within the threshold.")
 
 

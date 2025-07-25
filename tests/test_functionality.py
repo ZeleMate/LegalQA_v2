@@ -369,8 +369,12 @@ class TestProjectStructure:
                 "toml package not installed, skipping pyproject.toml check."
             )
         except Exception as e:
-            logger.error(f"Failed to parse pyproject.toml: {e}", exc_info=True)
-            pytest.fail(f"Failed to parse pyproject.toml: {e}")
+            logger.error(
+                f"Failed to parse pyproject.toml: {e}", exc_info=True
+            )
+            pytest.fail(
+                f"Failed to parse pyproject.toml: {e}"
+            )
 
 
 class TestEnvironmentConfiguration:
@@ -390,7 +394,9 @@ class TestEnvironmentConfiguration:
         # This test checks for documentation, not actual values.
         # A more robust test could check if they are set during CI.
         logger.debug(
-            f"Checking for documentation of required vars: {required_vars}"
+            "Checking for documentation of required vars: {}".format(
+                ", ".join(required_vars)
+            )
         )
         assert isinstance(required_vars, list)
         logger.info("✅ Test passed (checks for documentation existence).")
@@ -421,7 +427,7 @@ class TestErrorHandling:
             logger.debug(f"Caught expected exception: {excinfo.value}")
             assert "Index file not found" in str(excinfo.value)
         logger.info(
-            "✅ Correctly raised FileNotFoundError for missing FAISS index."
+            "Correctly raised FileNotFoundError for missing FAISS index."
         )
 
     @pytest.mark.asyncio
@@ -471,7 +477,8 @@ class TestErrorHandling:
             with pytest.raises(OSError):
                 asyncio.run(db_manager.initialize())
         logger.info(
-            "✅ DatabaseManager correctly propagated connection error from create_pool."
+            "DatabaseManager correctly propagated connection error from "
+            "create_pool."
         )
 
 

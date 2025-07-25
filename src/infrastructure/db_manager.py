@@ -125,11 +125,10 @@ class DatabaseManager:
             try:
                 async with self.get_connection() as conn:
                     if self.async_pool:  # asyncpg
-                        query = """
-                            SELECT chunk_id, doc_id, text, embedding
-                            FROM chunks 
-                            WHERE chunk_id = ANY($1::text[])
-                        """
+                        query = (
+                            "SELECT chunk_id, doc_id, text, embedding "
+                            "FROM chunks WHERE chunk_id = ANY($1::text[])"
+                        )
                         rows = await conn.fetch(query, unique_ids)
 
                         docs_data = {}
@@ -145,11 +144,10 @@ class DatabaseManager:
                             }
                     else:  # psycopg2
                         with conn.cursor() as cursor:
-                            query = """
-                                SELECT chunk_id, doc_id, text, embedding
-                                FROM chunks 
-                                WHERE chunk_id = ANY(%s)
-                            """
+                            query = (
+                                "SELECT chunk_id, doc_id, text, embedding "
+                                "FROM chunks WHERE chunk_id = ANY(%s)"
+                            )
                             cursor.execute(query, (unique_ids,))
                             rows = cursor.fetchall()
 
@@ -172,11 +170,16 @@ class DatabaseManager:
 
             except Exception as e:
                 logger.warning(
-                    f"Database fetch attempt {attempt + 1}/{max_retries} failed: {e}"
+                    "Database fetch attempt {}/{} failed: {}".format(
+                        attempt + 1, max_retries, e
+                    )
                 )
                 if attempt == max_retries - 1:
                     logger.error(
-                        f"All database fetch attempts failed for chunk_ids: {chunk_ids[:5]}..."
+                        "All database fetch attempts failed for chunk_ids: {}...".format(
+                            str(chunk_ids[:1]) + "..."
+                            if len(chunk_ids) > 1 else str(chunk_ids)
+                        )
                     )
                     return {}
                 await asyncio.sleep(0.1 * (attempt + 1))  # Exponential backoff
@@ -244,7 +247,7 @@ class DatabaseManager:
             return {row["tablename"]: row for row in results}
         except Exception as e:
             logger.error(
-                f"Failed to get database stats: {str(e)[:60]}..."
+                "Failed to get database stats: {}...".format(str(e)[:60])
             )
             return {}
 

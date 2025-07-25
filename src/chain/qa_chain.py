@@ -13,20 +13,30 @@ def format_docs(docs):
     """Helper function to format documents for the prompt."""
     logger = logging.getLogger(__name__)
     logger.info(
-        f"format_docs called with {len(docs)} documents. Type of first: "
-        f"{type(docs[0]) if docs else 'N/A'}"
+        "format_docs called with {} documents. Type of first: {}".format(
+            len(docs), type(docs[0]) if docs else 'N/A'
+        )
     )
     # Log the first few context chunks for debugging
     for i, doc in enumerate(docs[:3]):
         chunk_id = getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')
         page_content = getattr(doc, 'page_content', '')[:100]
         logger.info(
-            f"CONTEXT CHUNK {i+1} (chunk_id={chunk_id}):"
+            "CONTEXT CHUNK {} (chunk_id={}):".format(i+1, chunk_id)
         )
-        logger.info(f"CONTENT PREVIEW: {page_content}")
+        preview = page_content[:30]
+        if len(page_content) > 30:
+            preview += "..."
+        logger.info(
+            "CONTENT PREVIEW: {}".format(preview)
+        )
     return "\n\n".join(
-        f"### Document ID: {getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')}\n"
-        f"Content:\n{getattr(doc, 'page_content', '')[:100]}..."
+        "### Document ID: {}\nContent:\n{}...".format(
+            getattr(doc, 'metadata', {}).get('chunk_id', 'N/A'),
+            (getattr(doc, 'page_content', '')[:30] + "..."
+             if len(getattr(doc, 'page_content', '')) > 30
+             else getattr(doc, 'page_content', ''))
+        )
         for doc in docs
     )
 
@@ -55,7 +65,7 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
         template = prompt_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         raise RuntimeError(
-            f"Prompt file not found at: {str(prompt_path)[:60]}..."
+            "Prompt file not found at: {}...".format(str(prompt_path)[:60])
         )
 
     prompt = PromptTemplate.from_template(template)
@@ -71,14 +81,16 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
     async def retrieve_context_and_question(question):
         logger = logging.getLogger(__name__)
         logger.info(
-            f"retrieve_context_and_question called with question: {question}"
+            "retrieve_context_and_question called with question: {}".format(question)
         )
         docs = await retriever._aget_relevant_documents(question)
         logger.info(
-            f"retrieve_context_and_question returning {len(docs)} documents."
+            "retrieve_context_and_question returning {} documents.".format(len(docs))
         )
         if docs:
-            logger.info(f"Type of first: {type(docs[0])}")
+            logger.info(
+                "Type of first: {}".format(type(docs[0]))
+            )
         return {"context": format_docs(docs), "question": question}
 
     rag_chain = (
