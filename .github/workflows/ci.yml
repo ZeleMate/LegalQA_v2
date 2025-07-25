@@ -12,20 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Conda
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          auto-update-conda: true
-          python-version: 3.10
-      - name: Install dependencies (conda/pip fallback)
-        run: |
-          if [ -f environment.yml ]; then
-            conda env update -f environment.yml --prune
-            conda install flake8 black isort mypy bandit pytest pytest-cov
-          else
-            python -m pip install --upgrade pip
-            pip install flake8 black isort mypy bandit pytest pytest-cov
-          fi
+          python-version: '3.10'
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: pip install .[dev]
       - name: Run flake8
         run: flake8 src/ tests/
       - name: Run black
@@ -43,20 +42,19 @@ jobs:
     needs: lint
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Conda
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          auto-update-conda: true
-          python-version: 3.10
-      - name: Install dependencies (conda/pip fallback)
-        run: |
-          if [ -f environment.yml ]; then
-            conda env update -f environment.yml --prune
-            conda install pytest pytest-cov
-          else
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt || pip install pytest pytest-cov
-          fi
+          python-version: '3.10'
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: pip install .[dev]
       - name: Run tests with coverage
         run: pytest --maxfail=1 --disable-warnings --tb=short --cov=src --cov-report=xml
       - name: Upload coverage report
