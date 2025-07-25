@@ -48,6 +48,7 @@ dev = [
     "psutil>=5.9.0",  # For performance monitoring in tests
     "toml",
     "pyyaml",
+    "flake8",
 ]
 notebook = [
     "matplotlib",
