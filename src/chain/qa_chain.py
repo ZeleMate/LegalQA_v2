@@ -1,25 +1,32 @@
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-from langchain_core.output_parsers import StrOutputParser
-from langchain_google_genai import ChatGoogleGenerativeAI
-from pathlib import Path
-import os
 import logging
+import os
+from pathlib import Path
+
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from src.rag.retriever import RerankingRetriever
+
 
 def format_docs(docs):
     """Helper function to format documents for the prompt."""
     logger = logging.getLogger(__name__)
-    logger.info(f"format_docs called with {len(docs)} documents. Type of first: {type(docs[0]) if docs else 'N/A'}")
+    logger.info(
+        f"format_docs called with {len(docs)} documents. Type of first: {type(docs[0]) if docs else 'N/A'}"
+    )
     # Log the first few context chunks for debugging
     for i, doc in enumerate(docs[:3]):
-        logger.info(f"CONTEXT CHUNK {i+1} (chunk_id={getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')}): {getattr(doc, 'page_content', '')[:200]}")
+        logger.info(
+            f"CONTEXT CHUNK {i+1} (chunk_id={getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')}): {getattr(doc, 'page_content', '')[:200]}"
+        )
     return "\n\n".join(
         f"### Document ID: {getattr(doc, 'metadata', {}).get('chunk_id', 'N/A')}\n"
         f"Content:\n{getattr(doc, 'page_content', '')}"
         for doc in docs
     )
+
 
 def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
     """
@@ -36,19 +43,19 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
         A Runnable object representing the QA chain.
     """
     # 1. Load the prompt template for the legal assistant
-    prompt_path = Path(__file__).parent.parent / "prompts" / "legal_assistant_prompt.txt"
+    prompt_path = (
+        Path(__file__).parent.parent / "prompts" / "legal_assistant_prompt.txt"
+    )
     try:
         template = prompt_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         raise RuntimeError(f"Prompt file not found at: {prompt_path}")
-        
+
     prompt = PromptTemplate.from_template(template)
 
     # 2. Define the LLM for generating the final answer
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-pro",
-        temperature=0,
-        api_key=google_api_key
+        model="gemini-2.5-pro", temperature=0, api_key=google_api_key
     )
 
     # 3. Build the LCEL chain
@@ -56,17 +63,13 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
         logger = logging.getLogger(__name__)
         logger.info(f"retrieve_context_and_question called with question: {question}")
         docs = await retriever._aget_relevant_documents(question)
-        logger.info(f"retrieve_context_and_question returning {len(docs)} documents. Type of first: {type(docs[0]) if docs else 'N/A'}")
-        return {
-            "context": format_docs(docs),
-            "question": question
-        }
+        logger.info(
+            f"retrieve_context_and_question returning {len(docs)} documents. Type of first: {type(docs[0]) if docs else 'N/A'}"
+        )
+        return {"context": format_docs(docs), "question": question}
 
     rag_chain = (
-        RunnableLambda(retrieve_context_and_question)
-        | prompt
-        | llm
-        | StrOutputParser()
+        RunnableLambda(retrieve_context_and_question) | prompt | llm | StrOutputParser()
     )
 
     return rag_chain

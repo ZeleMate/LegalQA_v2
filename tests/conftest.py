@@ -1,8 +1,10 @@
-import pytest
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import os
 
+import pytest
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
 google_api_key = os.getenv("GOOGLE_API_KEY")
+
 
 @pytest.fixture(scope="session")
 def embeddings_model():
@@ -11,7 +13,5 @@ def embeddings_model():
     The model is loaded only once per test session.
     """
     return GoogleGenerativeAIEmbeddings(
-        model="gemini-embedding-001",
-        api_key=google_api_key,
-        output_dim=768
-    ) 
+        model="gemini-embedding-001", api_key=google_api_key, output_dim=768
+    )

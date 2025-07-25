@@ -1,0 +1,586 @@
+src/chain/__init__.py:3:4: W292 no newline at end of file
+src/chain/qa_chain.py:2:1: F401 'langchain_core.runnables.RunnablePassthrough' imported but unused
+src/chain/qa_chain.py:6:1: F401 'os' imported but unused
+src/chain/qa_chain.py:11:1: E302 expected 2 blank lines, found 1
+src/chain/qa_chain.py:14:80: E501 line too long (116 > 79 characters)
+src/chain/qa_chain.py:17:80: E501 line too long (150 > 79 characters)
+src/chain/qa_chain.py:19:80: E501 line too long (83 > 79 characters)
+src/chain/qa_chain.py:24:1: E302 expected 2 blank lines, found 1
+src/chain/qa_chain.py:26:80: E501 line too long (81 > 79 characters)
+src/chain/qa_chain.py:29:80: E501 line too long (82 > 79 characters)
+src/chain/qa_chain.py:39:80: E501 line too long (89 > 79 characters)
+src/chain/qa_chain.py:44:1: W293 blank line contains whitespace
+src/chain/qa_chain.py:57:80: E501 line too long (86 > 79 characters)
+src/chain/qa_chain.py:59:80: E501 line too long (136 > 79 characters)
+src/chain/qa_chain.py:72:21: W292 no newline at end of file
+src/data/faiss_loader.py:10:1: E302 expected 2 blank lines, found 1
+src/data/faiss_loader.py:10:80: E501 line too long (94 > 79 characters)
+src/data/faiss_loader.py:18:80: E501 line too long (88 > 79 characters)
+src/data/faiss_loader.py:23:80: E501 line too long (82 > 79 characters)
+src/data/faiss_loader.py:27:1: W293 blank line contains whitespace
+src/data/faiss_loader.py:35:80: E501 line too long (86 > 79 characters)
+src/data/faiss_loader.py:40:77: W292 no newline at end of file
+src/data/parquet_loader.py:27:80: E501 line too long (80 > 79 characters)
+src/data/parquet_loader.py:30:14: W292 no newline at end of file
+src/inference/__init__.py:3:4: W291 trailing whitespace
+src/inference/__init__.py:3:5: W292 no newline at end of file
+src/inference/app.py:12:1: F401 'typing.Optional' imported but unused
+src/inference/app.py:21:80: E501 line too long (86 > 79 characters)
+src/inference/app.py:29:23: W291 trailing whitespace
+src/inference/app.py:30:20: W291 trailing whitespace
+src/inference/app.py:37:24: W291 trailing whitespace
+src/inference/app.py:45:30: W291 trailing whitespace
+src/inference/app.py:46:32: W291 trailing whitespace
+src/inference/app.py:50:40: W291 trailing whitespace
+src/inference/app.py:54:32: W291 trailing whitespace
+src/inference/app.py:79:1: W293 blank line contains whitespace
+src/inference/app.py:89:1: W293 blank line contains whitespace
+src/inference/app.py:93:1: W293 blank line contains whitespace
+src/inference/app.py:96:1: W293 blank line contains whitespace
+src/inference/app.py:101:1: W293 blank line contains whitespace
+src/inference/app.py:109:1: W293 blank line contains whitespace
+src/inference/app.py:116:1: W293 blank line contains whitespace
+src/inference/app.py:119:1: W293 blank line contains whitespace
+src/inference/app.py:127:1: W293 blank line contains whitespace
+src/inference/app.py:130:1: W293 blank line contains whitespace
+src/inference/app.py:131:80: E501 line too long (98 > 79 characters)
+src/inference/app.py:132:1: W293 blank line contains whitespace
+src/inference/app.py:135:1: W293 blank line contains whitespace
+src/inference/app.py:137:1: W293 blank line contains whitespace
+src/inference/app.py:142:1: W293 blank line contains whitespace
+src/inference/app.py:166:1: W293 blank line contains whitespace
+src/inference/app.py:170:1: W293 blank line contains whitespace
+src/inference/app.py:172:1: W293 blank line contains whitespace
+src/inference/app.py:176:32: W291 trailing whitespace
+src/inference/app.py:177:32: W291 trailing whitespace
+src/inference/app.py:178:23: W291 trailing whitespace
+src/inference/app.py:181:80: E501 line too long (91 > 79 characters)
+src/inference/app.py:195:1: W293 blank line contains whitespace
+src/inference/app.py:197:80: E501 line too long (99 > 79 characters)
+src/inference/app.py:198:1: W293 blank line contains whitespace
+src/inference/app.py:203:1: W293 blank line contains whitespace
+src/inference/app.py:225:1: W293 blank line contains whitespace
+src/inference/app.py:229:1: W293 blank line contains whitespace
+src/inference/app.py:234:1: W293 blank line contains whitespace
+src/inference/app.py:237:80: E501 line too long (82 > 79 characters)
+src/inference/app.py:238:1: W293 blank line contains whitespace
+src/inference/app.py:240:1: W293 blank line contains whitespace
+src/inference/app.py:270:1: W293 blank line contains whitespace
+src/inference/app.py:280:1: W293 blank line contains whitespace
+src/inference/app.py:285:64: W291 trailing whitespace
+src/inference/app.py:302:5: F841 local variable 'cache_manager' is assigned to but never used
+src/inference/app.py:304:1: W293 blank line contains whitespace
+src/inference/app.py:309:1: W293 blank line contains whitespace
+src/inference/app.py:317:1: W293 blank line contains whitespace
+src/inference/app.py:328:1: W293 blank line contains whitespace
+src/inference/app.py:331:1: W293 blank line contains whitespace
+src/inference/app.py:333:80: E501 line too long (97 > 79 characters)
+src/inference/app.py:334:1: W293 blank line contains whitespace
+src/inference/app.py:337:1: W293 blank line contains whitespace
+src/inference/app.py:348:1: W293 blank line contains whitespace
+src/inference/app.py:352:1: W293 blank line contains whitespace
+src/inference/app.py:359:1: W293 blank line contains whitespace
+src/inference/app.py:363:1: W293 blank line contains whitespace
+src/inference/app.py:365:1: W293 blank line contains whitespace
+src/inference/app.py:366:80: E501 line too long (81 > 79 characters)
+src/inference/app.py:367:1: W293 blank line contains whitespace
+src/inference/app.py:379:1: W293 blank line contains whitespace
+src/inference/app.py:383:29: W291 trailing whitespace
+src/inference/app.py:396:80: E501 line too long (82 > 79 characters)
+src/inference/app.py:408:41: W291 trailing whitespace
+src/inference/app.py:422:6: W292 no newline at end of file
+src/infrastructure/__init__.py:10:80: E501 line too long (81 > 79 characters)
+src/infrastructure/__init__.py:11:80: E501 line too long (92 > 79 characters)
+src/infrastructure/__init__.py:15:25: W291 trailing whitespace
+src/infrastructure/__init__.py:21:2: W292 no newline at end of file
+src/infrastructure/cache_manager.py:12:1: E302 expected 2 blank lines, found 1
+src/infrastructure/cache_manager.py:14:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:19:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:28:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:34:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:38:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:45:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:46:23: W291 trailing whitespace
+src/infrastructure/cache_manager.py:52:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:60:80: E501 line too long (91 > 79 characters)
+src/infrastructure/cache_manager.py:63:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:72:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:75:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:83:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:96:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:99:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:104:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:112:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:113:35: W291 trailing whitespace
+src/infrastructure/cache_manager.py:114:28: E128 continuation line under-indented for visual indent
+src/infrastructure/cache_manager.py:114:37: W291 trailing whitespace
+src/infrastructure/cache_manager.py:115:28: E128 continuation line under-indented for visual indent
+src/infrastructure/cache_manager.py:116:28: E128 continuation line under-indented for visual indent
+src/infrastructure/cache_manager.py:117:28: E128 continuation line under-indented for visual indent
+src/infrastructure/cache_manager.py:122:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:128:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:132:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:140:31: W291 trailing whitespace
+src/infrastructure/cache_manager.py:141:26: W291 trailing whitespace
+src/infrastructure/cache_manager.py:143:30: W291 trailing whitespace
+src/infrastructure/cache_manager.py:144:26: W291 trailing whitespace
+src/infrastructure/cache_manager.py:145:27: W291 trailing whitespace
+src/infrastructure/cache_manager.py:150:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:170:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:185:1: E302 expected 2 blank lines, found 1
+src/infrastructure/cache_manager.py:200:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:206:1: W293 blank line contains whitespace
+src/infrastructure/cache_manager.py:214:78: W292 no newline at end of file
+src/infrastructure/db_manager.py:11:1: E302 expected 2 blank lines, found 1
+src/infrastructure/db_manager.py:13:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:19:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:24:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:26:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:35:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:48:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:50:80: E501 line too long (92 > 79 characters)
+src/infrastructure/db_manager.py:70:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:72:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:78:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:105:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:106:80: E501 line too long (91 > 79 characters)
+src/infrastructure/db_manager.py:124:40: W291 trailing whitespace
+src/infrastructure/db_manager.py:136:80: E501 line too long (93 > 79 characters)
+src/infrastructure/db_manager.py:142:44: W291 trailing whitespace
+src/infrastructure/db_manager.py:155:80: E501 line too long (109 > 79 characters)
+src/infrastructure/db_manager.py:162:80: E501 line too long (97 > 79 characters)
+src/infrastructure/db_manager.py:164:80: E501 line too long (105 > 79 characters)
+src/infrastructure/db_manager.py:167:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:175:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:182:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:185:80: E501 line too long (81 > 79 characters)
+src/infrastructure/db_manager.py:186:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:190:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:191:80: E501 line too long (102 > 79 characters)
+src/infrastructure/db_manager.py:206:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:210:19: W291 trailing whitespace
+src/infrastructure/db_manager.py:218:37: W291 trailing whitespace
+src/infrastructure/db_manager.py:221:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:228:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:235:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:238:72: W291 trailing whitespace
+src/infrastructure/db_manager.py:242:70: W291 trailing whitespace
+src/infrastructure/db_manager.py:246:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:261:1: W293 blank line contains whitespace
+src/infrastructure/db_manager.py:275:1: E302 expected 2 blank lines, found 1
+src/infrastructure/db_manager.py:305:13: W292 no newline at end of file
+src/infrastructure/gemini_embeddings.py:2:80: E501 line too long (83 > 79 characters)
+src/infrastructure/gemini_embeddings.py:4:1: E302 expected 2 blank lines, found 1
+src/infrastructure/gemini_embeddings.py:8:80: E501 line too long (94 > 79 characters)
+src/infrastructure/gemini_embeddings.py:11:80: E501 line too long (155 > 79 characters)
+src/infrastructure/gemini_embeddings.py:14:80: E501 line too long (84 > 79 characters)
+src/infrastructure/gemini_embeddings.py:21:72: W292 no newline at end of file
+src/rag/__init__.py:3:4: W292 no newline at end of file
+src/rag/retriever.py:11:80: E501 line too long (87 > 79 characters)
+src/rag/retriever.py:18:80: E501 line too long (87 > 79 characters)
+src/rag/retriever.py:22:1: E302 expected 2 blank lines, found 1
+src/rag/retriever.py:24:1: W293 blank line contains whitespace
+src/rag/retriever.py:43:1: W293 blank line contains whitespace
+src/rag/retriever.py:51:80: E501 line too long (81 > 79 characters)
+src/rag/retriever.py:56:1: W293 blank line contains whitespace
+src/rag/retriever.py:64:80: E501 line too long (80 > 79 characters)
+src/rag/retriever.py:65:1: W293 blank line contains whitespace
+src/rag/retriever.py:71:1: W293 blank line contains whitespace
+src/rag/retriever.py:73:1: W293 blank line contains whitespace
+src/rag/retriever.py:76:80: E501 line too long (97 > 79 characters)
+src/rag/retriever.py:80:1: W293 blank line contains whitespace
+src/rag/retriever.py:95:1: W293 blank line contains whitespace
+src/rag/retriever.py:104:80: E501 line too long (102 > 79 characters)
+src/rag/retriever.py:112:80: E501 line too long (95 > 79 characters)
+src/rag/retriever.py:113:80: E501 line too long (104 > 79 characters)
+src/rag/retriever.py:127:80: E501 line too long (88 > 79 characters)
+src/rag/retriever.py:128:80: E501 line too long (86 > 79 characters)
+src/rag/retriever.py:130:1: W293 blank line contains whitespace
+src/rag/retriever.py:132:80: E501 line too long (80 > 79 characters)
+src/rag/retriever.py:135:80: E501 line too long (96 > 79 characters)
+src/rag/retriever.py:139:80: E501 line too long (93 > 79 characters)
+src/rag/retriever.py:141:80: E501 line too long (103 > 79 characters)
+src/rag/retriever.py:147:1: E302 expected 2 blank lines, found 1
+src/rag/retriever.py:149:1: W293 blank line contains whitespace
+src/rag/retriever.py:161:53: W291 trailing whitespace
+src/rag/retriever.py:162:46: E128 continuation line under-indented for visual indent
+src/rag/retriever.py:162:60: W291 trailing whitespace
+src/rag/retriever.py:163:46: E128 continuation line under-indented for visual indent
+src/rag/retriever.py:163:71: W291 trailing whitespace
+src/rag/retriever.py:164:46: E128 continuation line under-indented for visual indent
+src/rag/retriever.py:169:1: W293 blank line contains whitespace
+src/rag/retriever.py:172:80: E501 line too long (81 > 79 characters)
+src/rag/retriever.py:174:1: W293 blank line contains whitespace
+src/rag/retriever.py:180:1: W293 blank line contains whitespace
+src/rag/retriever.py:183:40: W291 trailing whitespace
+src/rag/retriever.py:187:1: W293 blank line contains whitespace
+src/rag/retriever.py:196:1: W293 blank line contains whitespace
+src/rag/retriever.py:198:80: E501 line too long (85 > 79 characters)
+src/rag/retriever.py:208:50: W291 trailing whitespace
+src/rag/retriever.py:211:1: W293 blank line contains whitespace
+src/rag/retriever.py:216:1: W293 blank line contains whitespace
+src/rag/retriever.py:221:45: W291 trailing whitespace
+src/rag/retriever.py:222:38: E128 continuation line under-indented for visual indent
+src/rag/retriever.py:222:67: W291 trailing whitespace
+src/rag/retriever.py:223:38: E128 continuation line under-indented for visual indent
+src/rag/retriever.py:233:80: E501 line too long (80 > 79 characters)
+src/rag/retriever.py:235:1: W293 blank line contains whitespace
+src/rag/retriever.py:238:1: W293 blank line contains whitespace
+src/rag/retriever.py:242:1: W293 blank line contains whitespace
+src/rag/retriever.py:245:80: E501 line too long (81 > 79 characters)
+src/rag/retriever.py:250:1: W293 blank line contains whitespace
+src/rag/retriever.py:252:80: E501 line too long (81 > 79 characters)
+src/rag/retriever.py:253:1: W293 blank line contains whitespace
+src/rag/retriever.py:259:1: W293 blank line contains whitespace
+src/rag/retriever.py:261:80: E501 line too long (81 > 79 characters)
+src/rag/retriever.py:262:1: W293 blank line contains whitespace
+src/rag/retriever.py:266:80: E501 line too long (91 > 79 characters)
+src/rag/retriever.py:267:80: E501 line too long (86 > 79 characters)
+src/rag/retriever.py:270:1: W293 blank line contains whitespace
+src/rag/retriever.py:273:80: E501 line too long (90 > 79 characters)
+src/rag/retriever.py:274:1: W293 blank line contains whitespace
+src/rag/retriever.py:283:1: W293 blank line contains whitespace
+src/rag/retriever.py:291:80: E501 line too long (80 > 79 characters)
+src/rag/retriever.py:299:1: W293 blank line contains whitespace
+src/rag/retriever.py:304:80: E501 line too long (94 > 79 characters)
+src/rag/retriever.py:304:95: W291 trailing whitespace
+src/rag/retriever.py:307:1: W293 blank line contains whitespace
+src/rag/retriever.py:323:80: E501 line too long (83 > 79 characters)
+src/rag/retriever.py:326:80: E501 line too long (96 > 79 characters)
+src/rag/retriever.py:330:80: E501 line too long (93 > 79 characters)
+src/rag/retriever.py:332:80: E501 line too long (103 > 79 characters)
+src/rag/retriever.py:338:1: E302 expected 2 blank lines, found 1
+src/rag/retriever.py:338:80: E501 line too long (114 > 79 characters)
+src/rag/retriever.py:342:28: W292 no newline at end of file
+tests/__init__.py:4:80: E501 line too long (91 > 79 characters)
+tests/__init__.py:7:1: F401 'os' imported but unused
+tests/__init__.py:9:1: F401 'pytest' imported but unused
+tests/__init__.py:24:80: E501 line too long (83 > 79 characters)
+tests/__init__.py:36:2: W292 no newline at end of file
+tests/conftest.py:7:1: E302 expected 2 blank lines, found 1
+tests/conftest.py:17:6: W291 trailing whitespace
+tests/conftest.py:17:7: W292 no newline at end of file
+tests/test_functionality.py:9:1: F401 'json' imported but unused
+tests/test_functionality.py:10:1: F401 'time' imported but unused
+tests/test_functionality.py:12:1: F401 'fastapi.testclient.TestClient' imported but unused
+tests/test_functionality.py:13:1: F401 'dotenv.load_dotenv' imported but unused
+tests/test_functionality.py:18:1: F401 'tests.TEST_CONFIG' imported but unused
+tests/test_functionality.py:26:1: W293 blank line contains whitespace
+tests/test_functionality.py:32:13: F401 'src.data.faiss_loader.load_faiss_index' imported but unused
+tests/test_functionality.py:34:13: F401 'src.chain.qa_chain.build_qa_chain' imported but unused
+tests/test_functionality.py:36:1: W293 blank line contains whitespace
+tests/test_functionality.py:38:13: F401 'src.infrastructure.cache_manager.CacheManager' imported but unused
+tests/test_functionality.py:38:13: F401 'src.infrastructure.cache_manager.get_cache_manager' imported but unused
+tests/test_functionality.py:38:80: E501 line too long (88 > 79 characters)
+tests/test_functionality.py:40:13: F401 'src.infrastructure.db_manager.DatabaseManager' imported but unused
+tests/test_functionality.py:40:13: F401 'src.infrastructure.db_manager.get_db_manager' imported but unused
+tests/test_functionality.py:40:80: E501 line too long (85 > 79 characters)
+tests/test_functionality.py:42:13: F401 'src.rag.retriever.CustomRetriever' imported but unused
+tests/test_functionality.py:42:13: F401 'src.rag.retriever.RerankingRetriever' imported but unused
+tests/test_functionality.py:44:1: W293 blank line contains whitespace
+tests/test_functionality.py:50:1: W293 blank line contains whitespace
+tests/test_functionality.py:56:1: W293 blank line contains whitespace
+tests/test_functionality.py:61:1: W293 blank line contains whitespace
+tests/test_functionality.py:63:80: E501 line too long (86 > 79 characters)
+tests/test_functionality.py:65:1: W293 blank line contains whitespace
+tests/test_functionality.py:71:1: W293 blank line contains whitespace
+tests/test_functionality.py:74:80: E501 line too long (104 > 79 characters)
+tests/test_functionality.py:76:1: W293 blank line contains whitespace
+tests/test_functionality.py:78:80: E501 line too long (89 > 79 characters)
+tests/test_functionality.py:80:1: W293 blank line contains whitespace
+tests/test_functionality.py:86:1: W293 blank line contains whitespace
+tests/test_functionality.py:89:1: W293 blank line contains whitespace
+tests/test_functionality.py:97:1: W293 blank line contains whitespace
+tests/test_functionality.py:103:1: W293 blank line contains whitespace
+tests/test_functionality.py:110:1: W293 blank line contains whitespace
+tests/test_functionality.py:113:1: W293 blank line contains whitespace
+tests/test_functionality.py:116:1: W293 blank line contains whitespace
+tests/test_functionality.py:121:1: W293 blank line contains whitespace
+tests/test_functionality.py:125:1: W293 blank line contains whitespace
+tests/test_functionality.py:129:1: W293 blank line contains whitespace
+tests/test_functionality.py:134:80: E501 line too long (87 > 79 characters)
+tests/test_functionality.py:136:1: W293 blank line contains whitespace
+tests/test_functionality.py:139:1: W293 blank line contains whitespace
+tests/test_functionality.py:146:80: E501 line too long (85 > 79 characters)
+tests/test_functionality.py:147:1: W293 blank line contains whitespace
+tests/test_functionality.py:156:1: W293 blank line contains whitespace
+tests/test_functionality.py:161:1: W293 blank line contains whitespace
+tests/test_functionality.py:166:1: W293 blank line contains whitespace
+tests/test_functionality.py:174:1: W293 blank line contains whitespace
+tests/test_functionality.py:178:1: W293 blank line contains whitespace
+tests/test_functionality.py:184:1: W293 blank line contains whitespace
+tests/test_functionality.py:194:80: E501 line too long (83 > 79 characters)
+tests/test_functionality.py:200:1: W293 blank line contains whitespace
+tests/test_functionality.py:206:1: W293 blank line contains whitespace
+tests/test_functionality.py:208:1: W293 blank line contains whitespace
+tests/test_functionality.py:213:1: W293 blank line contains whitespace
+tests/test_functionality.py:220:1: W293 blank line contains whitespace
+tests/test_functionality.py:230:1: W293 blank line contains whitespace
+tests/test_functionality.py:234:1: W293 blank line contains whitespace
+tests/test_functionality.py:236:1: W293 blank line contains whitespace
+tests/test_functionality.py:241:1: W293 blank line contains whitespace
+tests/test_functionality.py:246:1: W293 blank line contains whitespace
+tests/test_functionality.py:253:1: W293 blank line contains whitespace
+tests/test_functionality.py:264:1: W293 blank line contains whitespace
+tests/test_functionality.py:269:1: W293 blank line contains whitespace
+tests/test_functionality.py:276:1: W293 blank line contains whitespace
+tests/test_functionality.py:284:80: E501 line too long (84 > 79 characters)
+tests/test_functionality.py:285:1: W293 blank line contains whitespace
+tests/test_functionality.py:317:1: W293 blank line contains whitespace
+tests/test_functionality.py:318:80: E501 line too long (82 > 79 characters)
+tests/test_functionality.py:332:80: E501 line too long (84 > 79 characters)
+tests/test_functionality.py:333:1: W293 blank line contains whitespace
+tests/test_functionality.py:342:80: E501 line too long (105 > 79 characters)
+tests/test_functionality.py:343:80: E501 line too long (82 > 79 characters)
+tests/test_functionality.py:345:80: E501 line too long (88 > 79 characters)
+tests/test_functionality.py:346:80: E501 line too long (85 > 79 characters)
+tests/test_functionality.py:354:1: W293 blank line contains whitespace
+tests/test_functionality.py:361:33: W291 trailing whitespace
+tests/test_functionality.py:365:1: W293 blank line contains whitespace
+tests/test_functionality.py:368:80: E501 line too long (85 > 79 characters)
+tests/test_functionality.py:371:1: W293 blank line contains whitespace
+tests/test_functionality.py:384:1: W293 blank line contains whitespace
+tests/test_functionality.py:389:1: W293 blank line contains whitespace
+tests/test_functionality.py:394:1: W293 blank line contains whitespace
+tests/test_functionality.py:397:80: E501 line too long (84 > 79 characters)
+tests/test_functionality.py:398:1: W293 blank line contains whitespace
+tests/test_functionality.py:401:80: E501 line too long (81 > 79 characters)
+tests/test_functionality.py:409:1: W293 blank line contains whitespace
+tests/test_functionality.py:416:80: E501 line too long (84 > 79 characters)
+tests/test_functionality.py:418:80: E501 line too long (84 > 79 characters)
+tests/test_functionality.py:423:80: E501 line too long (80 > 79 characters)
+tests/test_functionality.py:424:1: W293 blank line contains whitespace
+tests/test_functionality.py:430:1: W293 blank line contains whitespace
+tests/test_functionality.py:432:80: E501 line too long (88 > 79 characters)
+tests/test_functionality.py:433:80: E501 line too long (83 > 79 characters)
+tests/test_functionality.py:436:80: E501 line too long (96 > 79 characters)
+tests/test_functionality.py:441:48: W292 no newline at end of file
+tests/test_integration.py:8:1: F401 'json' imported but unused
+tests/test_integration.py:12:1: F401 'unittest.mock.AsyncMock' imported but unused
+tests/test_integration.py:17:1: F401 'tests.TEST_CONFIG' imported but unused
+tests/test_integration.py:25:1: W293 blank line contains whitespace
+tests/test_integration.py:29:1: W293 blank line contains whitespace
+tests/test_integration.py:31:80: E501 line too long (87 > 79 characters)
+tests/test_integration.py:34:80: E501 line too long (81 > 79 characters)
+tests/test_integration.py:35:1: W293 blank line contains whitespace
+tests/test_integration.py:38:1: W293 blank line contains whitespace
+tests/test_integration.py:40:1: W293 blank line contains whitespace
+tests/test_integration.py:48:1: W293 blank line contains whitespace
+tests/test_integration.py:51:80: E501 line too long (80 > 79 characters)
+tests/test_integration.py:54:1: W293 blank line contains whitespace
+tests/test_integration.py:61:1: W293 blank line contains whitespace
+tests/test_integration.py:66:1: W293 blank line contains whitespace
+tests/test_integration.py:68:80: E501 line too long (81 > 79 characters)
+tests/test_integration.py:70:1: W293 blank line contains whitespace
+tests/test_integration.py:74:1: W293 blank line contains whitespace
+tests/test_integration.py:78:1: W293 blank line contains whitespace
+tests/test_integration.py:81:1: W293 blank line contains whitespace
+tests/test_integration.py:84:1: W293 blank line contains whitespace
+tests/test_integration.py:90:1: W293 blank line contains whitespace
+tests/test_integration.py:93:53: W291 trailing whitespace
+tests/test_integration.py:94:20: E128 continuation line under-indented for visual indent
+tests/test_integration.py:95:1: W293 blank line contains whitespace
+tests/test_integration.py:99:1: W293 blank line contains whitespace
+tests/test_integration.py:105:1: W293 blank line contains whitespace
+tests/test_integration.py:110:1: W293 blank line contains whitespace
+tests/test_integration.py:112:1: W293 blank line contains whitespace
+tests/test_integration.py:120:1: W293 blank line contains whitespace
+tests/test_integration.py:124:1: W293 blank line contains whitespace
+tests/test_integration.py:128:1: W293 blank line contains whitespace
+tests/test_integration.py:132:1: W293 blank line contains whitespace
+tests/test_integration.py:136:1: W293 blank line contains whitespace
+tests/test_integration.py:140:1: W293 blank line contains whitespace
+tests/test_integration.py:144:1: W293 blank line contains whitespace
+tests/test_integration.py:149:1: W293 blank line contains whitespace
+tests/test_integration.py:152:80: E501 line too long (88 > 79 characters)
+tests/test_integration.py:154:1: W293 blank line contains whitespace
+tests/test_integration.py:156:1: W293 blank line contains whitespace
+tests/test_integration.py:166:1: W293 blank line contains whitespace
+tests/test_integration.py:173:1: W293 blank line contains whitespace
+tests/test_integration.py:176:1: W293 blank line contains whitespace
+tests/test_integration.py:179:1: W293 blank line contains whitespace
+tests/test_integration.py:182:1: W293 blank line contains whitespace
+tests/test_integration.py:185:1: W293 blank line contains whitespace
+tests/test_integration.py:190:1: W293 blank line contains whitespace
+tests/test_integration.py:194:1: W293 blank line contains whitespace
+tests/test_integration.py:198:1: W293 blank line contains whitespace
+tests/test_integration.py:205:1: W293 blank line contains whitespace
+tests/test_integration.py:208:9: E731 do not assign a lambda expression, use a def
+tests/test_integration.py:209:1: W293 blank line contains whitespace
+tests/test_integration.py:211:1: W293 blank line contains whitespace
+tests/test_integration.py:215:1: W293 blank line contains whitespace
+tests/test_integration.py:219:9: E306 expected 1 blank line before a nested definition, found 0
+tests/test_integration.py:221:1: W293 blank line contains whitespace
+tests/test_integration.py:225:1: W293 blank line contains whitespace
+tests/test_integration.py:234:1: W293 blank line contains whitespace
+tests/test_integration.py:236:1: W293 blank line contains whitespace
+tests/test_integration.py:244:1: W293 blank line contains whitespace
+tests/test_integration.py:248:1: W293 blank line contains whitespace
+tests/test_integration.py:252:13: F841 local variable 'q_embedding' is assigned to but never used
+tests/test_integration.py:256:13: F841 local variable 'context' is assigned to but never used
+tests/test_integration.py:261:1: W293 blank line contains whitespace
+tests/test_integration.py:264:1: W293 blank line contains whitespace
+tests/test_integration.py:268:1: W293 blank line contains whitespace
+tests/test_integration.py:272:1: W293 blank line contains whitespace
+tests/test_integration.py:274:1: W293 blank line contains whitespace
+tests/test_integration.py:279:1: W293 blank line contains whitespace
+tests/test_integration.py:296:1: W293 blank line contains whitespace
+tests/test_integration.py:302:1: W293 blank line contains whitespace
+tests/test_integration.py:310:1: W293 blank line contains whitespace
+tests/test_integration.py:314:1: W293 blank line contains whitespace
+tests/test_integration.py:318:1: W293 blank line contains whitespace
+tests/test_integration.py:322:1: W293 blank line contains whitespace
+tests/test_integration.py:326:1: W293 blank line contains whitespace
+tests/test_integration.py:331:1: W293 blank line contains whitespace
+tests/test_integration.py:335:1: W293 blank line contains whitespace
+tests/test_integration.py:338:1: W293 blank line contains whitespace
+tests/test_integration.py:345:1: W293 blank line contains whitespace
+tests/test_integration.py:349:1: W293 blank line contains whitespace
+tests/test_integration.py:353:80: E501 line too long (85 > 79 characters)
+tests/test_integration.py:356:1: W293 blank line contains whitespace
+tests/test_integration.py:362:1: W293 blank line contains whitespace
+tests/test_integration.py:364:80: E501 line too long (80 > 79 characters)
+tests/test_integration.py:368:80: E501 line too long (80 > 79 characters)
+tests/test_integration.py:369:1: W293 blank line contains whitespace
+tests/test_integration.py:373:1: W293 blank line contains whitespace
+tests/test_integration.py:381:1: W293 blank line contains whitespace
+tests/test_integration.py:387:1: W293 blank line contains whitespace
+tests/test_integration.py:393:80: E501 line too long (80 > 79 characters)
+tests/test_integration.py:409:1: W293 blank line contains whitespace
+tests/test_integration.py:411:80: E501 line too long (80 > 79 characters)
+tests/test_integration.py:413:80: E501 line too long (84 > 79 characters)
+tests/test_integration.py:427:1: W293 blank line contains whitespace
+tests/test_integration.py:429:80: E501 line too long (83 > 79 characters)
+tests/test_integration.py:433:80: E501 line too long (82 > 79 characters)
+tests/test_integration.py:436:80: E501 line too long (83 > 79 characters)
+tests/test_integration.py:442:48: W292 no newline at end of file
+tests/test_performance.py:9:1: F401 'threading' imported but unused
+tests/test_performance.py:11:1: F401 'json' imported but unused
+tests/test_performance.py:13:1: F401 'unittest.mock.Mock' imported but unused
+tests/test_performance.py:13:1: F401 'unittest.mock.patch' imported but unused
+tests/test_performance.py:28:1: W293 blank line contains whitespace
+tests/test_performance.py:32:80: E501 line too long (86 > 79 characters)
+tests/test_performance.py:33:1: W293 blank line contains whitespace
+tests/test_performance.py:36:1: W293 blank line contains whitespace
+tests/test_performance.py:39:1: W293 blank line contains whitespace
+tests/test_performance.py:41:80: E501 line too long (104 > 79 characters)
+tests/test_performance.py:42:1: W293 blank line contains whitespace
+tests/test_performance.py:44:80: E501 line too long (88 > 79 characters)
+tests/test_performance.py:46:1: W293 blank line contains whitespace
+tests/test_performance.py:50:80: E501 line too long (84 > 79 characters)
+tests/test_performance.py:51:1: W293 blank line contains whitespace
+tests/test_performance.py:54:1: W293 blank line contains whitespace
+tests/test_performance.py:57:1: W293 blank line contains whitespace
+tests/test_performance.py:59:80: E501 line too long (101 > 79 characters)
+tests/test_performance.py:60:1: W293 blank line contains whitespace
+tests/test_performance.py:62:80: E501 line too long (85 > 79 characters)
+tests/test_performance.py:64:1: W293 blank line contains whitespace
+tests/test_performance.py:70:1: W293 blank line contains whitespace
+tests/test_performance.py:73:1: W293 blank line contains whitespace
+tests/test_performance.py:76:1: W293 blank line contains whitespace
+tests/test_performance.py:80:1: W293 blank line contains whitespace
+tests/test_performance.py:85:1: W293 blank line contains whitespace
+tests/test_performance.py:90:80: E501 line too long (95 > 79 characters)
+tests/test_performance.py:91:1: W293 blank line contains whitespace
+tests/test_performance.py:92:80: E501 line too long (81 > 79 characters)
+tests/test_performance.py:96:1: W293 blank line contains whitespace
+tests/test_performance.py:100:9: E306 expected 1 blank line before a nested definition, found 0
+tests/test_performance.py:105:1: W293 blank line contains whitespace
+tests/test_performance.py:110:80: E501 line too long (88 > 79 characters)
+tests/test_performance.py:113:1: W293 blank line contains whitespace
+tests/test_performance.py:115:80: E501 line too long (86 > 79 characters)
+tests/test_performance.py:119:80: E501 line too long (85 > 79 characters)
+tests/test_performance.py:124:1: W293 blank line contains whitespace
+tests/test_performance.py:128:80: E501 line too long (88 > 79 characters)
+tests/test_performance.py:129:1: W293 blank line contains whitespace
+tests/test_performance.py:133:1: W293 blank line contains whitespace
+tests/test_performance.py:138:1: W293 blank line contains whitespace
+tests/test_performance.py:140:80: E501 line too long (109 > 79 characters)
+tests/test_performance.py:141:1: W293 blank line contains whitespace
+tests/test_performance.py:143:80: E501 line too long (91 > 79 characters)
+tests/test_performance.py:145:1: W293 blank line contains whitespace
+tests/test_performance.py:151:1: W293 blank line contains whitespace
+tests/test_performance.py:155:1: W293 blank line contains whitespace
+tests/test_performance.py:159:80: E501 line too long (81 > 79 characters)
+tests/test_performance.py:160:1: W293 blank line contains whitespace
+tests/test_performance.py:165:1: W293 blank line contains whitespace
+tests/test_performance.py:171:1: W293 blank line contains whitespace
+tests/test_performance.py:175:1: W293 blank line contains whitespace
+tests/test_performance.py:179:1: W293 blank line contains whitespace
+tests/test_performance.py:183:1: W293 blank line contains whitespace
+tests/test_performance.py:186:1: W293 blank line contains whitespace
+tests/test_performance.py:195:1: W293 blank line contains whitespace
+tests/test_performance.py:200:9: E306 expected 1 blank line before a nested definition, found 0
+tests/test_performance.py:203:1: W293 blank line contains whitespace
+tests/test_performance.py:207:1: W293 blank line contains whitespace
+tests/test_performance.py:213:80: E501 line too long (87 > 79 characters)
+tests/test_performance.py:214:1: W293 blank line contains whitespace
+tests/test_performance.py:220:80: E501 line too long (81 > 79 characters)
+tests/test_performance.py:221:1: W293 blank line contains whitespace
+tests/test_performance.py:224:13: F541 f-string is missing placeholders
+tests/test_performance.py:225:80: E501 line too long (97 > 79 characters)
+tests/test_performance.py:226:1: W293 blank line contains whitespace
+tests/test_performance.py:231:9: E306 expected 1 blank line before a nested definition, found 0
+tests/test_performance.py:237:1: W293 blank line contains whitespace
+tests/test_performance.py:242:1: W293 blank line contains whitespace
+tests/test_performance.py:246:80: E501 line too long (92 > 79 characters)
+tests/test_performance.py:247:80: E501 line too long (82 > 79 characters)
+tests/test_performance.py:248:1: W293 blank line contains whitespace
+tests/test_performance.py:251:13: F541 f-string is missing placeholders
+tests/test_performance.py:252:80: E501 line too long (82 > 79 characters)
+tests/test_performance.py:253:1: W293 blank line contains whitespace
+tests/test_performance.py:258:9: E306 expected 1 blank line before a nested definition, found 0
+tests/test_performance.py:264:1: W293 blank line contains whitespace
+tests/test_performance.py:270:1: W293 blank line contains whitespace
+tests/test_performance.py:275:1: W293 blank line contains whitespace
+tests/test_performance.py:280:1: W293 blank line contains whitespace
+tests/test_performance.py:283:13: F541 f-string is missing placeholders
+tests/test_performance.py:284:80: E501 line too long (80 > 79 characters)
+tests/test_performance.py:289:1: W293 blank line contains whitespace
+tests/test_performance.py:294:9: E306 expected 1 blank line before a nested definition, found 0
+tests/test_performance.py:296:1: W293 blank line contains whitespace
+tests/test_performance.py:299:1: W293 blank line contains whitespace
+tests/test_performance.py:304:1: W293 blank line contains whitespace
+tests/test_performance.py:309:1: W293 blank line contains whitespace
+tests/test_performance.py:315:1: W293 blank line contains whitespace
+tests/test_performance.py:320:1: W293 blank line contains whitespace
+tests/test_performance.py:323:80: E501 line too long (83 > 79 characters)
+tests/test_performance.py:324:1: W293 blank line contains whitespace
+tests/test_performance.py:329:9: E306 expected 1 blank line before a nested definition, found 0
+tests/test_performance.py:332:1: W293 blank line contains whitespace
+tests/test_performance.py:338:1: W293 blank line contains whitespace
+tests/test_performance.py:344:80: E501 line too long (83 > 79 characters)
+tests/test_performance.py:345:1: W293 blank line contains whitespace
+tests/test_performance.py:348:80: E501 line too long (81 > 79 characters)
+tests/test_performance.py:353:1: W293 blank line contains whitespace
+tests/test_performance.py:357:9: E306 expected 1 blank line before a nested definition, found 0
+tests/test_performance.py:360:1: W293 blank line contains whitespace
+tests/test_performance.py:363:80: E501 line too long (85 > 79 characters)
+tests/test_performance.py:365:1: W293 blank line contains whitespace
+tests/test_performance.py:367:80: E501 line too long (86 > 79 characters)
+tests/test_performance.py:370:1: W293 blank line contains whitespace
+tests/test_performance.py:373:1: W293 blank line contains whitespace
+tests/test_performance.py:376:80: E501 line too long (91 > 79 characters)
+tests/test_performance.py:378:1: W293 blank line contains whitespace
+tests/test_performance.py:383:1: W293 blank line contains whitespace
+tests/test_performance.py:387:1: W293 blank line contains whitespace
+tests/test_performance.py:393:1: W293 blank line contains whitespace
+tests/test_performance.py:397:1: W293 blank line contains whitespace
+tests/test_performance.py:398:80: E501 line too long (88 > 79 characters)
+tests/test_performance.py:401:80: E501 line too long (106 > 79 characters)
+tests/test_performance.py:411:80: E501 line too long (84 > 79 characters)
+tests/test_performance.py:415:80: E501 line too long (95 > 79 characters)
+tests/test_performance.py:422:80: E501 line too long (85 > 79 characters)
+tests/test_performance.py:423:80: E501 line too long (87 > 79 characters)
+tests/test_performance.py:426:80: E501 line too long (83 > 79 characters)
+tests/test_performance.py:434:80: E501 line too long (99 > 79 characters)
+tests/test_performance.py:435:80: E501 line too long (119 > 79 characters)
+tests/test_performance.py:445:1: W293 blank line contains whitespace
+tests/test_performance.py:446:80: E501 line too long (94 > 79 characters)
+tests/test_performance.py:448:80: E501 line too long (80 > 79 characters)
+tests/test_performance.py:470:80: E501 line too long (81 > 79 characters)
+tests/test_performance.py:472:1: W293 blank line contains whitespace
+tests/test_performance.py:482:1: W293 blank line contains whitespace
+tests/test_performance.py:485:80: E501 line too long (88 > 79 characters)
+tests/test_performance.py:487:80: E501 line too long (109 > 79 characters)
+tests/test_performance.py:493:74: W292 no newline at end of file

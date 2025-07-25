@@ -1,3 +1,3 @@
 """
 Inference components for LegalQA.
-""" 
+"""

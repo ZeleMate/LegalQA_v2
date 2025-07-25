@@ -1,56 +1,62 @@
 import asyncio
-import os
 import logging
-from typing import List, Dict, Any, Optional
+import os
 from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
+
 class DatabaseManager:
     """Optimized database manager with connection pooling and async support."""
-    
+
     def __init__(self):
         self.async_pool = None
         self.async_pool = None
         self.sync_pool = None
         self._initialized = False
-    
+
     async def initialize(self):
         """Initialize async database connection pool."""
         if self._initialized:
             return
-        
+
         load_dotenv()
-        
+
         # Database configuration
         db_config = {
-            'host': os.getenv("POSTGRES_HOST", "localhost"),
-            'port': int(os.getenv("POSTGRES_PORT", 5432)),
-            'database': os.getenv("POSTGRES_DB"),
-            'user': os.getenv("POSTGRES_USER"),
-            'password': os.getenv("POSTGRES_PASSWORD"),
+            "host": os.getenv("POSTGRES_HOST", "localhost"),
+            "port": int(os.getenv("POSTGRES_PORT", 5432)),
+            "database": os.getenv("POSTGRES_DB"),
+            "user": os.getenv("POSTGRES_USER"),
+            "password": os.getenv("POSTGRES_PASSWORD"),
         }
-        
+
         try:
             # Try to use asyncpg for better performance
             import asyncpg
+
             self.async_pool = await asyncpg.create_pool(
                 **db_config,
                 min_size=5,
                 max_size=20,
                 max_queries=50000,
                 max_inactive_connection_lifetime=300,
-                command_timeout=60
+                command_timeout=60,
             )
             logger.info("Async database pool initialized with asyncpg")
-            
+
         except ImportError:
-            logger.warning("asyncpg not available, falling back to synchronous connections")
+            logger.warning(
+                "asyncpg not available, falling back to synchronous connections"
+            )
             # Fallback to psycopg2 with connection pooling
             try:
                 import psycopg2.pool
+
                 connection_string = (
                     f"host={db_config['host']} "
                     f"port={db_config['port']} "
@@ -59,23 +65,21 @@ class DatabaseManager:
                     f"password={db_config['password']}"
                 )
                 self.sync_pool = psycopg2.pool.ThreadedConnectionPool(
-                    minconn=5,
-                    maxconn=20,
-                    dsn=connection_string
+                    minconn=5, maxconn=20, dsn=connection_string
                 )
                 logger.info("Sync database pool initialized with psycopg2")
             except Exception as e:
                 logger.error(f"Failed to initialize database pool: {e}")
                 raise
-        
+
         self._initialized = True
-    
+
     @asynccontextmanager
     async def get_connection(self):
         """Get a database connection from the pool."""
         if not self._initialized:
             await self.initialize()
-        
+
         if self.async_pool:
             # Async connection with better error handling
             connection = None
@@ -102,8 +106,10 @@ class DatabaseManager:
                     self.sync_pool.putconn(connection)
         else:
             raise RuntimeError("No database pool available")
-    
-    async def fetch_chunks_by_ids(self, chunk_ids: List[str]) -> Dict[str, Dict[str, Any]]:
+
+    async def fetch_chunks_by_ids(
+        self, chunk_ids: List[str]
+    ) -> Dict[str, Dict[str, Any]]:
         """
         Optimized method to fetch document chunks by IDs.
         Uses batch queries and optimized data processing.
@@ -128,12 +134,14 @@ class DatabaseManager:
 
                         docs_data = {}
                         for row in rows:
-                            chunk_id = row['chunk_id']
+                            chunk_id = row["chunk_id"]
                             docs_data[chunk_id] = {
-                                'chunk_id': chunk_id,
-                                'doc_id': row['doc_id'],
-                                'text': row['text'],
-                                'embedding': self._parse_pgvector_embedding(row['embedding'])
+                                "chunk_id": chunk_id,
+                                "doc_id": row["doc_id"],
+                                "text": row["text"],
+                                "embedding": self._parse_pgvector_embedding(
+                                    row["embedding"]
+                                ),
                             }
                     else:  # psycopg2
                         with conn.cursor() as cursor:
@@ -151,20 +159,26 @@ class DatabaseManager:
                             docs_data = {}
                             for row in rows:
                                 row_dict = dict(zip(colnames, row))
-                                chunk_id = row_dict['chunk_id']
-                                row_dict['embedding'] = self._parse_pgvector_embedding(row_dict['embedding'])
+                                chunk_id = row_dict["chunk_id"]
+                                row_dict["embedding"] = self._parse_pgvector_embedding(
+                                    row_dict["embedding"]
+                                )
                                 docs_data[chunk_id] = row_dict
 
                 logger.debug(f"Fetched {len(docs_data)} chunks from database")
                 return docs_data
 
             except Exception as e:
-                logger.warning(f"Database fetch attempt {attempt + 1}/{max_retries} failed: {e}")
+                logger.warning(
+                    f"Database fetch attempt {attempt + 1}/{max_retries} failed: {e}"
+                )
                 if attempt == max_retries - 1:
-                    logger.error(f"All database fetch attempts failed for chunk_ids: {chunk_ids[:5]}...")
+                    logger.error(
+                        f"All database fetch attempts failed for chunk_ids: {chunk_ids[:5]}..."
+                    )
                     return {}
                 await asyncio.sleep(0.1 * (attempt + 1))  # Exponential backoff
-    
+
     def _parse_pgvector_embedding(self, embedding_str: str) -> Optional[str]:
         """
         Parse pgvector embedding string back to numpy array.
@@ -172,23 +186,25 @@ class DatabaseManager:
         """
         if not embedding_str:
             return None
-        
+
         try:
             # pgvector returns format like "[1.0,2.0,3.0]"
             # Remove brackets and split by comma
-            clean_str = embedding_str.strip('[]')
+            clean_str = embedding_str.strip("[]")
             if not clean_str:
                 return None
-            
+
             # Convert to numpy array more efficiently
-            values = np.fromstring(clean_str, sep=',', dtype=np.float32)
+            values = np.fromstring(clean_str, sep=",", dtype=np.float32)
             return values.tobytes().hex()  # Return as hex string for consistency
-            
+
         except (ValueError, AttributeError) as e:
             logger.warning(f"Failed to parse embedding: {e}")
             return None
-    
-    async def execute_query(self, query: str, params: Optional[tuple] = None) -> List[Dict[str, Any]]:
+
+    async def execute_query(
+        self, query: str, params: Optional[tuple] = None
+    ) -> List[Dict[str, Any]]:
         """Execute a general query and return results."""
         async with self.get_connection() as conn:
             if self.async_pool:  # asyncpg
@@ -203,7 +219,7 @@ class DatabaseManager:
                     rows = cursor.fetchall()
                     colnames = [desc[0] for desc in cursor.description]
                     return [dict(zip(colnames, row)) for row in rows]
-    
+
     async def get_database_stats(self) -> Dict[str, Any]:
         """Get database performance statistics."""
         stats_query = """
@@ -218,21 +234,20 @@ class DatabaseManager:
             FROM pg_stat_user_tables 
             WHERE relname IN ('documents', 'chunks')
         """
-        
+
         try:
             results = await self.execute_query(stats_query)
-            return {row['tablename']: row for row in results}
+            return {row["tablename"]: row for row in results}
         except Exception as e:
             logger.error(f"Failed to get database stats: {e}")
             return {}
-    
+
     async def optimize_database(self):
         """Run database optimization queries."""
         optimization_queries = [
             # Analyze tables for better query planning
             "ANALYZE chunks;",
             "ANALYZE documents;",
-            
             # Create indices if they don't exist (only if not already created)
             """
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_chunk_id 
@@ -243,7 +258,7 @@ class DatabaseManager:
             ON chunks(doc_id);
             """,
         ]
-        
+
         for query in optimization_queries:
             try:
                 async with self.get_connection() as conn:
@@ -258,7 +273,7 @@ class DatabaseManager:
                 logger.warning(f"Optimization query failed: {e}")
                 # Don't fail the entire optimization if one query fails
                 continue
-    
+
     async def close(self):
         """Closes the database connection pool."""
         if self.async_pool:
@@ -271,6 +286,7 @@ class DatabaseManager:
 
 # Singleton instance of the database manager
 _db_manager = None
+
 
 def get_db_manager() -> DatabaseManager:
     """Returns a singleton instance of the DatabaseManager."""

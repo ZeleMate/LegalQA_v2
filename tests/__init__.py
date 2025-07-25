@@ -6,8 +6,9 @@ Comprehensive testing framework for performance optimizations and functionality 
 
 import os
 import sys
-import pytest
 from pathlib import Path
+
+import pytest
 
 # Add src to Python path for imports
 project_root = Path(__file__).parent.parent
@@ -21,16 +22,13 @@ TEST_CONFIG = {
         "Milyen jogkövetkezmények vonatkoznak a korrupciós bűncselekményekre?",
         "Hogyan kell értelmezni az önvédelem fogalmát?",
         "Mi a különbség a csalás és a sikkasztás között?",
-        "Milyen feltételek mellett alkalmazható a feltételes szabadságra bocsátás?"
+        "Milyen feltételek mellett alkalmazható a feltételes szabadságra bocsátás?",
     ],
     "performance_thresholds": {
         "max_response_time": 2.0,  # seconds
         "max_startup_time": 10.0,  # seconds
-        "max_memory_mb": 1024,     # MB
-        "min_cache_hit_rate": 0.3  # 30%
+        "max_memory_mb": 1024,  # MB
+        "min_cache_hit_rate": 0.3,  # 30%
     },
-    "test_database": {
-        "name": "legalqa_test",
-        "sample_size": 100
-    }
+    "test_database": {"name": "legalqa_test", "sample_size": 100},
 }
