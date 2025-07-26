@@ -6,6 +6,7 @@ Tests individual components and functions to ensure they work correctly.
 
 import logging
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 import pytest
 from dotenv import load_dotenv
@@ -132,11 +133,16 @@ class TestInfrastructureComponents:
             logger.error(f"❌ Cache key generation test failed: {e}")
             pytest.fail(f"Cache key generation test failed: {e}")
 
-    def test_gemini_embeddings_initialization(self) -> None:
+    @patch("src.infrastructure.gemini_embeddings.GoogleGenerativeAIEmbeddings")
+    def test_gemini_embeddings_initialization(self, mock_embeddings: Mock) -> None:
         """Test GeminiEmbeddings initialization."""
         logger.info("--- Running Gemini Embeddings Initialization Test ---")
         try:
             from src.infrastructure.gemini_embeddings import GeminiEmbeddings
+
+            # Mock the GoogleGenerativeAIEmbeddings to avoid async issues
+            mock_client = Mock()
+            mock_embeddings.return_value = mock_client
 
             # Test that we can create an instance with API key
             # This tests the class structure and imports
