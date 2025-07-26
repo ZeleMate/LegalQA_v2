@@ -12,3 +12,8 @@ repos:
     hooks:
       - id: flake8
         args: ["--max-line-length=100"]
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.7
+    hooks:
+      - id: bandit
+        args: ["-x", "tests/"]

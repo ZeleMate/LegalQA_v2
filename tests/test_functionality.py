@@ -256,9 +256,7 @@ class TestAPICompatibility:
 
         # Test with custom values
         logger.debug("Testing with custom values.")
-        custom_req = QuestionRequest(
-            question="Custom question", use_cache=False, max_documents=10
-        )
+        custom_req = QuestionRequest(question="Custom question", use_cache=False, max_documents=10)
         assert custom_req.use_cache is False
         assert custom_req.max_documents == 10
         logger.info("✅ API request models validate correctly.")

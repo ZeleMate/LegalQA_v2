@@ -52,7 +52,7 @@ graph TD
 ### Prerequisites
 
 - [Docker](https://www.docker.com/get-started) & [Docker Compose](https://docs.docker.com/compose/install/)
-- An OpenAI API key
+- An OpenAI/GEMINI API key
 - `make` command-line utility (optional, but recommended)
 
 ### Installation

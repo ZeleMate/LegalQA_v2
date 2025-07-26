@@ -1,7 +1,8 @@
 import asyncio
 import hashlib
+import json
 import logging
-import pickle
+import pickle  # nosec
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, Callable, Dict, Optional
@@ -75,7 +76,7 @@ class CacheManager:
         else:
             content = str(data).encode()
 
-        hash_object = hashlib.md5(content)
+        hash_object = hashlib.sha256(content)
         return f"{prefix}:{hash_object.hexdigest()}"
 
     async def get(self, key: str) -> Optional[Any]:
@@ -91,7 +92,19 @@ class CacheManager:
             try:
                 cached_data = await self.redis.get(key)
                 if cached_data:
-                    value = pickle.loads(cached_data)
+                    # Handle both JSON and pickle formats
+                    if cached_data.startswith(b"json:"):
+                        # JSON format
+                        json_data = cached_data[5:].decode("utf-8")
+                        value = json.loads(json_data)
+                    elif cached_data.startswith(b"pickle:"):
+                        # Pickle format (backward compatibility)
+                        pickle_data = cached_data[7:]
+                        value = pickle.loads(pickle_data)  # nosec
+                    else:
+                        # Legacy format (no prefix) - assume pickle
+                        value = pickle.loads(cached_data)  # nosec
+
                     # Store in memory cache for faster future access
                     self.memory_cache.set(key, value)
                     logger.debug(f"Cache hit (redis): {key}")
@@ -110,7 +123,15 @@ class CacheManager:
         # L2: Redis cache
         if self.redis:
             try:
-                await self.redis.setex(key, ttl, pickle.dumps(value))
+                # Use JSON for new cache entries, pickle for backward compatibility
+                if isinstance(value, (dict, list, str, int, float, bool, type(None))):
+                    # JSON-serializable types
+                    serialized_value = json.dumps(value).encode("utf-8")
+                    await self.redis.setex(key, ttl, b"json:" + serialized_value)
+                else:
+                    # Non-JSON types (like numpy arrays) - use pickle with nosec
+                    serialized_value = pickle.dumps(value)  # nosec
+                    await self.redis.setex(key, ttl, b"pickle:" + serialized_value)
                 logger.debug(f"Cache set: {key}")
             except Exception as e:
                 logger.warning(f"Redis set error: {e}")

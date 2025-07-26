@@ -69,9 +69,7 @@ class TestPerformanceMetrics:
 
         assert (
             startup_time < max_startup_time
-        ), "Startup time {:.3f}s exceeds threshold {:.3f}s".format(
-            startup_time, max_startup_time
-        )
+        ), "Startup time {:.3f}s exceeds threshold {:.3f}s".format(startup_time, max_startup_time)
         logger.info("✅ Startup time is within the threshold.")
 
     def _simulate_component_loading(self):
@@ -100,15 +98,13 @@ class TestPerformanceMetrics:
         memory_info = process.memory_info()
         memory_mb = memory_info.rss / 1024 / 1024
         logger.debug(
-            "Current memory usage: {:.1f}MB (Threshold: {}MB)".format(
-                memory_mb, max_memory_mb
-            )
+            "Current memory usage: {:.1f}MB (Threshold: {}MB)".format(memory_mb, max_memory_mb)
         )
 
         # For testing, we'll just check the current process doesn't exceed limits
-        assert (
-            memory_mb < max_memory_mb * 2
-        ), "Test process memory {:.1f}MB seems too high".format(memory_mb)
+        assert memory_mb < max_memory_mb * 2, "Test process memory {:.1f}MB seems too high".format(
+            memory_mb
+        )
         logger.info("✅ Memory usage is within acceptable limits.")
 
     def test_concurrent_request_handling(self):
@@ -180,9 +176,7 @@ class TestCachePerformance:
         logger.debug(f"Simulated cache size for 1000 items: {cache_size} bytes.")
 
         # Should be less than 1MB for this test
-        assert (
-            cache_size < 1024 * 1024
-        ), f"Cache size {cache_size} bytes seems excessive"
+        assert cache_size < 1024 * 1024, f"Cache size {cache_size} bytes seems excessive"
         logger.info("✅ Simulated cache memory usage is efficient.")
 
     def test_cache_access_speed(self):
@@ -242,12 +236,8 @@ class TestDatabasePerformance:
         logger.debug(f"Simulated time with connection pooling: {pool_time:.4f}s")
 
         # Pooling should be significantly faster
-        assert (
-            pool_time < no_pool_time / 2
-        ), "Connection pooling not providing expected speedup"
-        logger.info(
-            "✅ Connection pooling simulation shows significant performance improvement."
-        )
+        assert pool_time < no_pool_time / 2, "Connection pooling not providing expected speedup"
+        logger.info("✅ Connection pooling simulation shows significant performance improvement.")
 
     def test_batch_query_performance(self):
         """Test batch queries perform better than individual queries."""
@@ -270,18 +260,12 @@ class TestDatabasePerformance:
         individual_time = individual_queries(num_items)
         batch_time = batch_query(num_items)
         logger.debug(
-            "Individual query time for {} items: {:.4f}s".format(
-                num_items, individual_time
-            )
+            "Individual query time for {} items: {:.4f}s".format(num_items, individual_time)
         )
-        logger.debug(
-            "Batch query time for {} items: {:.4f}s".format(num_items, batch_time)
-        )
+        logger.debug("Batch query time for {} items: {:.4f}s".format(num_items, batch_time))
 
         # Batch should be faster
-        assert (
-            batch_time < individual_time
-        ), "Batch query not faster than individual queries"
+        assert batch_time < individual_time, "Batch query not faster than individual queries"
         logger.info("✅ Batch query simulation is faster than individual queries.")
 
     def test_index_usage_simulation(self):
@@ -313,9 +297,7 @@ class TestDatabasePerformance:
         logger.debug(f"Indexed search time: {indexed_time:.6f}s")
 
         # Indexed search should be much faster
-        assert (
-            indexed_time < linear_time
-        ), "Index not providing expected performance improvement"
+        assert indexed_time < linear_time, "Index not providing expected performance improvement"
         logger.info("✅ Indexed search simulation is faster than linear search.")
 
 
@@ -413,9 +395,7 @@ class TestLoadTesting:
         # Should complete in a reasonable timeframe (e.g., under 0.5s)
         assert (
             total_time < 0.5
-        ), "Sustained load test took {:.3f}s, indicating potential bottlenecks".format(
-            total_time
-        )
+        ), "Sustained load test took {:.3f}s, indicating potential bottlenecks".format(total_time)
         logger.info("✅ System is stable under sustained load simulation.")
 
     def test_memory_stability_under_load(self):
@@ -439,9 +419,7 @@ class TestLoadTesting:
 
         # Memory should not have increased by more than a reasonable amount (e.g., 50MB)
         # This is a loose check, real memory profiling is more complex
-        assert (
-            final_memory_mb - initial_memory_mb < 50
-        ), "Memory usage increased too much."
+        assert final_memory_mb - initial_memory_mb < 50, "Memory usage increased too much."
         logger.info("✅ Memory usage remained stable under load.")
 
 
@@ -456,10 +434,7 @@ class TestQALatency:
 
         from dotenv import load_dotenv
         from langchain_core.prompts import PromptTemplate
-        from langchain_google_genai import (
-            ChatGoogleGenerativeAI,
-            GoogleGenerativeAIEmbeddings,
-        )
+        from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 
         from src.chain.qa_chain import build_qa_chain
         from src.data.faiss_loader import load_faiss_index
@@ -468,7 +443,7 @@ class TestQALatency:
         load_dotenv()
 
         faiss_path = os.getenv("FAISS_INDEX_PATH", "data/processed/sample_faiss.bin")
-        id_mapping_path = os.getenv("ID_MAPPING_PATH", "data/processed/id_mapping.pkl")
+        id_mapping_path = os.getenv("ID_MAPPING_PATH", "data/processed/id_mapping.json")
 
         if not faiss_path or not id_mapping_path:
             pytest.skip("FAISS index paths not configured, skipping latency test.")
@@ -479,9 +454,7 @@ class TestQALatency:
             pytest.fail("Failed to load FAISS index for latency test.")
 
         logger.debug("FAISS index loaded successfully.")
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro", temperature=0, api_key=google_api_key
-        )
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0, api_key=google_api_key)
         embeddings = GoogleGenerativeAIEmbeddings(
             model="models/text-embedding-004",
             api_key=google_api_key,
@@ -496,9 +469,7 @@ class TestQALatency:
         )
         logger.debug("CustomRetriever initialized.")
 
-        prompt_path = (
-            Path(__file__).parent.parent / "src" / "prompts" / "reranker_prompt.txt"
-        )
+        prompt_path = Path(__file__).parent.parent / "src" / "prompts" / "reranker_prompt.txt"
         reranker_prompt_template = prompt_path.read_text(encoding="utf-8")
         reranker_prompt = PromptTemplate.from_template(reranker_prompt_template)
 

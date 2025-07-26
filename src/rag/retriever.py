@@ -13,18 +13,11 @@ from langchain_core.documents import Document
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.retrievers import BaseRetriever
-from langchain_google_genai import (
-    ChatGoogleGenerativeAI,
-    GoogleGenerativeAIEmbeddings,
-)
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from pydantic import BaseModel, ConfigDict, Field
 from sklearn.metrics.pairwise import cosine_similarity
 
-from src.infrastructure import (
-    cache_embedding_query,
-    get_cache_manager,
-    get_db_manager,
-)
+from src.infrastructure import cache_embedding_query, get_cache_manager, get_db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -83,9 +76,7 @@ class CustomRetriever(BaseRetriever, BaseModel):
 
             # Fetch documents from database (async)
             try:
-                docs_from_db = await self._get_docs_from_db_async(
-                    list(set(retrieved_chunk_ids))
-                )
+                docs_from_db = await self._get_docs_from_db_async(list(set(retrieved_chunk_ids)))
             except Exception as e:
                 logger.warning(f"Failed to fetch documents from DB: {e}")
                 docs_from_db = {}
@@ -123,12 +114,9 @@ class CustomRetriever(BaseRetriever, BaseModel):
 
                         # Calculate scores
                         relevance_score = 1.0 / (1.0 + distance)
-                        similarity_score = cosine_similarity(
-                            query_vector, doc_embedding
-                        )[0][0]
+                        similarity_score = cosine_similarity(query_vector, doc_embedding)[0][0]
                         final_score = (
-                            self.alpha * similarity_score
-                            + (1 - self.alpha) * relevance_score
+                            self.alpha * similarity_score + (1 - self.alpha) * relevance_score
                         )
 
                         metadata.update(
@@ -150,15 +138,11 @@ class CustomRetriever(BaseRetriever, BaseModel):
             logger.error(f"Error during document retrieval: {e}", exc_info=True)
             raise
 
-    def _get_relevant_documents(
-        self, query: str, *, run_manager: Optional[Any] = None
-    ) -> list:
+    def _get_relevant_documents(self, query: str, *, run_manager: Optional[Any] = None) -> list:
         """
         Dummy method required by BaseRetriever abstract interface. Do not use!
         """
-        raise NotImplementedError(
-            "Use only the async _get_relevant_documents_async method!"
-        )
+        raise NotImplementedError("Use only the async _get_relevant_documents_async method!")
 
     async def _aget_relevant_documents(
         self, query: str, *, run_manager: Optional[Any] = None
@@ -228,10 +212,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
 
             # Apply boost to similarities
             boosted_similarities = np.array(
-                [
-                    keyword_score_boost(chunk, score)
-                    for chunk, score in zip(chunks, similarities)
-                ]
+                [keyword_score_boost(chunk, score) for chunk, score in zip(chunks, similarities)]
             )
 
             # Get top k chunks
@@ -288,18 +269,14 @@ class RerankingRetriever(BaseRetriever, BaseModel):
         # Create context for reranker
         doc_texts = ""
         for i, doc in enumerate(processed_docs):
-            context = doc.metadata.get(
-                "best_snippet_for_reranker", doc.page_content[:500]
-            )
+            context = doc.metadata.get("best_snippet_for_reranker", doc.page_content[:500])
             doc_texts += f"### Document {i + 1} (ID: {doc.metadata.get('chunk_id')})\n"
             doc_texts += context
             doc_texts += "\\n---\\n"
 
         # Cache reranker results
         cache_manager = get_cache_manager()
-        reranker_key = cache_manager._generate_key(
-            "rerank", f"{query}:{doc_texts[:200]}"
-        )
+        reranker_key = cache_manager._generate_key("rerank", f"{query}:{doc_texts[:200]}")
 
         cached_result = await cache_manager.get(reranker_key)
         if cached_result:
@@ -328,11 +305,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
             for res in reranked_results["ranked_documents"]:
                 chunk_id = res.get("chunk_id")
                 original_doc = next(
-                    (
-                        doc
-                        for doc in initial_docs
-                        if doc.metadata.get("chunk_id") == chunk_id
-                    ),
+                    (doc for doc in initial_docs if doc.metadata.get("chunk_id") == chunk_id),
                     None,
                 )
 
@@ -356,15 +329,11 @@ class RerankingRetriever(BaseRetriever, BaseModel):
         logger.debug(f"Reranking completed, returning {len(final_docs)} documents")
         return final_docs[: self.k]
 
-    def _get_relevant_documents(
-        self, query: str, *, run_manager: Optional[Any] = None
-    ) -> list:
+    def _get_relevant_documents(self, query: str, *, run_manager: Optional[Any] = None) -> list:
         """
         Dummy method required by BaseRetriever abstract interface. Do not use!
         """
-        raise NotImplementedError(
-            "Use only the async _get_relevant_documents_async method!"
-        )
+        raise NotImplementedError("Use only the async _get_relevant_documents_async method!")
 
     async def _aget_relevant_documents(
         self, query: str, *, run_manager: Optional[Any] = None

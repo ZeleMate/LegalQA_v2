@@ -1,10 +1,11 @@
-from dotenv import load_dotenv
 import os
+
 import pandas as pd
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+from src.chain.qa_chain import build_qa_chain
 from src.data.faiss_loader import load_faiss_index
 from src.rag.retriever import CustomRetriever
-from src.chain.qa_chain import build_qa_chain
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 PARQUET_PATH = os.getenv("PARQUET_PATH")
 FAISS_INDEX_PATH = os.getenv("FAISS_INDEX_PATH")
@@ -21,7 +22,10 @@ required_env_vars = [
 missing_vars = [var for var in required_env_vars if not os.getenv(var)]
 
 if missing_vars:
-    raise ValueError(f"Missing environment variables: {', '.join(missing_vars)}. Please check your .env file.")
+    raise ValueError(
+        f"Missing environment variables: {', '.join(missing_vars)}. "
+        f"Please check your .env file."
+    )
 
 df = pd.read_parquet(PARQUET_PATH)
 faiss_index, id_mapping = load_faiss_index(FAISS_INDEX_PATH, ID_MAPPING_PATH)
@@ -43,11 +47,8 @@ while True:
     question = input("\n❓ Question: ")
     if question.strip().lower() in ["exit", "quit"]:
         break
-    
-    result = qa_chain.ainvoke({
-        "question": question,
-        "chat_history": chat_history
-        })
-    
+
+    result = qa_chain.ainvoke({"question": question, "chat_history": chat_history})
+
     print(f"\n🧾 Answer:\n{result['answer']}")
     chat_history.append((question, result["answer"]))
