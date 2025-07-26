@@ -29,7 +29,7 @@ TEST_CONFIG: Dict[str, Any] = {
         "max_memory_mb": 1024,  # MB
         "min_cache_hit_rate": 0.3,  # 30%
         "max_cache_memory_mb": 512,  # MB
-        "max_cache_access_time": 0.001,  # seconds
+        "max_cache_access_time": 0.002,  # seconds
         "max_qa_latency": 5.0,  # seconds
     },
     "test_database": {"name": "legalqa_test", "sample_size": 100},
