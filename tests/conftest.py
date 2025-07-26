@@ -7,9 +7,12 @@ google_api_key = os.getenv("GOOGLE_API_KEY")
 
 
 @pytest.fixture(scope="session")
-def embeddings_model():
+def embeddings_model() -> GoogleGenerativeAIEmbeddings:
     """
     Fixture to initialize and share the GeminiEmbeddings model across tests.
     The model is loaded only once per test session.
     """
-    return GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", api_key=google_api_key)
+    if not google_api_key:
+        pytest.skip("GOOGLE_API_KEY not set")
+
+    return GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
