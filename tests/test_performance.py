@@ -437,7 +437,7 @@ class TestQALatency:
         from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 
         from src.chain.qa_chain import build_qa_chain
-        from src.data.faiss_loader import load_faiss_index
+        from src.data_loading.faiss_loader import load_faiss_index
         from src.rag.retriever import CustomRetriever, RerankingRetriever
 
         load_dotenv()

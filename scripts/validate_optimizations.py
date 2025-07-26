@@ -20,7 +20,7 @@ def validate_imports():
     print("🔍 Validating imports...")
 
     critical_imports = [
-        ("src.data.faiss_loader", "load_faiss_index"),
+        ("src.data_loading.faiss_loader", "load_faiss_index"),
         ("src.infrastructure.cache_manager", "CacheManager"),
         ("src.infrastructure.db_manager", "DatabaseManager"),
     ]

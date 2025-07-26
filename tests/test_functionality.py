@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from dotenv import load_dotenv
 
-from src.data.faiss_loader import load_faiss_index
+from src.data_loading.faiss_loader import load_faiss_index
 from src.infrastructure.cache_manager import CacheManager
 from src.infrastructure.db_manager import DatabaseManager
 

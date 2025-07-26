@@ -105,7 +105,7 @@ module = [
     "psycopg2",
     "psycopg2.pool",
     "sklearn.metrics.pairwise",
-    "src.data.faiss_loader"
+    "src.data_loading.faiss_loader"
 ]
 ignore_missing_imports = true
 

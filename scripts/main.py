@@ -4,7 +4,7 @@ import pandas as pd
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 from src.chain.qa_chain import build_qa_chain
-from src.data.faiss_loader import load_faiss_index
+from src.data_loading.faiss_loader import load_faiss_index
 from src.rag.retriever import CustomRetriever
 
 PARQUET_PATH = os.getenv("PARQUET_PATH")

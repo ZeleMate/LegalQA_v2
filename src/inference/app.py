@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, SecretStr
 from src.chain.qa_chain import build_qa_chain
 
 # Import components
-from src.data.faiss_loader import load_faiss_index
+from src.data_loading.faiss_loader import load_faiss_index
 from src.infrastructure import ensure_database_setup, get_cache_manager, get_db_manager
 from src.infrastructure.gemini_embeddings import GeminiEmbeddings
 from src.rag.retriever import CustomRetriever, RerankingRetriever
