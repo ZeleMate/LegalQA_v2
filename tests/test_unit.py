@@ -142,6 +142,10 @@ class TestInfrastructureComponents:
             # This tests the class structure and imports
             embeddings = GeminiEmbeddings(api_key="test_key")
             assert embeddings is not None
+            assert hasattr(embeddings, "api_key")
+            assert hasattr(embeddings, "client")
+            assert hasattr(embeddings, "embed_query")
+            assert hasattr(embeddings, "aembed_query")
 
             logger.info("✅ GeminiEmbeddings initialization works correctly.")
         except Exception as e:
