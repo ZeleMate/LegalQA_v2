@@ -13,12 +13,12 @@ logger = logging.getLogger(__name__)
 class DatabaseManager:
     """Optimized database manager with connection pooling and async support."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.async_pool = None
         self.sync_pool = None
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize async database connection pool."""
         if self._initialized:
             return
@@ -168,6 +168,9 @@ class DatabaseManager:
                     return {}
                 await asyncio.sleep(0.1 * (attempt + 1))  # Exponential backoff
 
+        # This should never be reached, but mypy requires it
+        return {}
+
     def _parse_pgvector_embedding(self, embedding_str: str) -> Optional[str]:
         """
         Parse pgvector embedding string back to numpy array.
@@ -185,7 +188,7 @@ class DatabaseManager:
 
             # Convert to numpy array more efficiently
             values = np.fromstring(clean_str, sep=",", dtype=np.float32)
-            return values.tobytes().hex()  # Return as hex string for consistency
+            return str(values.tobytes().hex())  # Return as hex string for consistency
 
         except (ValueError, AttributeError) as e:
             logger.warning(f"Failed to parse embedding: {e}")
@@ -231,7 +234,7 @@ class DatabaseManager:
             logger.error("Failed to get database stats: {}...".format(str(e)[:60]))
             return {}
 
-    async def optimize_database(self):
+    async def optimize_database(self) -> None:
         """Run database optimization queries."""
         optimization_queries = [
             # Analyze tables for better query planning
@@ -263,7 +266,7 @@ class DatabaseManager:
                 # Don't fail the entire optimization if one query fails
                 continue
 
-    async def close(self):
+    async def close(self) -> None:
         """Closes the database connection pool."""
         if self.async_pool:
             await self.async_pool.close()
@@ -291,7 +294,7 @@ async def fetch_chunks(chunk_ids: List[str]) -> Dict[str, Dict[str, Any]]:
     return await db_manager.fetch_chunks_by_ids(chunk_ids)
 
 
-async def ensure_database_setup():
+async def ensure_database_setup() -> None:
     """Ensure database is set up with proper indices."""
     db_manager = get_db_manager()
     await db_manager.optimize_database()
@@ -299,7 +302,7 @@ async def ensure_database_setup():
 
 # Context manager for database operations
 @asynccontextmanager
-async def database_session():
+async def database_session() -> AsyncGenerator[DatabaseManager, None]:
     """Context manager for database operations."""
     db = get_db_manager()
     await db.initialize()

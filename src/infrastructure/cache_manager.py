@@ -62,9 +62,7 @@ class CacheManager:
                 self.redis = aioredis.from_url(redis_url)
                 logger.info("Redis cache initialized")
             except ImportError:
-                logger.warning(
-                    "aioredis not installed, falling back to memory cache only"
-                )
+                logger.warning("aioredis not installed, falling back to memory cache only")
             except Exception as e:
                 logger.warning(f"Failed to initialize Redis: {e}")
 
@@ -118,9 +116,11 @@ class CacheManager:
                 logger.warning(f"Redis set error: {e}")
 
     async def get_or_compute(
-        self, key: str, compute_func: Callable, ttl: int = 300, *args, **kwargs
+        self, key: str, compute_func: Callable[..., Any], ttl: int = 300, *args: Any, **kwargs: Any
     ) -> Any:
         """Get value from cache or compute and cache it."""
+        # Remove ttl from kwargs if present to avoid duplicate argument
+        kwargs.pop("ttl", None)
         value = await self.get(key)
         if value is not None:
             return value
@@ -135,12 +135,14 @@ class CacheManager:
         await self.set(key, value, ttl)
         return value
 
-    def cache_embedding(self, ttl: int = 3600):
+    def cache_embedding(
+        self, ttl: int = 3600
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator for caching embedding computations."""
 
-        def decorator(func):
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
-            async def wrapper(self_obj, text: str, *args, **kwargs):
+            async def wrapper(self_obj: Any, text: str, *args: Any, **kwargs: Any) -> Any:
                 cache_key = self._generate_key("embedding", text)
                 if "ttl" in kwargs:
                     kwargs.pop("ttl")
@@ -152,12 +154,14 @@ class CacheManager:
 
         return decorator
 
-    def cache_query_results(self, ttl: int = 600):
+    def cache_query_results(
+        self, ttl: int = 600
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator for caching query results."""
 
-        def decorator(func):
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
-            async def wrapper(self_obj, query: str, *args, **kwargs):
+            async def wrapper(self_obj: Any, query: str, *args: Any, **kwargs: Any) -> Any:
                 # Create cache key from query and relevant parameters
                 key_data = f"{query}:{str(args)}:{str(sorted(kwargs.items()))}"
                 cache_key = self._generate_key("query", key_data)
@@ -204,22 +208,27 @@ def get_cache_manager() -> CacheManager:
 
 
 # Utility functions for common caching patterns
-async def cache_embedding_query(text: str, embeddings_model) -> np.ndarray:
+async def cache_embedding_query(text: str, embeddings_model: Any) -> np.ndarray:
     """Cache embedding computation for a text query."""
     cache = get_cache_manager()
     cache_key = cache._generate_key("embedding", text)
 
-    async def compute_embedding():
+    async def compute_embedding() -> np.ndarray:
         if hasattr(embeddings_model, "aembed_query"):
-            return await embeddings_model.aembed_query(text)
+            result = await embeddings_model.aembed_query(text)
+            return np.array(result, dtype=np.float32).astype(np.float32)
         else:
-            return embeddings_model.embed_query(text)
+            result = embeddings_model.embed_query(text)
+            return np.array(result, dtype=np.float32).astype(np.float32)
 
     return await cache.get_or_compute(cache_key, compute_embedding, ttl=3600)
 
 
-async def cache_document_chunks(doc_id: str, chunk_func, *args) -> list:
+async def cache_document_chunks(
+    doc_id: str, chunk_func: Callable[..., Any], *args: Any
+) -> list[Any]:
     """Cache document chunking results."""
     cache = get_cache_manager()
     cache_key = cache._generate_key("chunks", doc_id)
-    return await cache.get_or_compute(cache_key, chunk_func, ttl=1800, *args)
+    result = await cache.get_or_compute(cache_key, chunk_func, 1800, *args)
+    return result if isinstance(result, list) else []

@@ -9,6 +9,7 @@ import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any, Dict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
@@ -17,23 +18,14 @@ from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Performance monitoring
-from prometheus_client import (
-    CONTENT_TYPE_LATEST,
-    Counter,
-    Histogram,
-    generate_latest,
-)
-from pydantic import BaseModel, Field
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from pydantic import BaseModel, Field, SecretStr
 
 from src.chain.qa_chain import build_qa_chain
 
 # Import components
 from src.data.faiss_loader import load_faiss_index
-from src.infrastructure import (
-    ensure_database_setup,
-    get_cache_manager,
-    get_db_manager,
-)
+from src.infrastructure import ensure_database_setup, get_cache_manager, get_db_manager
 from src.infrastructure.gemini_embeddings import GeminiEmbeddings
 from src.rag.retriever import CustomRetriever, RerankingRetriever
 
@@ -56,12 +48,10 @@ REQUEST_LATENCY = Histogram(
 )
 CACHE_HITS = Counter("legalqa_cache_hits_total", "Total cache hits", ["cache_type"])
 DATABASE_QUERIES = Counter("legalqa_database_queries_total", "Total database queries")
-EMBEDDING_REQUESTS = Counter(
-    "legalqa_embedding_requests_total", "Total embedding requests"
-)
+EMBEDDING_REQUESTS = Counter("legalqa_embedding_requests_total", "Total embedding requests")
 
 # Global application state
-app_state = {
+app_state: Dict[str, Any] = {
     "qa_chain": None,
     "cache_manager": None,
     "db_manager": None,
@@ -88,7 +78,7 @@ async def lifespan(app: FastAPI):
         faiss_index, id_mapping = await load_faiss_components()
 
         logger.info("🤖 Initializing AI models...")
-        embeddings, reranker_llm, reranker_prompt = await initialize_models()
+        embeddings, reranker_llm, reranker_prompt, google_api_key = await initialize_models()
 
         # Initialize cache and database managers
         logger.info("🗄️ Initializing cache and database managers...")
@@ -111,26 +101,24 @@ async def lifespan(app: FastAPI):
         )
 
         # Build the final QA chain
-        final_qa_chain = build_qa_chain(reranking_retriever)
+        final_qa_chain = build_qa_chain(reranking_retriever, google_api_key)
 
         # Store components in app state
+        startup_time = time.time() - startup_start_time
         app_state.update(
             {
                 "qa_chain": final_qa_chain,
                 "cache_manager": cache_manager,
                 "db_manager": db_manager,
-                "startup_time": time.time() - startup_start_time,
+                "startup_time": startup_time,
             }
         )
 
         # Ensure database is set up
         await ensure_database_setup()
 
-        logger.info(
-            "✅ Application startup complete in {:.2f} seconds.".format(
-                app_state["startup_time"]
-            )
-        )
+        startup_time = app_state.get("startup_time", 0.0) or 0.0
+        logger.info("✅ Application startup complete in {:.2f} seconds.".format(startup_time))
 
     startup_start_time = time.time()
     await startup_event()
@@ -178,18 +166,16 @@ async def initialize_models():
         ChatGoogleGenerativeAI,
         model="gemini-2.5-pro",
         temperature=0,
-        api_key=google_api_key,
+        api_key=SecretStr(google_api_key) if google_api_key else None,
     )
-    reranker_prompt_path = (
-        Path(__file__).parent.parent / "prompts" / "reranker_prompt.txt"
-    )
+    reranker_prompt_path = Path(__file__).parent.parent / "prompts" / "reranker_prompt.txt"
     try:
         reranker_template = reranker_prompt_path.read_text(encoding="utf-8")
         reranker_prompt = PromptTemplate.from_template(reranker_template)
     except FileNotFoundError:
         logger.error(f"Reranker prompt not found at: {reranker_prompt_path}")
         raise
-    return embeddings, reranker_llm, reranker_prompt
+    return embeddings, reranker_llm, reranker_prompt, google_api_key
 
 
 async def load_faiss_components():
@@ -198,9 +184,7 @@ async def load_faiss_components():
     id_mapping_path = os.getenv("ID_MAPPING_PATH")
 
     if not faiss_index_path or not id_mapping_path:
-        raise ValueError(
-            "FAISS_INDEX_PATH and ID_MAPPING_PATH environment variables are required"
-        )
+        raise ValueError("FAISS_INDEX_PATH and ID_MAPPING_PATH environment variables are required")
 
     # Load FAISS components in thread pool to avoid blocking
     faiss_index, id_mapping = await asyncio.to_thread(
@@ -294,7 +278,7 @@ async def health_check():
             "database": db_status,
         },
         "startup_time": app_state.get("startup_time"),
-        "uptime": time.time() - (app_state.get("startup_time", time.time())),
+        "uptime": time.time() - (app_state.get("startup_time") or time.time()),
     }
 
 
@@ -311,7 +295,7 @@ async def get_stats():
 
     stats = {
         "startup_time": app_state.get("startup_time"),
-        "uptime": time.time() - (app_state.get("startup_time", time.time())),
+        "uptime": time.time() - (app_state.get("startup_time") or time.time()),
     }
 
     # Add database stats if available
@@ -373,12 +357,10 @@ async def ask_question(req: QuestionRequest, request: Request):
 
         processing_time = time.time() - start_time
 
-        logger.info(
-            "Question processed successfully in {:.3f}s".format(processing_time)
-        )
+        logger.info("Question processed successfully in {:.3f}s".format(processing_time))
 
         return QuestionResponse(
-            answer=answer,
+            answer=str(answer) if answer is not None else "No answer generated",
             sources=[],  # Could be enhanced to include actual sources
             processing_time=processing_time,
             cache_hit=cache_hit,

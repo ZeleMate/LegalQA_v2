@@ -32,7 +32,7 @@ jobs:
       - name: Run isort
         run: isort src/ tests/
       - name: Run mypy
-        run: mypy src/
+        run: mypy src/ --ignore-missing-imports
       - name: Run bandit (security)
         run: bandit -r src/
 

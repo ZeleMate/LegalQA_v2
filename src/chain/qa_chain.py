@@ -1,15 +1,17 @@
 import logging
 from pathlib import Path
+from typing import Any
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableLambda
 from langchain_google_genai import ChatGoogleGenerativeAI
+from pydantic import SecretStr
 
 from src.rag.retriever import RerankingRetriever
 
 
-def format_docs(docs):
+def format_docs(docs: list[Any]) -> str:
     """Helper function to format documents for the prompt."""
     logger = logging.getLogger(__name__)
     logger.info(
@@ -39,7 +41,7 @@ def format_docs(docs):
     return "\n\n".join(lines)
 
 
-def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
+def build_qa_chain(retriever: RerankingRetriever, google_api_key: str) -> Any:
     """
     Builds a Question-Answering chain using LangChain Expression Language (LCEL).
 
@@ -54,15 +56,11 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
         A Runnable object representing the QA chain.
     """
     # 1. Load the prompt template for the legal assistant
-    prompt_path = (
-        Path(__file__).parent.parent / "prompts" / "legal_assistant_prompt.txt"
-    )
+    prompt_path = Path(__file__).parent.parent / "prompts" / "legal_assistant_prompt.txt"
     try:
         template = prompt_path.read_text(encoding="utf-8")
     except FileNotFoundError:
-        raise RuntimeError(
-            "Prompt file not found at: {}...".format(str(prompt_path)[:60])
-        )
+        raise RuntimeError("Prompt file not found at: {}...".format(str(prompt_path)[:60]))
 
     prompt = PromptTemplate.from_template(template)
 
@@ -70,25 +68,32 @@ def build_qa_chain(retriever: RerankingRetriever, google_api_key: str):
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-pro",
         temperature=0,
-        api_key=google_api_key,
+        api_key=SecretStr(google_api_key),
     )
 
     # 3. Build the LCEL chain
-    async def retrieve_context_and_question(question):
+    async def retrieve_context_and_question(question: str) -> dict[str, str]:
         logger = logging.getLogger(__name__)
-        logger.info(
-            "retrieve_context_and_question called with question: {}".format(question)
-        )
+        logger.info("retrieve_context_and_question called with question: {}".format(question))
         docs = await retriever._aget_relevant_documents(question)
-        logger.info(
-            "retrieve_context_and_question returning {} documents.".format(len(docs))
-        )
+        logger.info("retrieve_context_and_question returning {} documents.".format(len(docs)))
         if docs:
             logger.info("Type of first: {}".format(type(docs[0])))
         return {"context": format_docs(docs), "question": question}
 
-    rag_chain = (
-        RunnableLambda(retrieve_context_and_question) | prompt | llm | StrOutputParser()
+    # Use a sync wrapper for RunnableLambda
+    def sync_retrieve_context_and_question(question: str) -> dict[str, str]:
+        import asyncio
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(retrieve_context_and_question(question))
+        finally:
+            loop.close()
+
+    rag_chain: Any = (
+        RunnableLambda(sync_retrieve_context_and_question) | prompt | llm | StrOutputParser()
     )
 
     return rag_chain
