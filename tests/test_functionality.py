@@ -11,9 +11,16 @@ from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from dotenv import load_dotenv
+
+from src.data.faiss_loader import load_faiss_index
+from src.infrastructure.cache_manager import CacheManager
+from src.infrastructure.db_manager import DatabaseManager
 
 # Configure logging for this test file
 logger = logging.getLogger(__name__)
+
+load_dotenv()
 
 
 class TestBasicFunctionality:
@@ -48,8 +55,6 @@ class TestBasicFunctionality:
         """Test cache manager can be initialized."""
         logger.info("--- Running Cache Manager Initialization Test ---")
         try:
-            from src.infrastructure.cache_manager import CacheManager
-
             cache_manager = CacheManager(memory_maxsize=100, memory_ttl=300)
             assert cache_manager is not None
             assert cache_manager.memory_cache is not None
@@ -63,8 +68,6 @@ class TestBasicFunctionality:
         """Test database manager can be initialized."""
         logger.info("--- Running Database Manager Initialization Test ---")
         try:
-            from src.infrastructure.db_manager import DatabaseManager
-
             db_manager = DatabaseManager()
             assert db_manager is not None
             assert (
@@ -83,8 +86,6 @@ class TestBasicFunctionality:
         """Test that FAISS loader function exists and is callable."""
         logger.info("--- Running FAISS Loader Existence Test ---")
         try:
-            from src.data.faiss_loader import load_faiss_index
-
             assert callable(load_faiss_index)
             logger.info("✅ FAISS loader is callable.")
 
@@ -99,8 +100,6 @@ class TestCacheSystem:
     @pytest.fixture
     def cache_manager(self):
         """Provide a cache manager for testing."""
-        from src.infrastructure.cache_manager import CacheManager
-
         return CacheManager(memory_maxsize=10, memory_ttl=60)
 
     def test_memory_cache_set_get(self, cache_manager):
@@ -159,8 +158,6 @@ class TestDatabaseOperations:
     @pytest.fixture
     def mock_db_manager(self):
         """Provide a mocked database manager."""
-        from src.infrastructure.db_manager import DatabaseManager
-
         db_manager = DatabaseManager()
         # Mock the connection methods
         db_manager._initialized = True
@@ -387,8 +384,6 @@ class TestErrorHandling:
     def test_missing_faiss_files_error(self):
         """Test graceful failure when FAISS files are missing."""
         logger.info("--- Running Missing FAISS Files Error Handling Test ---")
-        from src.data.faiss_loader import load_faiss_index
-
         with patch("os.path.exists", return_value=False):
             logger.debug("Simulating that FAISS files do not exist.")
             with pytest.raises(FileNotFoundError) as excinfo:
@@ -410,8 +405,6 @@ class TestErrorHandling:
         mock_aioredis.from_url.return_value = mock_redis_client
 
         with patch.dict("sys.modules", {"aioredis": mock_aioredis}):
-            from src.infrastructure.cache_manager import CacheManager
-
             # Initialize the manager. It will use the mocked aioredis.
             cache_manager = CacheManager(redis_url="redis://dummy")
 
@@ -427,8 +420,6 @@ class TestErrorHandling:
     def test_database_connection_error_handling(self):
         """Test database connection error handling."""
         logger.info("--- Running Database Connection Error Handling Test ---")
-        from src.infrastructure.db_manager import DatabaseManager
-
         db_manager = DatabaseManager()
 
         # Mock the asyncpg.create_pool to raise an error
