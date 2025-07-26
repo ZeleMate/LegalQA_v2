@@ -162,18 +162,107 @@ curl -X POST "http://localhost:8000/ask" \
 
 ## 🧪 Testing
 
-The project includes a comprehensive test suite. To run all tests:
+The project includes a comprehensive test suite and quality checks.
 
-1.  Install development dependencies:
-    ```sh
-    make install
-    ```
-2.  Run the tests:
-    ```sh
-    make test
-    ```
+### Unit and Integration Tests
 
-You can also run specific test types (e.g., `make test-functionality`, `make test-performance`) or lint the code (`make lint`).
+Run the test suite:
+
+```bash
+pytest tests/ -v
+```
+
+### Code Quality Checks
+
+The project uses multiple tools to ensure code quality:
+
+```bash
+# Format checking (CI mode)
+black --check src/ tests/
+isort --check-only src/ tests/
+
+# Linting
+flake8 src/ tests/
+mypy src/
+bandit -r src/
+
+# Pre-commit hooks (install with: pre-commit install)
+pre-commit run --all-files
+```
+
+### Performance Testing
+
+The project includes k6-based smoke performance tests to validate system stability under concurrent load.
+
+#### Local Performance Testing
+
+```bash
+# Install k6 (if not already installed)
+brew install k6  # macOS
+# or download from https://k6.io/docs/getting-started/installation/
+
+# Run smoke test against local development server
+k6 run perf/smoke.js
+
+# Run with custom URL
+BASE_URL=http://your-app-url:8000 k6 run perf/smoke.js
+
+# Run stress test
+k6 run --vus 10 --duration 60s perf/smoke.js
+```
+
+#### CI/CD Performance Testing
+
+The GitHub Actions workflow automatically runs performance tests on pull requests and main/develop branches using the integrated CI workflow.
+
+**Requirements:**
+- Set `APP_URL_STAGING` secret in GitHub repository settings
+- Ensure the staging environment is accessible from GitHub Actions
+
+**Test Coverage:**
+- Health check endpoint (`/health`)
+- Metrics endpoint (`/metrics`) 
+- Stats endpoint (`/stats`)
+- QA endpoint (`/ask`)
+- Cache management (`/clear-cache`)
+
+**Thresholds:**
+- 95% response time < 5 seconds (noise-tolerant for smoke test)
+- Error rate < 5% (noise-tolerant for smoke test)
+- All endpoints return 200 status codes
+
+### CI/CD Pipeline
+
+The project uses a robust CI/CD pipeline with the following features:
+
+- **Fast feedback**: Lint and tests run on every push to any branch
+- **Heavy jobs**: Docker build and performance tests only on PR/main/develop
+- **Smart skipping**: Documentation changes and `[skip ci]` commits bypass CI
+- **Concurrency control**: New commits cancel previous runs
+- **Format checking**: Black and isort run in check mode
+- **Type checking**: Strict mypy configuration with specific overrides
+- **Security scanning**: Bandit for security vulnerabilities
+- **Test coverage**: Minimum 80% coverage requirement
+- **Docker build**: Multi-stage builds with layer caching
+- **Performance testing**: k6 smoke tests on PR/main/develop
+
+#### CI Policy
+
+- **Every push**: Lint, format check, unit tests (fast feedback)
+- **PR/main/develop**: Full pipeline including Docker build and performance tests
+- **Documentation**: Automatically skipped (docs/, *.md files)
+- **Skip CI**: Use `[skip ci]` in commit message to bypass all checks
+
+### Make Commands
+
+You can also run specific test types using make:
+
+```bash
+make test              # Run all tests
+make test-functionality # Run functionality tests
+make test-performance  # Run performance tests
+make lint              # Run all linting tools
+```
 
 ## 📋 Data Schema
 

@@ -7,6 +7,7 @@ functionality validation.
 
 import sys
 from pathlib import Path
+from typing import Any, Dict
 
 # Add src to Python path for imports
 project_root = Path(__file__).parent.parent
@@ -14,7 +15,7 @@ sys.path.insert(0, str(project_root / "src"))
 
 # Test configuration
 TEST_DATA_DIR = project_root / "tests" / "data"
-TEST_CONFIG = {
+TEST_CONFIG: Dict[str, Any] = {
     "sample_questions": [
         "Mi a bűnszervezet fogalma a Btk. szerint?",
         "Milyen jogkövetkezmények vonatkoznak a korrupciós " "bűncselekményekre?",
@@ -27,6 +28,9 @@ TEST_CONFIG = {
         "max_startup_time": 10.0,  # seconds
         "max_memory_mb": 1024,  # MB
         "min_cache_hit_rate": 0.3,  # 30%
+        "max_cache_memory_mb": 512,  # MB
+        "max_cache_access_time": 0.001,  # seconds
+        "max_qa_latency": 5.0,  # seconds
     },
     "test_database": {"name": "legalqa_test", "sample_size": 100},
 }

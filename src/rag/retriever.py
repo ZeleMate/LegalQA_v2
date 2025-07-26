@@ -171,11 +171,11 @@ class RerankingRetriever(BaseRetriever, BaseModel):
         self, doc: Document, query_vector: np.ndarray, k: int = 3
     ) -> str:
         """
-        Cached version of snippet extraction with keyword boosting.
+        Get prioritized snippets from document with caching.
         """
         cache_manager = get_cache_manager()
 
-        # Create cache key based on document content and query
+        # Generate cache keys
         doc_hash = cache_manager._generate_key("doc", doc.page_content)
         query_hash = cache_manager._generate_key("query", query_vector.tobytes())
         cache_key = f"snippets:{doc_hash}:{query_hash}:{k}"
@@ -184,7 +184,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
         cached_snippets = await cache_manager.get(cache_key)
         if cached_snippets:
             logger.debug("Cache hit for snippet extraction")
-            return cached_snippets
+            return str(cached_snippets)
 
         # Compute snippets if not cached
         text_splitter = RecursiveCharacterTextSplitter(
@@ -222,7 +222,7 @@ class RerankingRetriever(BaseRetriever, BaseModel):
 
         # Cache the result
         await cache_manager.set(cache_key, result, ttl=1800)
-        return result
+        return str(result)
 
     async def _batch_process_documents(
         self, initial_docs: List[Document], query: str
@@ -345,15 +345,32 @@ class RerankingRetriever(BaseRetriever, BaseModel):
 
 
 def initialize_retriever(
-    embeddings,
-    faiss_index,
-    id_mapping,
-    llm,
-    reranker_prompt,
-    k_retriever=25,
-    k_reranker=5,
-):
+    embeddings: GoogleGenerativeAIEmbeddings,
+    faiss_index: faiss.Index,
+    id_mapping: dict,
+    llm: ChatGoogleGenerativeAI,
+    reranker_prompt: PromptTemplate,
+    k_retriever: int = 25,
+    k_reranker: int = 5,
+) -> RerankingRetriever:
     """
     Initialize a new retriever with the given parameters.
     """
-    # ... existing code ...
+    # Create custom retriever
+    custom_retriever = CustomRetriever(
+        embeddings=embeddings,
+        faiss_index=faiss_index,
+        id_mapping=id_mapping,
+        k=k_retriever,
+    )
+
+    # Create reranking retriever
+    reranking_retriever = RerankingRetriever(
+        retriever=custom_retriever,
+        llm=llm,
+        reranker_prompt=reranker_prompt,
+        embeddings=embeddings,
+        k=k_reranker,
+    )
+
+    return reranking_retriever

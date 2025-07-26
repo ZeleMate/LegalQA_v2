@@ -173,20 +173,19 @@ class DatabaseManager:
 
     def _parse_pgvector_embedding(self, embedding_str: str) -> Optional[str]:
         """
-        Parse pgvector embedding string back to numpy array.
-        Optimized version with better error handling.
+        Parse pgvector embedding string to hex format.
+        Handles both array and binary formats.
         """
         if not embedding_str:
             return None
 
         try:
-            # pgvector returns format like "[1.0,2.0,3.0]"
-            # Remove brackets and split by comma
-            clean_str = embedding_str.strip("[]")
+            # Remove array brackets and split by comma
+            clean_str = embedding_str.strip("[]").replace(" ", "")
             if not clean_str:
                 return None
 
-            # Convert to numpy array more efficiently
+            # Convert to numpy array and then to hex
             values = np.fromstring(clean_str, sep=",", dtype=np.float32)
             return str(values.tobytes().hex())  # Return as hex string for consistency
 
