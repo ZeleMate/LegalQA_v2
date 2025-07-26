@@ -9,7 +9,7 @@ import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
@@ -51,7 +51,7 @@ DATABASE_QUERIES = Counter("legalqa_database_queries_total", "Total database que
 EMBEDDING_REQUESTS = Counter("legalqa_embedding_requests_total", "Total embedding requests")
 
 # Global application state
-app_state: Dict[str, Any] = {
+app_state: Dict[str, Optional[Any]] = {
     "qa_chain": None,
     "cache_manager": None,
     "db_manager": None,
