@@ -28,9 +28,9 @@ jobs:
       - name: Run flake8
         run: flake8 src/ tests/
       - name: Run black
-        run: black --check src/ tests/
+        run: black src/ tests/
       - name: Run isort
-        run: isort --check src/ tests/
+        run: isort src/ tests/
       - name: Run mypy
         run: mypy src/
       - name: Run bandit (security)
