@@ -5,6 +5,7 @@ Tests individual components and functions to ensure they work correctly.
 """
 
 import logging
+import os
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -329,6 +330,7 @@ class TestDataLoadingComponents:
             logger.error(f"❌ FAISS loader import failed: {e}")
             pytest.fail(f"FAISS loader import failed: {e}")
 
+    @patch.dict(os.environ, {"PARQUET_PATH": "/tmp/test.parquet"})
     def test_parquet_loader_import(self) -> None:
         """Test that Parquet loader can be imported."""
         logger.info("--- Running Parquet Loader Import Test ---")
