@@ -203,7 +203,6 @@ outputs/
 
 # Docker
 .dockerignore
-docker-compose.yml
 
 # Testing
 /test-results/

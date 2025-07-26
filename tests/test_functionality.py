@@ -297,7 +297,7 @@ class TestProjectStructure:
         expected_paths = [
             "src/infrastructure/cache_manager.py",
             "src/infrastructure/db_manager.py",
-            "src/data/faiss_loader.py",
+            "src/data_loading/faiss_loader.py",
             "config/redis.conf",
             "config/prometheus.yml",
             "Dockerfile",
