@@ -37,7 +37,7 @@ chunks = Table(
     Column("chunk_id", String, primary_key=True),
     Column("doc_id", String, ForeignKey("documents.doc_id")),
     Column("text", String),
-    Column("embedding", Vector(768)),  # Sentence transformer embedding dimension
+    Column("embedding", Vector(768)),
 )
 # --- End of Schema Definition ---
 
