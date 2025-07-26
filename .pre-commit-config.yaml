@@ -23,4 +23,5 @@ repos:
     rev: v1.8.0
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests, types-PyYAML, types-toml]
+        args: ["--config-file=pyproject.toml"]
+        additional_dependencies: [types-requests, types-PyYAML, types-toml, python-dotenv, aioredis, langchain-core]

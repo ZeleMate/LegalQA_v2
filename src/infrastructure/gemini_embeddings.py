@@ -21,5 +21,4 @@ class GeminiEmbeddings:
         import asyncio
 
         loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(None, self.embed_query, text)
-        return result.astype(np.float32)
+        return await loop.run_in_executor(None, self.embed_query, text)

@@ -9,23 +9,19 @@ import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, AsyncGenerator, Dict, Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-
-# Performance monitoring
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from prometheus_client import Counter, Histogram
 from pydantic import BaseModel, Field, SecretStr
 
 from src.chain.qa_chain import build_qa_chain
-
-# Import components
 from src.data_loading.faiss_loader import load_faiss_index
-from src.infrastructure import ensure_database_setup, get_cache_manager, get_db_manager
+from src.infrastructure.cache_manager import CacheManager, get_cache_manager
+from src.infrastructure.db_manager import DatabaseManager, ensure_database_setup, get_db_manager
 from src.infrastructure.gemini_embeddings import GeminiEmbeddings
 from src.rag.retriever import CustomRetriever, RerankingRetriever
 
@@ -60,11 +56,11 @@ app_state: Dict[str, Optional[Any]] = {
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifecycle management with async initialization."""
 
     @REQUEST_LATENCY.time()
-    async def startup_event():
+    async def startup_event() -> None:
         """Initializes all application components asynchronously."""
         logger.info("🚀 Starting LegalQA application...")
         load_dotenv()
@@ -88,7 +84,7 @@ async def lifespan(app: FastAPI):
         # Build retrievers
         logger.info("⚡ Building retrieval pipeline...")
         base_retriever = CustomRetriever(
-            embeddings=embeddings,
+            embeddings=embeddings,  # type: ignore[arg-type]
             faiss_index=faiss_index,
             id_mapping=id_mapping,
         )
@@ -97,11 +93,14 @@ async def lifespan(app: FastAPI):
             retriever=base_retriever,
             llm=reranker_llm,
             reranker_prompt=reranker_prompt,
-            embeddings=embeddings,
+            embeddings=embeddings,  # type: ignore[arg-type]
         )
 
         # Build the final QA chain
-        final_qa_chain = build_qa_chain(reranking_retriever, google_api_key)
+        if google_api_key:
+            final_qa_chain = build_qa_chain(reranking_retriever, google_api_key)
+        else:
+            raise ValueError("GOOGLE_API_KEY is required for QA chain initialization")
 
         # Store components in app state
         startup_time = time.time() - startup_start_time
@@ -135,14 +134,14 @@ async def lifespan(app: FastAPI):
     logger.info("✅ Application shutdown complete.")
 
 
-async def initialize_cache():
+async def initialize_cache() -> CacheManager:
     """Initialize cache manager."""
     logger.info("Initializing cache manager...")
     cache_manager = get_cache_manager()
     return cache_manager
 
 
-async def initialize_database():
+async def initialize_database() -> DatabaseManager:
     """Initialize database manager."""
     logger.info("Initializing database manager...")
     db_manager = get_db_manager()
@@ -150,7 +149,9 @@ async def initialize_database():
     return db_manager
 
 
-async def initialize_models():
+async def initialize_models() -> (
+    tuple[GeminiEmbeddings, ChatGoogleGenerativeAI, PromptTemplate, str | None]
+):
     """Initialize AI models."""
     logger.info("Initializing AI models...")
 
@@ -178,7 +179,7 @@ async def initialize_models():
     return embeddings, reranker_llm, reranker_prompt, google_api_key
 
 
-async def load_faiss_components():
+async def load_faiss_components() -> tuple[Any, Any]:
     """Load FAISS index components."""
     faiss_index_path = os.getenv("FAISS_INDEX_PATH")
     id_mapping_path = os.getenv("ID_MAPPING_PATH")
@@ -207,7 +208,7 @@ app = FastAPI(
 
 # Performance monitoring middleware
 @app.middleware("http")
-async def performance_middleware(request: Request, call_next):
+async def performance_middleware(request: Request, call_next: Any) -> Response:
     """Add performance monitoring to all requests."""
     start_time = time.time()
     method = request.method
@@ -254,7 +255,7 @@ class QuestionResponse(BaseModel):
 
 
 @app.get("/health", status_code=200, tags=["Status"])
-async def health_check():
+async def health_check() -> dict[str, Any]:
     """Enhanced health check with system status."""
     qa_chain = app_state.get("qa_chain")
     cache_manager = app_state.get("cache_manager")
@@ -283,13 +284,16 @@ async def health_check():
 
 
 @app.get("/metrics", tags=["Monitoring"])
-async def get_metrics():
+async def get_metrics() -> Response:
     """Prometheus metrics endpoint."""
-    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+    content = generate_latest()
+    return Response(content=content, media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/stats", tags=["Monitoring"])
-async def get_stats():
+async def get_stats() -> dict[str, Any]:
     """Get application performance statistics."""
     db_manager = app_state.get("db_manager")
 
@@ -310,7 +314,7 @@ async def get_stats():
 
 
 @app.post("/ask", response_model=QuestionResponse, tags=["Q&A"])
-async def ask_question(req: QuestionRequest, request: Request):
+async def ask_question(req: QuestionRequest, request: Request) -> QuestionResponse:
     """
     High-performance question answering endpoint with caching and monitoring.
     """
@@ -377,7 +381,7 @@ async def ask_question(req: QuestionRequest, request: Request):
 
 
 @app.post("/clear-cache", tags=["Management"])
-async def clear_cache():
+async def clear_cache() -> dict[str, str]:
     """Clear all caches."""
     cache_manager = app_state.get("cache_manager")
     if cache_manager:
@@ -388,7 +392,7 @@ async def clear_cache():
 
 
 @app.get("/", tags=["General"])
-async def read_root():
+async def read_root() -> dict[str, Any]:
     """Root endpoint with API information."""
     return {
         "message": "Welcome to the LegalQA API!",

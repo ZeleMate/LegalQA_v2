@@ -237,12 +237,13 @@ async def cache_embedding_query(text: str, embeddings_model: Any) -> np.ndarray:
     async def compute_embedding() -> np.ndarray:
         if hasattr(embeddings_model, "aembed_query"):
             result = await embeddings_model.aembed_query(text)
-            return np.array(result, dtype=np.float32).astype(np.float32)
+            return np.array(result, dtype=np.float32)
         else:
             result = embeddings_model.embed_query(text)
-            return np.array(result, dtype=np.float32).astype(np.float32)
+            return np.array(result, dtype=np.float32)
 
-    return await cache.get_or_compute(cache_key, compute_embedding, ttl=3600)
+    result = await cache.get_or_compute(cache_key, compute_embedding, ttl=3600)
+    return result if isinstance(result, np.ndarray) else np.array(result, dtype=np.float32)
 
 
 async def cache_document_chunks(
