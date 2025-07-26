@@ -49,6 +49,7 @@ dev = [
     "toml",
     "pyyaml",
     "flake8",
+    "bandit",
 ]
 notebook = [
     "matplotlib",
