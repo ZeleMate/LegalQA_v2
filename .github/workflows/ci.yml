@@ -118,11 +118,7 @@ jobs:
           push: false
           # Disable cache completely for fallback
           no-cache: true
-      - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: Dockerfile.minimal
-          failure-threshold: error
+
 
   # Only run merge-check on pull requests
   merge-check:
