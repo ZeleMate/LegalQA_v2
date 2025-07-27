@@ -1,13 +1,13 @@
 # LegalQA - AI-Powered Legal Question Answering System
 
 <p align="center">
-  <!-- CI státusz -->
+  <!-- CI status -->
   <a href="https://github.com/ZeleMate/LegalQA_v2/actions/workflows/ci.yml">
     <img alt="CI" src="https://github.com/ZeleMate/LegalQA_v2/actions/workflows/ci.yml/badge.svg?branch=main">
   </a>
-  <!-- Python verzió -->
+  <!-- Python version -->
   <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white">
-  <!-- Licenc -->
+  <!-- License -->
   <img alt="License" src="https://img.shields.io/github/license/ZeleMate/LegalQA_v2">
   <!-- Docker -->
   <img alt="Docker" src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white">
