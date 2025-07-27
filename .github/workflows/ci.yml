@@ -122,7 +122,6 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile.minimal
-          config-file: .hadolint.yaml
           failure-threshold: error
 
   # Only run merge-check on pull requests
