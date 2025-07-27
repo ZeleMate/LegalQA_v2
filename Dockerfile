@@ -1,7 +1,7 @@
 # Optimized Multi-stage Dockerfile for LegalQA
 
 # Build stage - Install dependencies
-FROM python:3.10-slim as builder
+FROM python:3.10-slim AS builder
 
 # Set environment variables for build optimization
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -9,28 +9,68 @@ ENV PYTHONUNBUFFERED=1
 ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies needed for building
+# Install only essential system dependencies for building
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
-    musl-dev \
-    libffi-dev \
-    libssl-dev \
     libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Create and use virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install Python dependencies
+# Install Python dependencies with better caching
 WORKDIR /build
+
+# Copy dependency files first for better layer caching
 COPY pyproject.toml .
+
+# Install build tools first
 RUN pip install --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir .
+
+# Install core dependencies first (smaller packages) - Layer 1
+RUN pip install --no-cache-dir \
+    pandas \
+    pyarrow \
+    python-dotenv \
+    fastapi \
+    uvicorn[standard] \
+    psycopg2-binary \
+    scikit-learn \
+    numpy
+
+# Install ML dependencies (larger packages) - Layer 2
+RUN pip install --no-cache-dir \
+    faiss-cpu
+
+# Install sentence-transformers separately (very large) - Layer 3
+RUN pip install --no-cache-dir \
+    sentence-transformers
+
+# Install LangChain dependencies - Layer 4
+RUN pip install --no-cache-dir \
+    langchain \
+    langchain-openai \
+    langchain-google-genai \
+    langchain-core \
+    langchain-community \
+    google-genai
+
+# Install remaining dependencies - Layer 5
+RUN pip install --no-cache-dir \
+    pgvector \
+    asyncpg \
+    aioredis \
+    redis[hiredis] \
+    sqlalchemy[asyncio] \
+    prometheus-client \
+    aioboto3 \
+    cachetools
 
 # Production stage - Minimal runtime image
-FROM python:3.10-slim as production
+FROM python:3.10-slim AS production
 
 # Runtime environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -79,7 +119,7 @@ CMD ["uvicorn", "src.inference.app:app", \
      "--log-level", "info"]
 
 # Development stage - For development with hot reload
-FROM production as development
+FROM production AS development
 
 # Switch back to root for installing development tools
 USER root
