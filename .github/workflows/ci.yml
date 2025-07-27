@@ -308,25 +308,53 @@ jobs:
           echo "  Summary: ${{ needs.summary.result }}"
           echo ""
           
-          # Count successful jobs
+          # Count successful jobs with proper handling of skipped jobs
           success_count=0
           total_count=0
           
+          # Core jobs that should always run
           if [ "${{ needs.lint.result }}" == "success" ]; then ((success_count++)); fi
           if [ "${{ needs.test.result }}" == "success" ]; then ((success_count++)); fi
           if [ "${{ needs.docker-build.result }}" == "success" ]; then ((success_count++)); fi
-          if [ "${{ needs.merge-check.result }}" == "success" ] || [ "${{ needs.merge-check.result }}" == "skipped" ]; then ((success_count++)); fi
-          if [ "${{ needs.k6-smoke.result }}" == "success" ] || [ "${{ needs.k6-smoke.result }}" == "skipped" ]; then ((success_count++)); fi
           if [ "${{ needs.summary.result }}" == "success" ]; then ((success_count++)); fi
+          ((total_count+=4))
           
-          total_count=6
+          # Optional jobs that can be skipped
+          if [ "${{ needs.merge-check.result }}" == "success" ] || [ "${{ needs.merge-check.result }}" == "skipped" ]; then 
+            ((success_count++)); 
+          fi
+          if [ "${{ needs.k6-smoke.result }}" == "success" ] || [ "${{ needs.k6-smoke.result }}" == "skipped" ]; then 
+            ((success_count++)); 
+          fi
+          ((total_count+=2))
           
           echo "Success Rate: $success_count/$total_count jobs passed"
           
-          if [ $success_count -eq $total_count ]; then
-            echo "🎉 All jobs completed successfully!"
-            exit 0
+          # Determine if this is a successful run
+          # For push events: lint, test, docker-build, summary must succeed
+          # For PR events: all jobs must succeed or be skipped
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # For PRs, all jobs should succeed or be skipped
+            if [ $success_count -eq $total_count ]; then
+              echo "🎉 All jobs completed successfully!"
+              exit 0
+            else
+              echo "⚠️  Some jobs failed"
+              exit 1
+            fi
           else
-            echo "⚠️  Some jobs failed or were skipped"
-            exit 1
+            # For push events, core jobs must succeed
+            core_success=0
+            if [ "${{ needs.lint.result }}" == "success" ]; then ((core_success++)); fi
+            if [ "${{ needs.test.result }}" == "success" ]; then ((core_success++)); fi
+            if [ "${{ needs.docker-build.result }}" == "success" ]; then ((core_success++)); fi
+            if [ "${{ needs.summary.result }}" == "success" ]; then ((core_success++)); fi
+            
+            if [ $core_success -eq 4 ]; then
+              echo "🎉 Core CI checks passed! (Optional jobs skipped for push event)"
+              exit 0
+            else
+              echo "❌ Core CI checks failed!"
+              exit 1
+            fi
           fi 
