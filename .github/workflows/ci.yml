@@ -331,20 +331,8 @@ jobs:
           
           echo "Success Rate: $success_count/$total_count jobs passed"
           
-          # Determine if this is a successful run
-          # For push events: lint, test, docker-build, summary must succeed
-          # For PR events: all jobs must succeed or be skipped
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # For PRs, all jobs should succeed or be skipped
-            if [ $success_count -eq $total_count ]; then
-              echo "🎉 All jobs completed successfully!"
-              exit 0
-            else
-              echo "⚠️  Some jobs failed"
-              exit 1
-            fi
-          else
-            # For push events, core jobs must succeed
+          # For push events, only core jobs matter
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
             core_success=0
             if [ "${{ needs.lint.result }}" == "success" ]; then ((core_success++)); fi
             if [ "${{ needs.test.result }}" == "success" ]; then ((core_success++)); fi
@@ -358,4 +346,15 @@ jobs:
               echo "❌ Core CI checks failed!"
               exit 1
             fi
-          fi 
+          else
+            # For PR events, all jobs should succeed or be skipped
+            if [ $success_count -eq $total_count ]; then
+              echo "🎉 All jobs completed successfully!"
+              exit 0
+            else
+              echo "⚠️  Some jobs failed"
+              exit 1
+            fi
+          fi
+          
+ 
