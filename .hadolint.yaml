@@ -1,11 +1,13 @@
 # Hadolint configuration
-# Disable version pinning warnings for CI environment
+  failure-threshold: error  # csak ERROR vagy súlyosabb dobja el a CI-t
+
 override:
-  DL3008: info  # Pin versions in apt get install
-  DL3013: info  # Pin versions in pip
-  SC1091: info  # Not following: File not included in mock
+  info:
+    - DL3008  # apt-get install verziópin
+    - DL3013  # pip install verziópin
+    - SC1091  # ShellCheck: "Not following: ..." (source)
 
 # Trusted registries
 trustedRegistries:
   - docker.io
-  - registry.hub.docker.com 
+  - registry.hub.docker.com

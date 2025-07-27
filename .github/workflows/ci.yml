@@ -45,6 +45,21 @@ jobs:
       - name: Bandit
         run: bandit -r src/
 
+      - name: Hadolint (Dockerfile lint)
+        if: ${{ hashFiles('Dockerfile*', '**/Dockerfile*') != '' }}
+        run: |
+          set -e
+          echo "Installing hadolint..."
+          curl -sSL -o /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+          chmod +x /usr/local/bin/hadolint
+          echo "Scanning Dockerfiles with hadolint (failure-threshold=error)..."
+          files=$(git ls-files | grep -E '(^|/)(Dockerfile(\..*)?$)' || true)
+          if [ -z "$files" ]; then
+            echo "No Dockerfiles found, skipping."
+            exit 0
+          fi
+          echo "$files" | xargs -I{} hadolint --failure-threshold error {}
+
   test:
     name: Pytest & Coverage
     runs-on: ubuntu-latest
@@ -267,19 +282,19 @@ jobs:
             echo "Merge check job: Skipped (not a PR)"
           fi
           
-          # Determine overall status
-          if [ "${{ needs.test.result }}" == "success" ] && \
-             [ "${{ needs.docker-build.result }}" == "success" ]; then
+          # Determine overall status (treat skipped docker-build as pass)
+          DB_RESULT="${{ needs.docker-build.result }}"
+          if [ "${{ needs.test.result }}" == "success" ] && { [ "$DB_RESULT" == "success" ] || [ "$DB_RESULT" == "skipped" ]; }; then
             if [ "${{ github.event_name }}" == "pull_request" ]; then
               echo "✅ All CI checks passed! (Including merge check for PR)"
             else
-              echo "✅ Core CI checks passed! (Merge check skipped for non-PR)"
+              echo "✅ Core CI checks passed! (Docker build is conditional and counted as pass when skipped)"
             fi
             exit 0
           else
             echo "❌ Some CI checks failed!"
             echo "Test: ${{ needs.test.result }}"
-            echo "Docker Build: ${{ needs.docker-build.result }}"
+            echo "Docker Build: $DB_RESULT"
             exit 1
           fi
 
@@ -327,19 +342,20 @@ jobs:
           
           echo "Success Rate: $success_count/$total_count jobs passed"
           
-          # For push events, only core jobs matter
+          # For push events, only core jobs matter (treat skipped docker-build as pass)
           if [ "${{ github.event_name }}" != "pull_request" ]; then
-            core_success=0
-            if [ "${{ needs.lint.result }}" == "success" ]; then ((core_success++)); fi
-            if [ "${{ needs.test.result }}" == "success" ]; then ((core_success++)); fi
-            if [ "${{ needs.docker-build.result }}" == "success" ]; then ((core_success++)); fi
-            if [ "${{ needs.summary.result }}" == "success" ]; then ((core_success++)); fi
-            
-            if [ $core_success -eq 4 ]; then
-              echo "🎉 Core CI checks passed! (Optional jobs skipped for push event)"
+            if [ "${{ needs.lint.result }}" == "success" ] && \
+               [ "${{ needs.test.result }}" == "success" ] && \
+               [ "${{ needs.summary.result }}" == "success" ] && \
+               { [ "${{ needs.docker-build.result }}" == "success" ] || [ "${{ needs.docker-build.result }}" == "skipped" ]; }; then
+              echo "🎉 Core CI checks passed! (Docker build is conditional and counted as pass when skipped)"
               exit 0
             else
               echo "❌ Core CI checks failed!"
+              echo "  Lint:    ${{ needs.lint.result }}"
+              echo "  Test:    ${{ needs.test.result }}"
+              echo "  Summary: ${{ needs.summary.result }}"
+              echo "  Docker:  ${{ needs.docker-build.result }} (success or skipped required)"
               exit 1
             fi
           else
