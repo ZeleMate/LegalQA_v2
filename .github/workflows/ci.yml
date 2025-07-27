@@ -123,6 +123,7 @@ jobs:
         with:
           dockerfile: Dockerfile.minimal
           config-file: .hadolint.yaml
+          failure-threshold: error
 
   # Only run merge-check on pull requests
   merge-check:
