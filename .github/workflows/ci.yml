@@ -122,6 +122,7 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile.minimal
+          config-file: .hadolint.yaml
 
   # Only run merge-check on pull requests
   merge-check:
