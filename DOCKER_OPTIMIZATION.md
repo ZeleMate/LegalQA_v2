@@ -1,54 +1,54 @@
-# Docker Optimalizációk
+# Docker Optimizations
 
-Ez a dokumentum leírja a LegalQA projekt Docker optimalizációit a CI/CD folyamatok gyorsítására.
+This document describes the Docker optimizations for the LegalQA project to speed up CI/CD processes.
 
-## Dockerfile Változatok
+## Dockerfile Variants
 
-### 1. Dockerfile (Eredeti)
-- **Cél**: Teljes fejlesztői környezet
-- **Függőségek**: Minden szükséges csomag
-- **Build idő**: ~150 másodperc
-- **Használat**: Lokális fejlesztés, production
+### 1. Dockerfile (Original)
+- **Purpose**: Complete development environment
+- **Dependencies**: All required packages
+- **Build Time**: ~150 seconds
+- **Usage**: Local development, production
 
-### 2. Dockerfile.ci (CI Optimalizált)
-- **Cél**: CI/CD környezet
-- **Függőségek**: Teljes függőségek, de jobb cache stratégiával
-- **Build idő**: ~110 másodperc
-- **Használat**: GitHub Actions CI
+### 2. Dockerfile.ci (CI Optimized)
+- **Purpose**: CI/CD environment
+- **Dependencies**: Full dependencies with better cache strategy
+- **Build Time**: ~110 seconds
+- **Usage**: GitHub Actions CI
 
-### 3. Dockerfile.minimal (Minimális)
-- **Cél**: Gyors CI tesztelés
-- **Függőségek**: Csak a legszükségesebb csomagok
-- **Build idő**: ~50 másodperc
-- **Használat**: GitHub Actions CI (jelenlegi)
+### 3. Dockerfile.minimal (Minimal)
+- **Purpose**: Fast CI testing
+- **Dependencies**: Only essential packages
+- **Build Time**: ~50 seconds
+- **Usage**: GitHub Actions CI (current)
 
-## Optimalizációs Stratégiák
+## Optimization Strategies
 
-### 1. Réteges Cache
-- Függőségek külön rétegekben telepítése
-- Kisebb csomagok először
-- Nagyobb csomagok utoljára
+### 1. Layered Caching
+- Installing dependencies in separate layers
+- Smaller packages first
+- Larger packages last
 
-### 2. .dockerignore Optimalizáció
-- Felesleges fájlok kizárása
-- Build context méretének csökkentése
+### 2. .dockerignore Optimization
+- Excluding unnecessary files
+- Reducing build context size
 
 ### 3. Multi-stage Build
-- Builder és production stage elkülönítése
-- Csak szükséges fájlok másolása
+- Separating builder and production stages
+- Copying only necessary files
 
 ### 4. GitHub Actions Cache
-- Registry cache használata
-- Layer cache optimalizálás
+- Using registry cache
+- Optimizing layer cache
 
-## Használat
+## Usage
 
-### Lokális Fejlesztés
+### Local Development
 ```bash
 docker build -t legalqa:dev .
 ```
 
-### CI Tesztelés
+### CI Testing
 ```bash
 docker build -f Dockerfile.minimal -t legalqa:ci .
 ```
@@ -58,29 +58,29 @@ docker build -f Dockerfile.minimal -t legalqa:ci .
 docker build -t legalqa:prod .
 ```
 
-## Teljesítmény Összehasonlítás
+## Performance Comparison
 
-| Dockerfile | Build Idő | Méret | Használat |
-|------------|-----------|-------|-----------|
-| Eredeti | ~150s | Nagy | Dev/Prod |
-| CI | ~110s | Közepes | CI |
-| Minimális | ~50s | Kicsi | CI |
+| Dockerfile | Build Time | Size | Usage |
+|------------|------------|------|-------|
+| Original | ~150s | Large | Dev/Prod |
+| CI | ~110s | Medium | CI |
+| Minimal | ~50s | Small | CI |
 
-## Jövőbeli Optimalizációk
+## Future Optimizations
 
-1. **Alpine Linux**: Kisebb base image
-2. **Pre-built Wheels**: Előfordított csomagok használata
-3. **Distroless**: Minimális runtime image
-4. **Build Cache**: Jobb cache stratégiák
+1. **Alpine Linux**: Smaller base image
+2. **Pre-built Wheels**: Using pre-compiled packages
+3. **Distroless**: Minimal runtime image
+4. **Build Cache**: Better cache strategies
 
-## Hibaelhárítás
+## Troubleshooting
 
-### Build Időtúllépés
-- Használja a `Dockerfile.minimal`-t CI-hez
-- Növelje a timeout-ot a workflow-ban
-- Ellenőrizze a cache beállításokat
+### Build Timeout
+- Use `Dockerfile.minimal` for CI
+- Increase timeout in workflow
+- Check cache settings
 
-### Cache Problémák
-- Törölje a régi cache-eket
-- Frissítse a cache kulcsokat
-- Használjon registry cache-t 
+### Cache Issues
+- Clear old caches
+- Update cache keys
+- Use registry cache 
