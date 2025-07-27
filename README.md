@@ -8,7 +8,7 @@
   <!-- Python version -->
   <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white">
   <!-- License -->
-  <img alt="License" src="https://img.shields.io/github/license/ZeleMate/LegalQA_v2">
+  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg">
   <!-- Docker -->
   <img alt="Docker" src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white">
 </p>
