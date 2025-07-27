@@ -10,15 +10,18 @@ ENV PIP_NO_CACHE_DIR=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # Install only essential system dependencies for building
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Create and use virtual environment
-RUN python -m venv /opt/venv
+# Create virtual environment and install dependencies in one layer
+RUN python -m venv /opt/venv \
+    && . /opt/venv/bin/activate \
+    && pip install --upgrade pip setuptools wheel
+
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python dependencies with better caching
@@ -27,47 +30,32 @@ WORKDIR /build
 # Copy dependency files first for better layer caching
 COPY pyproject.toml .
 
-# Install build tools first
-RUN pip install --upgrade pip setuptools wheel
-
-# Install core dependencies first (smaller packages) - Layer 1
+# Install all dependencies in one consolidated RUN command
 RUN pip install --no-cache-dir \
-    pandas \
-    pyarrow \
-    python-dotenv \
-    fastapi \
-    uvicorn[standard] \
-    psycopg2-binary \
-    scikit-learn \
-    numpy
-
-# Install ML dependencies (larger packages) - Layer 2
-RUN pip install --no-cache-dir \
-    faiss-cpu
-
-# Install sentence-transformers separately (very large) - Layer 3
-RUN pip install --no-cache-dir \
-    sentence-transformers
-
-# Install LangChain dependencies - Layer 4
-RUN pip install --no-cache-dir \
-    langchain \
-    langchain-openai \
-    langchain-google-genai \
-    langchain-core \
-    langchain-community \
-    google-genai
-
-# Install remaining dependencies - Layer 5
-RUN pip install --no-cache-dir \
-    pgvector \
-    asyncpg \
-    aioredis \
-    redis[hiredis] \
-    sqlalchemy[asyncio] \
-    prometheus-client \
-    aioboto3 \
-    cachetools
+    pandas==2.1.4 \
+    pyarrow==14.0.2 \
+    python-dotenv==1.0.0 \
+    fastapi==0.104.1 \
+    "uvicorn[standard]==0.24.0" \
+    psycopg2-binary==2.9.9 \
+    scikit-learn==1.3.2 \
+    numpy==1.24.3 \
+    faiss-cpu==1.7.4 \
+    sentence-transformers==2.2.2 \
+    langchain==0.1.0 \
+    langchain-openai==0.0.5 \
+    langchain-google-genai==0.0.6 \
+    langchain-core==0.1.10 \
+    langchain-community==0.0.10 \
+    google-genai==1.27.0 \
+    pgvector==0.2.3 \
+    asyncpg==0.29.0 \
+    aioredis==2.0.1 \
+    "redis[hiredis]==5.0.1" \
+    "sqlalchemy[asyncio]==2.0.23" \
+    prometheus-client==0.19.0 \
+    aioboto3==12.3.0 \
+    cachetools==5.3.2
 
 # Production stage - Minimal runtime image
 FROM python:3.10-slim AS production
@@ -79,7 +67,7 @@ ENV PYTHONOPTIMIZE=2
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install only runtime system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
     && rm -rf /var/lib/apt/lists/* \
@@ -88,8 +76,10 @@ RUN apt-get update && apt-get install -y \
 # Copy virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv
 
-# Create non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+# Create user and set up application in one layer
+RUN groupadd -r appuser && useradd -r -g appuser appuser \
+    && mkdir -p /app/data/processed /app/logs \
+    && chown -R appuser:appuser /app
 
 # Set working directory
 WORKDIR /app
@@ -98,11 +88,6 @@ WORKDIR /app
 COPY --chown=appuser:appuser ./src /app/src
 COPY --chown=appuser:appuser ./scripts /app/scripts
 
-# Create directories for data and ensure proper permissions
-RUN mkdir -p /app/data/processed /app/logs \
-    && chown -R appuser:appuser /app
-
-# Switch to non-root user
 USER appuser
 
 # Health check for container orchestration

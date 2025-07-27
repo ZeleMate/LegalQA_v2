@@ -5,8 +5,8 @@ export let options = {
   vus: 2,
   duration: '15s',
   thresholds: {
-    http_req_duration: ['p(95)<10000'], // 95% response time < 10s (very noise-tolerant)
-    http_req_failed: ['rate<0.10'],    // max 10% error rate (very noise-tolerant)
+    http_req_duration: ['p(95)<2000'], // 95% response time < 2s (industry standard)
+    http_req_failed: ['rate<0.01'],    // max 1% error rate (industry standard)
   },
   // Don't fail the test on threshold violations for smoke test
   noConnectionReuse: true,
@@ -19,7 +19,7 @@ export default function () {
   let health = http.get(`${BASE_URL}/health`);
   check(health, {
     'health status 200': (r) => r.status === 200,
-    'health response fast': (r) => r.timings.duration < 1000,
+    'health response fast': (r) => r.timings.duration < 500, // 500ms
     'health response contains required fields': (r) => {
       try {
         const data = JSON.parse(r.body);
@@ -36,7 +36,7 @@ export default function () {
   let metrics = http.get(`${BASE_URL}/metrics`);
   check(metrics, {
     'metrics status 200': (r) => r.status === 200,
-    'metrics response fast': (r) => r.timings.duration < 1000,
+    'metrics response fast': (r) => r.timings.duration < 500, // 500ms
     'metrics contains prometheus format': (r) => r.body && r.body.includes('legalqa_'),
   });
 
@@ -46,7 +46,7 @@ export default function () {
   let stats = http.get(`${BASE_URL}/stats`);
   check(stats, {
     'stats status 200': (r) => r.status === 200,
-    'stats response fast': (r) => r.timings.duration < 1000,
+    'stats response fast': (r) => r.timings.duration < 500, // 500ms
     'stats contains component information': (r) => {
       try {
         const data = JSON.parse(r.body);
@@ -73,7 +73,7 @@ export default function () {
   
   check(qa, {
     'ask status 200': (r) => r.status === 200,
-    'ask response fast': (r) => r.timings.duration < 5000, // QA can be slower
+    'ask response fast': (r) => r.timings.duration < 2000, // 2s (industry standard)
     'ask response contains answer field': (r) => {
       try {
         const data = JSON.parse(r.body);
@@ -98,7 +98,7 @@ export default function () {
   let cache_clear = http.post(`${BASE_URL}/clear-cache`);
   check(cache_clear, {
     'cache clear status 200': (r) => r.status === 200,
-    'cache clear response fast': (r) => r.timings.duration < 2000,
+    'cache clear response fast': (r) => r.timings.duration < 1000, // 1s
   });
 
   sleep(1);

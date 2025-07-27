@@ -1,0 +1,173 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "LegalQA SLI/SLO Dashboard",
+    "tags": ["legalqa", "sli", "slo", "rag"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "P95 Latency",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(legalqa_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95 Latency"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 2}
+              ]
+            },
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Error Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(legalqa_requests_total{status=~\"5..\"}[5m]) / rate(legalqa_requests_total[5m]) * 100",
+            "legendFormat": "Error Rate %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.5},
+                {"color": "red", "value": 1}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Cache Hit Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(legalqa_cache_hits_total[5m]) / rate(legalqa_requests_total[5m]) * 100",
+            "legendFormat": "Cache Hit Rate %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 30},
+                {"color": "green", "value": 50}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "RAG Component Latency",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(legalqa_rag_retrieval_seconds_sum[5m]) / rate(legalqa_rag_retrieval_seconds_count[5m])",
+            "legendFormat": "Retrieval Time"
+          },
+          {
+            "expr": "rate(legalqa_rag_rerank_seconds_sum[5m]) / rate(legalqa_rag_rerank_seconds_count[5m])",
+            "legendFormat": "Rerank Time"
+          },
+          {
+            "expr": "rate(legalqa_rag_llm_seconds_sum[5m]) / rate(legalqa_rag_llm_seconds_count[5m])",
+            "legendFormat": "LLM Time"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "QPS (Queries Per Second)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(legalqa_requests_total[5m])",
+            "legendFormat": "QPS"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 10},
+                {"color": "green", "value": 50}
+              ]
+            },
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Cost per Query (USD)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "legalqa_cost_per_query_usd",
+            "legendFormat": "Cost per Query"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.01},
+                {"color": "red", "value": 0.05}
+              ]
+            },
+            "unit": "currencyUSD"
+          }
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+} 

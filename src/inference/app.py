@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Response
 from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from prometheus_client import Counter, Histogram
+from prometheus_client import Counter, Gauge, Histogram
 from pydantic import BaseModel, Field, SecretStr
 
 from src.chain.qa_chain import build_qa_chain
@@ -45,6 +45,26 @@ REQUEST_LATENCY = Histogram(
 CACHE_HITS = Counter("legalqa_cache_hits_total", "Total cache hits", ["cache_type"])
 DATABASE_QUERIES = Counter("legalqa_database_queries_total", "Total database queries")
 EMBEDDING_REQUESTS = Counter("legalqa_embedding_requests_total", "Total embedding requests")
+
+# RAG-specific metrics
+RAG_RETRIEVAL_TIME = Histogram("legalqa_rag_retrieval_seconds", "RAG retrieval time")
+RAG_RERANK_TIME = Histogram("legalqa_rag_rerank_seconds", "RAG reranking time")
+RAG_LLM_TIME = Histogram("legalqa_rag_llm_seconds", "RAG LLM generation time")
+RAG_DOCUMENTS_RETRIEVED = Histogram("legalqa_documents_retrieved", "Number of documents retrieved")
+RAG_RELEVANCE_SCORE = Histogram("legalqa_relevance_score", "Document relevance scores")
+RAG_CACHE_HIT_RATE = Gauge("legalqa_cache_hit_rate", "Cache hit rate percentage")
+
+# SLI/SLO metrics
+LATENCY_P95 = Gauge("legalqa_latency_p95_seconds", "95th percentile latency")
+LATENCY_P99 = Gauge("legalqa_latency_p99_seconds", "99th percentile latency")
+ERROR_RATE = Gauge("legalqa_error_rate", "Error rate percentage")
+QPS = Gauge("legalqa_queries_per_second", "Queries per second")
+COST_PER_QUERY = Gauge("legalqa_cost_per_query_usd", "Cost per query in USD")
+
+# Canary/Rollback metrics
+CANARY_SUCCESS_RATE = Gauge("legalqa_canary_success_rate", "Canary deployment success rate")
+CANARY_LATENCY_DIFF = Gauge("legalqa_canary_latency_diff", "Latency difference in canary")
+ROLLBACK_TRIGGERED = Counter("legalqa_rollback_triggered", "Number of rollbacks triggered")
 
 # Global application state
 app_state: Dict[str, Optional[Any]] = {

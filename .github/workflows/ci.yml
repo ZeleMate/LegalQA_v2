@@ -121,7 +121,7 @@ jobs:
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: Dockerfile
+          dockerfile: Dockerfile.minimal
 
   # Only run merge-check on pull requests
   merge-check:
