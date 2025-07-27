@@ -99,8 +99,8 @@ jobs:
           file: ./Dockerfile.minimal
           tags: legalqa:ci
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Disable cache due to GitHub service issues
+          no-cache: true
           platforms: linux/amd64
           push: false
         # Fallback: if cache fails, retry without cache
