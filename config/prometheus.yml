@@ -7,25 +7,25 @@ rule_files:
   # - "second_rules.yml"
 
 scrape_configs:
-  # LegalQA Application
+  # LegalQA Application (host.docker.internal for testing)
   - job_name: 'legalqa'
     static_configs:
-      - targets: ['app:8000']
+      - targets: ['host.docker.internal:8000']
     metrics_path: '/metrics'
     scrape_interval: 30s
     scrape_timeout: 10s
 
-  # PostgreSQL Database
+  # PostgreSQL Database (host.docker.internal for testing)
   - job_name: 'postgres'
     static_configs:
-      - targets: ['db:5432']
+      - targets: ['host.docker.internal:5433']
     scrape_interval: 30s
     scrape_timeout: 10s
 
-  # Redis Cache
+  # Redis Cache (host.docker.internal for testing)
   - job_name: 'redis'
     static_configs:
-      - targets: ['redis:6379']
+      - targets: ['host.docker.internal:6379']
     scrape_interval: 30s
     scrape_timeout: 10s
 

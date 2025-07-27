@@ -203,21 +203,33 @@ validate:
 	@echo "${GREEN}🔍 Running quick validation...${NC}"
 	$(PYTHON) scripts/validate_optimizations.py
 
-test:
-	@echo "${GREEN}🧪 Running comprehensive tests...${NC}"
-	$(PYTHON) scripts/run_tests.py
+test: test-unit test-integration test-performance
+test-unit:
+	pytest tests/test_unit.py -v --cov=src --cov-report=html --cov-report=term-missing
+
+test-integration:
+	pytest tests/test_integration.py -v --cov=src --cov-report=html --cov-report=term-missing
+
+test-performance:
+	pytest tests/test_performance.py -v --cov=src --cov-report=html --cov-report=term-missing
+
+test-metrics:
+	python tests/monitoring/test_metrics_app.py &
+	sleep 3
+	k6 run tests/performance/smoke.js
+	pkill -f test_metrics_app.py
+
+test-rag-performance:
+	python tests/monitoring/test_metrics_app.py &
+	sleep 3
+	k6 run tests/performance/rag_performance.js
+	pkill -f test_metrics_app.py
+
+test-all: test test-metrics test-rag-performance
 
 test-functionality:
 	@echo "${GREEN}🔧 Running functionality tests...${NC}"
 	$(PYTHON) -m pytest tests/test_functionality.py -v
-
-test-performance:
-	@echo "${GREEN}⚡ Running performance tests...${NC}"
-	$(PYTHON) -m pytest tests/test_performance.py -v
-
-test-integration:
-	@echo "${GREEN}🔗 Running integration tests...${NC}"
-	$(PYTHON) -m pytest tests/test_integration.py -v
 
 test-ci:
 	@echo "${GREEN}🚀 Running CI test suite...${NC}"

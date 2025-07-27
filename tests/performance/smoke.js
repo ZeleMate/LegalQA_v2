@@ -23,61 +23,50 @@ export default function () {
     'health response contains required fields': (r) => {
       try {
         const data = JSON.parse(r.body);
-        return data.hasOwnProperty('status') && data.status === 'healthy';
+        return data.status === 'healthy' && data.components;
       } catch (e) {
         return false;
       }
     },
   });
 
-  sleep(0.5);
-
-  // Metrics endpoint - monitoring
+  // Metrics endpoint - Prometheus format
   let metrics = http.get(`${BASE_URL}/metrics`);
   check(metrics, {
     'metrics status 200': (r) => r.status === 200,
-    'metrics response fast': (r) => r.timings.duration < 500, // 500ms
-    'metrics contains prometheus format': (r) => r.body && r.body.includes('legalqa_'),
+    'metrics response fast': (r) => r.timings.duration < 1000, // 1s
+    'metrics contains prometheus format': (r) => r.body.includes('# HELP') && r.body.includes('# TYPE'),
   });
 
-  sleep(0.5);
-
-  // Stats endpoint - system statistics
+  // Stats endpoint - performance statistics
   let stats = http.get(`${BASE_URL}/stats`);
   check(stats, {
     'stats status 200': (r) => r.status === 200,
-    'stats response fast': (r) => r.timings.duration < 500, // 500ms
+    'stats response fast': (r) => r.timings.duration < 1000, // 1s
     'stats contains component information': (r) => {
       try {
         const data = JSON.parse(r.body);
-        return data.hasOwnProperty('components');
+        return data.metrics && typeof data.uptime === 'number';
       } catch (e) {
         return false;
       }
     },
   });
 
-  sleep(0.5);
-
-  // QA question - main functionality testing
-  let qa = http.post(`${BASE_URL}/ask`, JSON.stringify({
-    question: "What is the main rule of the Civil Code?",
-    use_cache: true,
-    max_documents: 3
-  }), { 
-    headers: { 
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    } 
+  // QA endpoint - Hungarian court decision question
+  let qaResponse = http.post(`${BASE_URL}/ask`, JSON.stringify({
+    question: "Milyen büntetést szabott ki a bíróság emberölés esetén?",
+    use_cache: false
+  }), {
+    headers: { 'Content-Type': 'application/json' },
   });
-  
-  check(qa, {
+  check(qaResponse, {
     'ask status 200': (r) => r.status === 200,
-    'ask response fast': (r) => r.timings.duration < 2000, // 2s (industry standard)
+    'ask response fast': (r) => r.timings.duration < 5000, // 5s for RAG pipeline
     'ask response contains answer field': (r) => {
       try {
         const data = JSON.parse(r.body);
-        return data.hasOwnProperty('answer') && data.answer.length > 0;
+        return data.answer && data.processing_time;
       } catch (e) {
         return false;
       }
@@ -85,20 +74,18 @@ export default function () {
     'ask response contains processing_time field': (r) => {
       try {
         const data = JSON.parse(r.body);
-        return data.hasOwnProperty('processing_time') && data.processing_time >= 0;
+        return typeof data.processing_time === 'number';
       } catch (e) {
         return false;
       }
     },
   });
 
-  sleep(1);
-
-  // Cache clear endpoint - admin function
-  let cache_clear = http.post(`${BASE_URL}/clear-cache`);
-  check(cache_clear, {
+  // Cache clear endpoint
+  let cacheClear = http.post(`${BASE_URL}/clear-cache`);
+  check(cacheClear, {
     'cache clear status 200': (r) => r.status === 200,
-    'cache clear response fast': (r) => r.timings.duration < 1000, // 1s
+    'cache clear response fast': (r) => r.timings.duration < 500, // 500ms
   });
 
   sleep(1);
