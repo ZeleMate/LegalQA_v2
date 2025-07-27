@@ -99,14 +99,25 @@ jobs:
           file: ./Dockerfile.minimal
           tags: legalqa:ci
           load: true
-          cache-from: |
-            type=gha
-            type=registry,ref=legalqa:cache
-          cache-to: |
-            type=gha,mode=max
-            type=registry,ref=legalqa:cache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           platforms: linux/amd64
           push: false
+        # Fallback: if cache fails, retry without cache
+        continue-on-error: true
+      
+      - name: Build (no cache fallback)
+        if: failure()
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.minimal
+          tags: legalqa:ci
+          load: true
+          platforms: linux/amd64
+          push: false
+          # Disable cache completely for fallback
+          no-cache: true
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
         with:

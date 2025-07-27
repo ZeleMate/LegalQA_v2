@@ -83,4 +83,6 @@ docker build -t legalqa:prod .
 ### Cache Issues
 - Clear old caches
 - Update cache keys
-- Use registry cache 
+- Use registry cache
+- If GitHub Actions cache fails, use fallback without cache
+- Check GitHub service status
