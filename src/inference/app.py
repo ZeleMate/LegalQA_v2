@@ -9,7 +9,7 @@ import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional, Type, Union
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -33,33 +33,73 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Prometheus metrics
-REQUEST_COUNT = Counter(
-    "legalqa_requests_total",
-    "Total requests processed",
-    ["method", "endpoint", "status"],
+
+# Prometheus metrics - avoid duplicate registration
+def get_or_create_metric(
+    metric_type: Type[Union[Counter, Gauge, Histogram]],
+    name: str,
+    description: str,
+    labelnames: Optional[List[str]] = None,
+    registry: Optional[Any] = None,
+) -> Any:
+    """Get existing metric or create new one if it doesn't exist."""
+    from prometheus_client import REGISTRY
+
+    # Check if metric already exists
+    for collector in REGISTRY._collector_to_names:
+        if hasattr(collector, "_name") and collector._name == name:
+            return collector
+
+    # Create new metric if it doesn't exist
+    if metric_type == Counter:
+        return metric_type(name, description, labelnames or [], registry=registry)
+    elif metric_type in [Histogram, Gauge]:
+        return metric_type(name, description, registry=registry)
+
+    # This should never happen, but for type safety
+    raise ValueError(f"Unsupported metric type: {metric_type}")
+
+
+REQUEST_COUNT = get_or_create_metric(
+    Counter, "legalqa_requests_total", "Total requests processed", ["method", "endpoint", "status"]
 )
-REQUEST_LATENCY = Histogram(
-    "legalqa_request_duration_seconds", "Request processing time in seconds"
+REQUEST_LATENCY = get_or_create_metric(
+    Histogram, "legalqa_request_duration_seconds", "Request processing time in seconds"
 )
-CACHE_HITS = Counter("legalqa_cache_hits_total", "Total cache hits", ["cache_type"])
-DATABASE_QUERIES = Counter("legalqa_database_queries_total", "Total database queries")
-EMBEDDING_REQUESTS = Counter("legalqa_embedding_requests_total", "Total embedding requests")
+CACHE_HITS = get_or_create_metric(
+    Counter, "legalqa_cache_hits_total", "Total cache hits", ["cache_type"]
+)
+DATABASE_QUERIES = get_or_create_metric(
+    Counter, "legalqa_database_queries_total", "Total database queries"
+)
+EMBEDDING_REQUESTS = get_or_create_metric(
+    Counter, "legalqa_embedding_requests_total", "Total embedding requests"
+)
 
 # RAG-specific metrics
-RAG_RETRIEVAL_TIME = Histogram("legalqa_rag_retrieval_seconds", "RAG retrieval time")
-RAG_RERANK_TIME = Histogram("legalqa_rag_rerank_seconds", "RAG reranking time")
-RAG_LLM_TIME = Histogram("legalqa_rag_llm_seconds", "RAG LLM generation time")
-RAG_DOCUMENTS_RETRIEVED = Histogram("legalqa_documents_retrieved", "Number of documents retrieved")
-RAG_RELEVANCE_SCORE = Histogram("legalqa_relevance_score", "Document relevance scores")
-RAG_CACHE_HIT_RATE = Gauge("legalqa_cache_hit_rate", "Cache hit rate percentage")
+RAG_RETRIEVAL_TIME = get_or_create_metric(
+    Histogram, "legalqa_rag_retrieval_seconds", "RAG retrieval time"
+)
+RAG_RERANK_TIME = get_or_create_metric(
+    Histogram, "legalqa_rag_rerank_seconds", "RAG reranking time"
+)
+RAG_LLM_TIME = get_or_create_metric(Histogram, "legalqa_rag_llm_seconds", "RAG LLM generation time")
+RAG_DOCUMENTS_RETRIEVED = get_or_create_metric(
+    Histogram, "legalqa_documents_retrieved", "Number of documents retrieved"
+)
+RAG_RELEVANCE_SCORE = get_or_create_metric(
+    Histogram, "legalqa_relevance_score", "Document relevance scores"
+)
+RAG_CACHE_HIT_RATE = get_or_create_metric(
+    Gauge, "legalqa_cache_hit_rate", "Cache hit rate percentage"
+)
 
 # SLI/SLO metrics
-LATENCY_P95 = Gauge("legalqa_latency_p95_seconds", "95th percentile latency")
-LATENCY_P99 = Gauge("legalqa_latency_p99_seconds", "99th percentile latency")
-ERROR_RATE = Gauge("legalqa_error_rate", "Error rate percentage")
-QPS = Gauge("legalqa_queries_per_second", "Queries per second")
-COST_PER_QUERY = Gauge("legalqa_cost_per_query_usd", "Cost per query in USD")
+LATENCY_P95 = get_or_create_metric(Gauge, "legalqa_latency_p95_seconds", "95th percentile latency")
+LATENCY_P99 = get_or_create_metric(Gauge, "legalqa_latency_p99_seconds", "99th percentile latency")
+ERROR_RATE = get_or_create_metric(Gauge, "legalqa_error_rate", "Error rate percentage")
+QPS = get_or_create_metric(Gauge, "legalqa_queries_per_second", "Queries per second")
+COST_PER_QUERY = get_or_create_metric(Gauge, "legalqa_cost_per_query_usd", "Cost per query in USD")
 
 # Canary/Rollback metrics
 CANARY_SUCCESS_RATE = Gauge("legalqa_canary_success_rate", "Canary deployment success rate")
@@ -79,7 +119,7 @@ app_state: Dict[str, Optional[Any]] = {
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifecycle management with async initialization."""
 
-    @REQUEST_LATENCY.time()
+    @REQUEST_LATENCY.time()  # type: ignore
     async def startup_event() -> None:
         """Initializes all application components asynchronously."""
         logger.info("🚀 Starting LegalQA application...")
@@ -240,8 +280,8 @@ async def performance_middleware(request: Request, call_next: Any) -> Response:
 
         # Record metrics
         process_time = time.time() - start_time
-        REQUEST_LATENCY.observe(process_time)
-        REQUEST_COUNT.labels(method=method, endpoint=path, status=status).inc()
+        REQUEST_LATENCY.observe(process_time)  # type: ignore
+        REQUEST_COUNT.labels(method=method, endpoint=path, status=status).inc()  # type: ignore
 
         # Add performance headers
         response.headers["X-Process-Time"] = str(process_time)
@@ -251,7 +291,7 @@ async def performance_middleware(request: Request, call_next: Any) -> Response:
 
     except Exception as e:
         process_time = time.time() - start_time
-        REQUEST_COUNT.labels(method=method, endpoint=path, status=500).inc()
+        REQUEST_COUNT.labels(method=method, endpoint=path, status=500).inc()  # type: ignore
         logger.error(f"Request failed: {e}")
         raise
 
@@ -361,12 +401,12 @@ async def ask_question(req: QuestionRequest, request: Request) -> QuestionRespon
             if cached_result:
                 answer = cached_result
                 cache_hit = True
-                CACHE_HITS.labels(cache_type="qa_result").inc()
+                CACHE_HITS.labels(cache_type="qa_result").inc()  # type: ignore
                 logger.info("Cache hit for question")
 
         # Generate answer if not cached
         if not answer:
-            EMBEDDING_REQUESTS.inc()
+            EMBEDDING_REQUESTS.inc()  # type: ignore
 
             # Use async version if available
             if hasattr(qa_chain, "ainvoke"):

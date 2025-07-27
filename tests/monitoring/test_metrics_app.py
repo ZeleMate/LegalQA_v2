@@ -11,6 +11,7 @@ import uvicorn
 from fastapi import FastAPI, Request, Response
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
+    CollectorRegistry,
     Counter,
     Gauge,
     Histogram,
@@ -18,35 +19,65 @@ from prometheus_client import (
 )
 from pydantic import BaseModel
 
-# Prometheus metrics
+# Create a separate registry for test metrics to avoid conflicts
+test_registry = CollectorRegistry()
+
+# Prometheus metrics using test registry
 REQUEST_COUNT = Counter(
     "legalqa_requests_total",
     "Total requests processed",
     ["method", "endpoint", "status"],
+    registry=test_registry,
 )
 REQUEST_LATENCY = Histogram(
-    "legalqa_request_duration_seconds", "Request processing time in seconds"
+    "legalqa_request_duration_seconds",
+    "Request processing time in seconds",
+    registry=test_registry,
 )
 
 # RAG-specific metrics
-RAG_RETRIEVAL_TIME = Histogram("legalqa_rag_retrieval_seconds", "RAG retrieval time")
-RAG_RERANK_TIME = Histogram("legalqa_rag_rerank_seconds", "RAG reranking time")
-RAG_LLM_TIME = Histogram("legalqa_rag_llm_seconds", "RAG LLM generation time")
-RAG_DOCUMENTS_RETRIEVED = Histogram("legalqa_documents_retrieved", "Number of documents retrieved")
-RAG_RELEVANCE_SCORE = Histogram("legalqa_relevance_score", "Document relevance scores")
-RAG_CACHE_HIT_RATE = Gauge("legalqa_cache_hit_rate", "Cache hit rate percentage")
+RAG_RETRIEVAL_TIME = Histogram(
+    "legalqa_rag_retrieval_seconds", "RAG retrieval time", registry=test_registry
+)
+RAG_RERANK_TIME = Histogram(
+    "legalqa_rag_rerank_seconds", "RAG reranking time", registry=test_registry
+)
+RAG_LLM_TIME = Histogram(
+    "legalqa_rag_llm_seconds", "RAG LLM generation time", registry=test_registry
+)
+RAG_DOCUMENTS_RETRIEVED = Histogram(
+    "legalqa_documents_retrieved", "Number of documents retrieved", registry=test_registry
+)
+RAG_RELEVANCE_SCORE = Histogram(
+    "legalqa_relevance_score", "Document relevance scores", registry=test_registry
+)
+RAG_CACHE_HIT_RATE = Gauge(
+    "legalqa_cache_hit_rate", "Cache hit rate percentage", registry=test_registry
+)
 
 # SLI/SLO metrics
-LATENCY_P95 = Gauge("legalqa_latency_p95_seconds", "95th percentile latency")
-LATENCY_P99 = Gauge("legalqa_latency_p99_seconds", "99th percentile latency")
-ERROR_RATE = Gauge("legalqa_error_rate", "Error rate percentage")
-QPS = Gauge("legalqa_queries_per_second", "Queries per second")
-COST_PER_QUERY = Gauge("legalqa_cost_per_query_usd", "Cost per query in USD")
+LATENCY_P95 = Gauge(
+    "legalqa_latency_p95_seconds", "95th percentile latency", registry=test_registry
+)
+LATENCY_P99 = Gauge(
+    "legalqa_latency_p99_seconds", "99th percentile latency", registry=test_registry
+)
+ERROR_RATE = Gauge("legalqa_error_rate", "Error rate percentage", registry=test_registry)
+QPS = Gauge("legalqa_queries_per_second", "Queries per second", registry=test_registry)
+COST_PER_QUERY = Gauge(
+    "legalqa_cost_per_query_usd", "Cost per query in USD", registry=test_registry
+)
 
 # Canary/Rollback metrics
-CANARY_SUCCESS_RATE = Gauge("legalqa_canary_success_rate", "Canary deployment success rate")
-CANARY_LATENCY_DIFF = Gauge("legalqa_canary_latency_diff", "Latency difference in canary")
-ROLLBACK_TRIGGERED = Counter("legalqa_rollback_triggered", "Number of rollbacks triggered")
+CANARY_SUCCESS_RATE = Gauge(
+    "legalqa_canary_success_rate", "Canary deployment success rate", registry=test_registry
+)
+CANARY_LATENCY_DIFF = Gauge(
+    "legalqa_canary_latency_diff", "Latency difference in canary", registry=test_registry
+)
+ROLLBACK_TRIGGERED = Counter(
+    "legalqa_rollback_triggered", "Number of rollbacks triggered", registry=test_registry
+)
 
 app = FastAPI(title="LegalQA Metrics Test", version="1.0.0")
 
@@ -106,7 +137,7 @@ async def health_check() -> dict[str, Any]:
 @app.get("/metrics")
 async def get_metrics() -> Response:
     """Prometheus metrics endpoint."""
-    content = generate_latest()
+    content = generate_latest(test_registry)
     return Response(content=content, media_type=CONTENT_TYPE_LATEST)
 
 
