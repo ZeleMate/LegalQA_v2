@@ -1,0 +1,11 @@
+# Hadolint configuration
+# Disable version pinning warnings for CI environment
+override:
+  DL3008: info  # Pin versions in apt get install
+  DL3013: info  # Pin versions in pip
+  SC1091: info  # Not following: File not included in mock
+
+# Trusted registries
+trustedRegistries:
+  - docker.io
+  - registry.hub.docker.com 
