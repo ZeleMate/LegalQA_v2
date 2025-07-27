@@ -1,5 +1,18 @@
 # LegalQA - AI-Powered Legal Question Answering System
 
+<p align="center">
+  <!-- CI státusz -->
+  <a href="https://github.com/ZeleMate/LegalQA_v2/actions/workflows/ci.yml">
+    <img alt="CI" src="https://github.com/ZeleMate/LegalQA_v2/actions/workflows/ci.yml/badge.svg?branch=main">
+  </a>
+  <!-- Python verzió -->
+  <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white">
+  <!-- Licenc -->
+  <img alt="License" src="https://img.shields.io/github/license/ZeleMate/LegalQA_v2">
+  <!-- Docker -->
+  <img alt="Docker" src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white">
+</p>
+
 A production-ready RAG (Retrieval-Augmented Generation) system for legal document analysis and question answering, featuring comprehensive monitoring, testing, and deployment capabilities.
 
 ## 🎯 **Project Overview**
