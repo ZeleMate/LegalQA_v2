@@ -325,20 +325,20 @@ jobs:
           total_count=0
           
           # Core jobs that should always run
-          if [ "${{ needs.lint.result }}" == "success" ]; then ((success_count++)); fi
-          if [ "${{ needs.test.result }}" == "success" ]; then ((success_count++)); fi
-          if [ "${{ needs.docker-build.result }}" == "success" ]; then ((success_count++)); fi
-          if [ "${{ needs.summary.result }}" == "success" ]; then ((success_count++)); fi
-          ((total_count+=4))
+          if [ "${{ needs.lint.result }}" == "success" ]; then success_count=$((success_count+1)); fi
+          if [ "${{ needs.test.result }}" == "success" ]; then success_count=$((success_count+1)); fi
+          if [ "${{ needs.docker-build.result }}" == "success" ]; then success_count=$((success_count+1)); fi
+          if [ "${{ needs.summary.result }}" == "success" ]; then success_count=$((success_count+1)); fi
+          total_count=$((total_count+4))
           
           # Optional jobs that can be skipped
           if [ "${{ needs.merge-check.result }}" == "success" ] || [ "${{ needs.merge-check.result }}" == "skipped" ]; then 
-            ((success_count++)); 
+            success_count=$((success_count+1))
           fi
           if [ "${{ needs.k6-smoke.result }}" == "success" ] || [ "${{ needs.k6-smoke.result }}" == "skipped" ]; then 
-            ((success_count++)); 
+            success_count=$((success_count+1))
           fi
-          ((total_count+=2))
+          total_count=$((total_count+2))
           
           echo "Success Rate: $success_count/$total_count jobs passed"
           
@@ -369,4 +369,3 @@ jobs:
             fi
           fi
           
- 
