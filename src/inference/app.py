@@ -221,7 +221,6 @@ async def initialize_models() -> (
 
     embeddings = GeminiEmbeddings(api_key=google_api_key)
 
-    # Reranker LLM és prompt marad
     google_api_key = os.getenv("GOOGLE_API_KEY")
     reranker_llm = await asyncio.to_thread(
         ChatGoogleGenerativeAI,
