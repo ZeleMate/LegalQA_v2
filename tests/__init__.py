@@ -18,10 +18,10 @@ TEST_DATA_DIR = project_root / "tests" / "data"
 TEST_CONFIG: Dict[str, Any] = {
     "sample_questions": [
         "Mi a bűnszervezet fogalma a Btk. szerint?",
-        "Milyen jogkövetkezmények vonatkoznak a korrupciós " "bűncselekményekre?",
+        "Milyen jogkövetkezmények vonatkoznak a korrupciós bűncselekményekre?",
         "Hogyan kell értelmezni az önvédelem fogalmát?",
         "Mi a különbség a csalás és a sikkasztás között?",
-        "Milyen feltételek mellett alkalmazható a feltételes " "szabadságra bocsátás?",
+        "Milyen feltételek mellett alkalmazható a feltételes szabadságra bocsátás?",
     ],
     "performance_thresholds": {
         "max_response_time": 2.0,  # seconds
@@ -35,8 +35,8 @@ TEST_CONFIG: Dict[str, Any] = {
     "test_database": {"name": "legalqa_test", "sample_size": 100},
 }
 
-# E501 javítás: hosszú sorok tördelése
+# E501 fix: long line wrapping
 LONG_STRING = (
-    "Ez egy nagyon hosszú string, amit több sorba kell tördelni, "
-    "hogy ne lépje túl a 79 karaktert."
+    "This is a very long string that needs to be wrapped across multiple lines "
+    "to avoid exceeding the 79 character limit."
 )

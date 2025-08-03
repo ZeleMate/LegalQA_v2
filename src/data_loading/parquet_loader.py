@@ -7,26 +7,26 @@ load_dotenv()
 
 parquet_path = os.getenv("PARQUET_PATH")
 if not parquet_path:
-    raise ValueError("Hiányzik a PARQUET_PATH változó")
+    raise ValueError("Missing PARQUET_PATH variable")
 
 
 def load_parquet_file(parquet_path: str) -> pd.DataFrame:
     """
-    Parquet fájl betöltése, kötelező mezők ellenőrzésével.
+    Load parquet file with required field validation.
 
     Args:
         parquet_path (str): Path to the file.
 
     Returns:
-        pd.DataFrame: Betöltött adatkeret.
+        pd.DataFrame: Loaded dataframe.
 
     Raises:
-        ValueError: Ha a kötelező oszlopok hiányoznak.
+        ValueError: If required columns are missing.
     """
     df = pd.read_parquet(parquet_path)
     required_columns = ["text", "embeddings"]
     missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
-        msg = "Hiányzik a következő oszlop(ok): " f"{str(missing_columns)[:60]}..."
+        msg = "Missing the following column(s): " f"{str(missing_columns)[:60]}..."
         raise ValueError(msg)
     return df

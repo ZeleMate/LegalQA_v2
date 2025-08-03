@@ -3,7 +3,7 @@ max-line-length = 100
 ignore = W291,W292,W503,W504
 exclude = venv,env,.git,__pycache__
 
-# Alapértelmezett target könyvtárak
-# (A flake8 parancsban is megadható, de itt is dokumentáljuk)
+# Default target directories
+# (Can also be specified in flake8 command, but documented here as well)
 # src/
 # tests/ 

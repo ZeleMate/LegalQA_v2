@@ -1,10 +1,10 @@
 # Hadolint configuration
-  failure-threshold: error  # csak ERROR vagy súlyosabb dobja el a CI-t
+  failure-threshold: error  # only ERROR or more severe fails the CI
 
 override:
   info:
-    - DL3008  # apt-get install verziópin
-    - DL3013  # pip install verziópin
+    - DL3008  # apt-get install version pin
+- DL3013  # pip install version pin
     - SC1091  # ShellCheck: "Not following: ..." (source)
 
 # Trusted registries
