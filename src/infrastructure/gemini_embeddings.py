@@ -7,7 +7,7 @@ class GeminiEmbeddings:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.client = GoogleGenerativeAIEmbeddings(
-            model="models/text-embedding-004", google_api_key=SecretStr(api_key)
+            model="models/text-embedding-004", api_key=SecretStr(api_key)
         )
 
     def embed_query(self, text: str) -> np.ndarray:
