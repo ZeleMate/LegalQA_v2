@@ -6,4 +6,4 @@ exclude = venv,env,.git,__pycache__
 # Default target directories
 # (Can also be specified in flake8 command, but documented here as well)
 # src/
-# tests/ 
+# tests/

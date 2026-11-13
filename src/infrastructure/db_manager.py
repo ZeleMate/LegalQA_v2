@@ -214,7 +214,7 @@ class DatabaseManager:
     async def get_database_stats(self) -> Dict[str, Any]:
         """Get database performance statistics."""
         stats_query = """
-            SELECT 
+            SELECT
                 schemaname,
                 relname as tablename,
                 n_tup_ins as inserts,
@@ -222,7 +222,7 @@ class DatabaseManager:
                 n_tup_del as deletes,
                 n_live_tup as live_rows,
                 n_dead_tup as dead_rows
-            FROM pg_stat_user_tables 
+            FROM pg_stat_user_tables
             WHERE relname IN ('documents', 'chunks')
         """
 
@@ -241,11 +241,11 @@ class DatabaseManager:
             "ANALYZE documents;",
             # Create indices if they don't exist (only if not already created)
             """
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_chunk_id 
+            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_chunk_id
             ON chunks(chunk_id);
             """,
             """
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_doc_id 
+            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_doc_id
             ON chunks(doc_id);
             """,
         ]

@@ -1,0 +1,83 @@
+name: Local CI
+
+# This repo's own CI jobs. The template wrote this file once and never updates it.
+# ci.yml calls it on every PR and push, and the merge gate (ci-ok) waits for it.
+# Moved here from the old "CI/CD Pipeline" workflow when the repo adopted the template.
+#
+# Rules: no job may need a secret (Dependabot PRs get none), every action is pinned
+# to a full commit SHA, and each job asks for read access only.
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  lint:
+    name: lint (black, isort, flake8, mypy, bandit, hadolint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install .[dev]
+      - run: black --check src/ tests/
+      - run: isort --check-only src/ tests/
+      - run: flake8 src/ tests/
+      - run: mypy src/
+      - run: bandit -r src/
+      - name: Hadolint (Dockerfiles, checksum-verified)
+        env:
+          HADOLINT_VERSION: v2.15.1
+          HADOLINT_SHA256: c7187db94eeeeca956519a6af171adc31453941a1e777961f6e680f697c8c507
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/hadolint" "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-linux-x86_64"
+          echo "${HADOLINT_SHA256}  $RUNNER_TEMP/hadolint" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/hadolint"
+          git ls-files -z | grep -zE '(^|/)Dockerfile(\..*)?$' | xargs -0 --no-run-if-empty -n1 "$RUNNER_TEMP/hadolint" --failure-threshold error
+
+  test:
+    name: pytest (coverage ≥ 25%)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install .[dev]
+      - run: pytest --maxfail=1 --disable-warnings --tb=short --cov=src --cov-report=xml --cov-fail-under=25
+
+  docker-build:
+    name: docker build (Dockerfile.minimal)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: ./Dockerfile.minimal
+          tags: legalqa:ci
+          load: true
+          no-cache: true
+          platforms: linux/amd64
+          push: false
