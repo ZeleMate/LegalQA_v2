@@ -10,7 +10,7 @@ BEGIN
     -- Drop tables if they exist
     DROP TABLE IF EXISTS chunks CASCADE;
     DROP TABLE IF EXISTS documents CASCADE;
-    
+
     -- Create documents table
     CREATE TABLE documents (
         doc_id VARCHAR PRIMARY KEY,
@@ -18,7 +18,7 @@ BEGIN
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-    
+
     -- Create chunks table with optimized structure
     CREATE TABLE chunks (
         chunk_id VARCHAR PRIMARY KEY,
@@ -28,34 +28,34 @@ BEGIN
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-    
+
     -- Create performance indices
     RAISE NOTICE 'Creating performance indices...';
-    
+
     -- Standard B-tree indices
     CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_doc_id ON chunks(doc_id);
     CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_created_at ON chunks(created_at);
     CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_documents_source ON documents(source);
-    
+
     -- Vector similarity indices (IVFFlat for better performance)
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_embedding_cosine 
-    ON chunks USING ivfflat (embedding vector_cosine_ops) 
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_embedding_cosine
+    ON chunks USING ivfflat (embedding vector_cosine_ops)
     WITH (lists = 100);
-    
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_embedding_l2 
-    ON chunks USING ivfflat (embedding vector_l2_ops) 
+
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_embedding_l2
+    ON chunks USING ivfflat (embedding vector_l2_ops)
     WITH (lists = 100);
-    
+
     -- Partial indices for better performance
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_non_null_embedding 
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_non_null_embedding
     ON chunks(chunk_id) WHERE embedding IS NOT NULL;
-    
+
     -- Text search index for full-text search capabilities
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_text_gin 
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_chunks_text_gin
     ON chunks USING gin(to_tsvector('english', text));
-    
+
     RAISE NOTICE 'Database schema and indices created successfully';
-    
+
 EXCEPTION WHEN OTHERS THEN
     RAISE NOTICE 'Error during initialization: %', SQLERRM;
 END $$;
@@ -86,12 +86,12 @@ END;
 $$ language 'plpgsql';
 
 -- Create triggers for updated_at columns
-CREATE TRIGGER update_documents_updated_at 
-    BEFORE UPDATE ON documents 
+CREATE TRIGGER update_documents_updated_at
+    BEFORE UPDATE ON documents
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_chunks_updated_at 
-    BEFORE UPDATE ON chunks 
+CREATE TRIGGER update_chunks_updated_at
+    BEFORE UPDATE ON chunks
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Analyze tables for better query planning
@@ -100,7 +100,7 @@ ANALYZE chunks;
 
 -- Create a view for monitoring database performance
 CREATE OR REPLACE VIEW performance_stats AS
-SELECT 
+SELECT
     schemaname,
     tablename,
     n_tup_ins as inserts,
@@ -112,7 +112,7 @@ SELECT
     last_autovacuum,
     last_analyze,
     last_autoanalyze
-FROM pg_stat_user_tables 
+FROM pg_stat_user_tables
 WHERE tablename IN ('documents', 'chunks');
 
 -- Grant necessary permissions

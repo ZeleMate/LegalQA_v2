@@ -28,7 +28,7 @@ services:
         limits:
           cpus: '1.0'
           memory: 1G
-    
+
   redis:
     deploy:
       resources:

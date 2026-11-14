@@ -58,7 +58,7 @@ export default function () {
 
   // QA request with detailed timing
   const startTime = Date.now();
-  
+
   let qaResponse = http.post(`${BASE_URL}/ask`, JSON.stringify({
     question: question,
     use_cache: useCache
@@ -115,4 +115,4 @@ export default function () {
   }
 
   sleep(Math.random() * 2 + 1); // 1-3s between requests
-} 
+}

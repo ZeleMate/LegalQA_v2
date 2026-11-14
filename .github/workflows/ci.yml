@@ -1,374 +1,55 @@
-name: CI/CD Pipeline
+name: CI
+
+# Caller workflow: each job below calls a reusable workflow in ZeleMate/workflows, all pinned
+# to the same release SHA. Dependabot moves the pin through minor and patch releases; a major
+# arrives with a template update. This file is the template's: put jobs of your own in
+# ci-local.yml, which the `local` job below calls and the merge gate waits on.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions: read-all
-
-on:
-  push:
-    branches: ['**']  # All branches
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-  pull_request:
-    branches: [ main, develop ]
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  lint:
-    name: Lint & Format Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # Skip if [skip ci] in commit message
-    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]') }}
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
-        with:
-          python-version: '3.10'
-          cache: 'pip'
-          cache-dependency-path: |
-            pyproject.toml
-            poetry.lock
-            requirements*.txt
-      - name: Install dependencies
-        run: pip install .[dev]
-      - name: Black (check)
-        run: black --check src/ tests/
-      - name: isort (check)
-        run: isort --check-only src/ tests/
-      - name: Flake8
-        run: flake8 src/ tests/
-      - name: Mypy
-        run: mypy src/
-      - name: Bandit
-        run: bandit -r src/
+  repo-lint:
+    uses: ZeleMate/workflows/.github/workflows/repo-lint.yml@95244ca1c8b62ab0f3d56aefee2c60348445d132  # v1.0.0
+    permissions:
+      contents: read
 
-      - name: Hadolint (Dockerfile lint)
-        if: ${{ hashFiles('Dockerfile*', '**/Dockerfile*') != '' }}
-        run: |
-          set -e
-          echo "Installing hadolint..."
-          HADOLINT_VERSION=v2.15.1
-          HADOLINT_SHA256=c7187db94eeeeca956519a6af171adc31453941a1e777961f6e680f697c8c507
-          curl -fsSL -o /usr/local/bin/hadolint "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-linux-x86_64"
-          echo "${HADOLINT_SHA256}  /usr/local/bin/hadolint" | sha256sum -c -
-          chmod +x /usr/local/bin/hadolint
-          echo "Scanning Dockerfiles with hadolint (failure-threshold=error)..."
-          files=$(git ls-files | grep -E '(^|/)(Dockerfile(\..*)?$)' || true)
-          if [ -z "$files" ]; then
-            echo "No Dockerfiles found, skipping."
-            exit 0
-          fi
-          echo "$files" | xargs -I{} hadolint --failure-threshold error {}
+  security:
+    uses: ZeleMate/workflows/.github/workflows/security.yml@95244ca1c8b62ab0f3d56aefee2c60348445d132  # v1.0.0
+    permissions:
+      contents: read
+    with:
+      # Semgrep runs on private repos; public repos use CodeQL default setup instead.
+      sast: false
 
-  test:
-    name: Pytest & Coverage
-    runs-on: ubuntu-latest
-    needs: lint
-    timeout-minutes: 30
-    # Skip if [skip ci] in commit message
-    if: ${{ github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]') }}
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
-        with:
-          python-version: '3.10'
-          cache: 'pip'
-          cache-dependency-path: |
-            pyproject.toml
-            poetry.lock
-            requirements*.txt
-      - name: Install dependencies
-        run: pip install .[dev]
-      - name: Run tests
-        run: |
-          pytest --maxfail=1 --disable-warnings --tb=short \
-                 --cov=src --cov-report=xml --cov-fail-under=25
-      - name: Upload coverage.xml
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: coverage-xml
-          path: coverage.xml
+  # This repo's own jobs. ci-local.yml is written once by the template and never updated.
+  local:
+    uses: $/.github/workflows/ci-local.yml
+    permissions:
+      contents: read
 
-  # Heavy jobs - only on PR or main/develop branches
-  docker-build:
-    name: Build Docker image
-    runs-on: ubuntu-latest
-    needs: test
-    timeout-minutes: 45
-    # Only run on PR or main/develop branches
-    if: ${{ (github.event_name == 'pull_request' || 
-             github.ref == 'refs/heads/main' || 
-             github.ref == 'refs/heads/develop') &&
-           (github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')) }}
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-        with:
-          driver-opts: |
-            image=moby/buildkit:v0.12.0
-      - name: Build (no push)
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
-        with:
-          context: .
-          file: ./Dockerfile.minimal
-          tags: legalqa:ci
-          load: true
-          # Disable cache due to GitHub service issues
-          no-cache: true
-          platforms: linux/amd64
-          push: false
-        # Fallback: if cache fails, retry without cache
-        continue-on-error: true
-      
-      - name: Build (no cache fallback)
-        if: failure()
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
-        with:
-          context: .
-          file: ./Dockerfile.minimal
-          tags: legalqa:ci
-          load: true
-          platforms: linux/amd64
-          push: false
-          # Disable cache completely for fallback
-          no-cache: true
-
-
-  # Only run merge-check on pull requests
-  merge-check:
-    if: ${{ github.event_name == 'pull_request' &&
-           (github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')) }}
-    name: Prevent Merge Collisions
-    runs-on: ubuntu-latest
-    needs: test
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          fetch-depth: 0
-      - name: Check for merge conflicts
-        run: |
-          git fetch origin ${{ github.base_ref }}
-          git merge --no-commit --no-ff origin/${{ github.base_ref }} || (echo 'Merge conflict detected!' && exit 1)
-
-  # Performance test - only on PR or main/develop, and only if staging URL is available
-  k6-smoke:
-    runs-on: ubuntu-latest
-    name: k6 Smoke Performance Test
-    timeout-minutes: 10
-    # Only run on PR or main/develop branches, and only if staging URL is configured
-    if: ${{ (github.event_name == 'pull_request' || 
-             github.ref == 'refs/heads/main' || 
-             github.ref == 'refs/heads/develop') &&
-           (github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        
-      - name: Setup k6
-        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece # v1.3.0
-        
-      - name: Load environment variables
-        run: |
-          if [ -f .env ]; then
-            echo "Loading .env file..."
-            export $(cat .env | grep -v '^#' | xargs)
-            echo "APP_URL_STAGING from .env: $APP_URL_STAGING"
-          else
-            echo "No .env file found"
-          fi
-          
-      - name: Check staging URL
-        run: |
-          # Use .env file if available, otherwise skip
-          if [ -f .env ]; then
-            export $(cat .env | grep -v '^#' | xargs)
-            echo "APP_URL_STAGING from .env: $APP_URL_STAGING"
-          fi
-          
-          if [ -z "$APP_URL_STAGING" ]; then
-            echo "No staging URL configured, skipping performance test"
-            exit 0
-          fi
-          echo "Staging URL configured: $APP_URL_STAGING"
-          
-      - name: Run k6 smoke test
-        run: |
-          # Use .env file if available
-          if [ -f .env ]; then
-            export $(cat .env | grep -v '^#' | xargs)
-          fi
-          
-          if [ -z "$APP_URL_STAGING" ]; then
-            echo "No staging URL configured, skipping performance test"
-            exit 0
-          fi
-          
-          echo "Running k6 smoke performance test..."
-          echo "Target URL: $APP_URL_STAGING"
-          
-          # Run with noise-tolerant thresholds for smoke test
-          # Use --no-usage-report to avoid potential issues
-          k6 run \
-            --vus 2 \
-            --duration 15s \
-            --summary-export k6-summary.json \
-            --out json=k6-results.json \
-            --no-usage-report \
-            perf/smoke.js || {
-            echo "k6 test failed, but continuing to upload any generated files"
-            # Create empty files if they don't exist to avoid upload errors
-            touch k6-summary.json k6-results.json
-            exit 0
-          }
-          
-          # Ensure files exist
-          if [ ! -f k6-summary.json ]; then
-            echo '{"metrics":{}}' > k6-summary.json
-          fi
-          if [ ! -f k6-results.json ]; then
-            echo '[]' > k6-results.json
-          fi
-        env:
-          BASE_URL: $APP_URL_STAGING
-          
-      - name: Upload k6 results
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: k6-smoke-results
-          path: |
-            k6-summary.json
-            k6-results.json
-          retention-days: 7
-          if-no-files-found: warn
-          
-      - name: Debug k6 files
-        if: always()
-        run: |
-          echo "=== Debug: Checking for k6 files ==="
-          ls -la *.json 2>/dev/null || echo "No JSON files found in current directory"
-          echo "Current directory contents:"
-          ls -la
-          
-      - name: Display k6 summary
-        if: always()
-        run: |
-          if [ -f k6-summary.json ]; then
-            echo "=== k6 Smoke Test Summary ==="
-            cat k6-summary.json | jq -r '.metrics | to_entries[] | "\(.key): \(.value.avg // .value.rate // .value.count)"' || echo "Could not parse k6 summary"
-          else
-            echo "k6 summary file not found"
-          fi
-
-  # Always run summary - collects results from all jobs
-  summary:
-    name: CI Summary
-    runs-on: ubuntu-latest
-    needs: [test, docker-build]
+  # The merge gate: the single required status check for the ruleset.
+  # Fails if any job failed or was cancelled. repo-lint checks that every job is listed here.
+  ci-ok:
+    name: ci-ok
     if: always()
-    steps:
-      - name: Check CI status
-        run: |
-          echo "=== CI Summary ==="
-          echo "Test job status: ${{ needs.test.result }}"
-          echo "Docker build job status: ${{ needs.docker-build.result }}"
-          
-          # Check if merge-check job exists (only for PRs)
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "Merge check job: Expected for PR"
-          else
-            echo "Merge check job: Skipped (not a PR)"
-          fi
-          
-          # Determine overall status (treat skipped docker-build as pass)
-          DB_RESULT="${{ needs.docker-build.result }}"
-          if [ "${{ needs.test.result }}" == "success" ] && { [ "$DB_RESULT" == "success" ] || [ "$DB_RESULT" == "skipped" ]; }; then
-            if [ "${{ github.event_name }}" == "pull_request" ]; then
-              echo "✅ All CI checks passed! (Including merge check for PR)"
-            else
-              echo "✅ Core CI checks passed! (Docker build is conditional and counted as pass when skipped)"
-            fi
-            exit 0
-          else
-            echo "❌ Some CI checks failed!"
-            echo "Test: ${{ needs.test.result }}"
-            echo "Docker Build: $DB_RESULT"
-            exit 1
-          fi
-
-  # Final summary that always runs and shows all job results
-  final-summary:
-    name: Final Summary
+    needs:
+      - repo-lint
+      - security
+      - local
     runs-on: ubuntu-latest
-    needs: [lint, test, docker-build, merge-check, k6-smoke, summary]
-    if: always()
+    timeout-minutes: 5
+    permissions: {}
     steps:
-      - name: Display final summary
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
-          echo "=== FINAL CI SUMMARY ==="
-          echo "Event type: ${{ github.event_name }}"
-          echo "Branch: ${{ github.ref }}"
-          echo ""
-          echo "Job Results:"
-          echo "  Lint & Format: ${{ needs.lint.result }}"
-          echo "  Tests: ${{ needs.test.result }}"
-          echo "  Docker Build: ${{ needs.docker-build.result }}"
-          echo "  Merge Check: ${{ needs.merge-check.result }}"
-          echo "  k6 Performance: ${{ needs.k6-smoke.result }}"
-          echo "  Summary: ${{ needs.summary.result }}"
-          echo ""
-          
-          # Count successful jobs with proper handling of skipped jobs
-          success_count=0
-          total_count=0
-          
-          # Core jobs that should always run
-          if [ "${{ needs.lint.result }}" == "success" ]; then success_count=$((success_count+1)); fi
-          if [ "${{ needs.test.result }}" == "success" ]; then success_count=$((success_count+1)); fi
-          if [ "${{ needs.docker-build.result }}" == "success" ]; then success_count=$((success_count+1)); fi
-          if [ "${{ needs.summary.result }}" == "success" ]; then success_count=$((success_count+1)); fi
-          total_count=$((total_count+4))
-          
-          # Optional jobs that can be skipped
-          if [ "${{ needs.merge-check.result }}" == "success" ] || [ "${{ needs.merge-check.result }}" == "skipped" ]; then 
-            success_count=$((success_count+1))
-          fi
-          if [ "${{ needs.k6-smoke.result }}" == "success" ] || [ "${{ needs.k6-smoke.result }}" == "skipped" ]; then 
-            success_count=$((success_count+1))
-          fi
-          total_count=$((total_count+2))
-          
-          echo "Success Rate: $success_count/$total_count jobs passed"
-          
-          # For push events, only core jobs matter (treat skipped docker-build as pass)
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
-            if [ "${{ needs.lint.result }}" == "success" ] && \
-               [ "${{ needs.test.result }}" == "success" ] && \
-               [ "${{ needs.summary.result }}" == "success" ] && \
-               { [ "${{ needs.docker-build.result }}" == "success" ] || [ "${{ needs.docker-build.result }}" == "skipped" ]; }; then
-              echo "🎉 Core CI checks passed! (Docker build is conditional and counted as pass when skipped)"
-              exit 0
-            else
-              echo "❌ Core CI checks failed!"
-              echo "  Lint:    ${{ needs.lint.result }}"
-              echo "  Test:    ${{ needs.test.result }}"
-              echo "  Summary: ${{ needs.summary.result }}"
-              echo "  Docker:  ${{ needs.docker-build.result }} (success or skipped required)"
-              exit 1
-            fi
-          else
-            # For PR events, all jobs should succeed or be skipped
-            if [ $success_count -eq $total_count ]; then
-              echo "🎉 All jobs completed successfully!"
-              exit 0
-            else
-              echo "⚠️  Some jobs failed"
-              exit 1
-            fi
-          fi
-          
+          echo "results: $RESULTS"
+          case "$RESULTS" in *failure*|*cancelled*) exit 1 ;; esac

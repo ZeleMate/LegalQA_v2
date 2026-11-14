@@ -81,4 +81,4 @@ spec:
           service:
             name: legalqa-canary-service
             port:
-              number: 80 
+              number: 80

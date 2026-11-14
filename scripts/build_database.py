@@ -439,8 +439,8 @@ def safe_insert_data(engine, parquet_path, batch_size=1000):
                     conn.execute(
                         text(
                             """
-                        INSERT INTO documents (doc_id, source) 
-                        VALUES (:doc_id, :source) 
+                        INSERT INTO documents (doc_id, source)
+                        VALUES (:doc_id, :source)
                         ON CONFLICT (doc_id) DO NOTHING
                     """
                         ),
@@ -466,8 +466,8 @@ def safe_insert_data(engine, parquet_path, batch_size=1000):
                         result = conn.execute(
                             text(
                                 """
-                            INSERT INTO chunks (chunk_id, doc_id, text, embedding) 
-                            VALUES (:chunk_id, :doc_id, :text, CAST(:embedding_vec AS vector)) 
+                            INSERT INTO chunks (chunk_id, doc_id, text, embedding)
+                            VALUES (:chunk_id, :doc_id, :text, CAST(:embedding_vec AS vector))
                             ON CONFLICT (chunk_id) DO NOTHING
                             RETURNING chunk_id
                         """
@@ -540,9 +540,9 @@ def build_faiss_index(engine, output_dir, batch_size=10000):
                 result = conn.execute(
                     text(
                         """
-                    SELECT chunk_id, embedding 
-                    FROM chunks 
-                    WHERE embedding IS NOT NULL 
+                    SELECT chunk_id, embedding
+                    FROM chunks
+                    WHERE embedding IS NOT NULL
                     ORDER BY chunk_id
                     LIMIT :limit OFFSET :offset
                 """
