@@ -232,4 +232,5 @@ test_run.log
 .pytest_cache/
 .coverage
 *.pyc
+# Keep last: template files that broad rules above (`.python-version`, `/*.json`) must not hide.
 !.github/tools/.python-version
