@@ -1,7 +1,7 @@
 # CI-optimized Dockerfile for LegalQA
 # This version is optimized for CI/CD with minimal dependencies
 
-FROM python:3.10-slim AS builder
+FROM python:3.15-slim AS builder
 
 # Set environment variables for build optimization
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -63,7 +63,7 @@ RUN pip install --no-cache-dir \
 RUN pip install --no-cache-dir sentence-transformers
 
 # Production stage
-FROM python:3.10-slim AS production
+FROM python:3.15-slim AS production
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
