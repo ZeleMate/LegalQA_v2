@@ -1,7 +1,7 @@
 # Minimal CI Dockerfile for LegalQA
 # This version contains only essential dependencies for CI testing
 
-FROM python:3.10-slim AS builder
+FROM python:3.15-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -30,7 +30,7 @@ COPY pyproject.toml .
 RUN pip install --no-cache-dir .
 
 # Production stage
-FROM python:3.10-slim AS production
+FROM python:3.15-slim AS production
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

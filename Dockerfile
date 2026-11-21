@@ -1,7 +1,7 @@
 # Optimized Multi-stage Dockerfile for LegalQA
 
 # Build stage - Install dependencies
-FROM python:3.10-slim AS builder
+FROM python:3.15-slim AS builder
 
 # Set environment variables for build optimization
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -58,7 +58,7 @@ RUN pip install --no-cache-dir \
     cachetools==5.3.2
 
 # Production stage - Minimal runtime image
-FROM python:3.10-slim AS production
+FROM python:3.15-slim AS production
 
 # Runtime environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
